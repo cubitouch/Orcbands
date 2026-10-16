@@ -351,6 +351,12 @@ bpy.context.view_layer.objects.active=character_objs[0]
 bpy.ops.export_scene.gltf(filepath=str(out/'worker-orc-vnext.glb'),export_format='GLB',use_selection=True,export_apply=True)
 bpy.ops.wm.save_as_mainfile(filepath=str(out/'worker-orc-vnext.blend'))
 
+if '--export-only' in argv:
+    # GitHub Pages only needs the GLB, not four expensive CPU Cycles renders.
+    assert (out/'worker-orc-vnext.glb').is_file()
+    print('FAST GLB export complete')
+    sys.exit(0)
+
 stage=material("Studio sage",(.11,.18,.15))
 bpy.ops.mesh.primitive_cylinder_add(vertices=64,radius=1.75,depth=.12,location=(0,0,-.10))
 floor=bpy.context.object;floor.name="STUDIO ONLY - pedestal";apply_mat(floor,stage)
