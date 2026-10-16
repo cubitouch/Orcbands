@@ -61,7 +61,8 @@ def sphere(name, center, dims, mat, segments=20, rings=12):
     obj=bpy.context.object;obj.name=name
     obj.scale=dims
     apply_mat(obj,mat)
-    # Keep readable low-poly facets, use weighted normals on larger forms
+    for face in obj.data.polygons:
+        face.use_smooth = True
     return obj
 
 def box(name, center, dims, mat, width=.025):
@@ -109,7 +110,10 @@ def tube(name, start, end, r1, r2, mat, verts=12):
     bpy.ops.mesh.primitive_cone_add(vertices=verts, radius1=r1,radius2=r2,depth=direction.length,location=(a+b)/2)
     obj=bpy.context.object;obj.name=name
     obj.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
-    return apply_mat(obj,mat)
+    apply_mat(obj,mat)
+    for face in obj.data.polygons:
+        face.use_smooth = True
+    return obj
 
 def curved_line(name,points,radius,mat):
     curve=bpy.data.curves.new(name,'CURVE');curve.dimensions='3D'
@@ -155,9 +159,14 @@ ring_loft("Fitted worker leather vest",[
 # Open collar, front bib and fabric edging; avoid cubic overlays.
 sphere("Vest collar left",(-.27,-.27,2.01),(.15,.12,.17),leather,12,8)
 sphere("Vest collar right",(.27,-.27,2.01),(.15,.12,.17),leather,12,8)
-prism("Apron hanging below belt",[(-.40,1.16),(.41,1.17),(.38,.66),(.25,.54),(-.32,.56),(-.42,.63)],-.40,-.455,leather_mid)
-prism("Apron red repair",[(-.29,.86),(-.09,.88),(-.12,.68),(-.31,.64)],-.465,-.48,red_dark)
-curved_line("Apron seam",[(-.36,-.49,.77),(-.35,-.49,.65),(-.25,-.49,.59)],.011,leather_light)
+prism("Apron asymmetrical hanging front",[(-.39,1.16),(.43,1.17),(.39,.83),(.33,.70),(.16,.57),(-.06,.61),(-.17,.57),(-.40,.66)],-.405,-.480,leather)
+prism("Apron hem facing",[(-.37,.71),(-.18,.64),(-.06,.685),(.15,.64),(.32,.765),(.30,.715),(.16,.58),(-.06,.64),(-.19,.62),(-.37,.68)],-.482,-.493,leather_light)
+curved_line("Apron worn vertical fold",[(-.12,-.497,1.06),(-.10,-.505,.86),(-.07,-.505,.69)],.013,leather_mid)
+curved_line("Apron side seam",[(.34,-.489,1.10),(.37,-.495,.90),(.32,-.505,.71)],.017,leather_mid)
+prism("Apron stitched red repair",[(-.32,.87),(-.11,.90),(-.12,.71),(-.32,.68)],-.490,-.508,red_dark)
+curved_line("Apron patch stitching",[(-.31,-.51,.85),(-.30,-.51,.71),(-.13,-.51,.725)],.011,leather_light)
+for i in range(5):
+    sphere(f'Apron hand sewn stitch {i}',(-.30+i*.043,-.525,.713),(.013,.008,.012),bone,7,5)
 for sx in [-1,1]:
     curved_line("Shoulder harness",[ (sx*.39,-.23,2.16),(sx*.39,-.37,1.70),(sx*.31,-.41,1.32)],.077,leather)
     sphere("Harness rivet",(sx*.33,-.415,1.38),(.045,.028,.038),gold,10,7)
@@ -208,7 +217,7 @@ for sx,label in [(-1,'L'),(1,'R')]:
 
 # Face: sculpted brow/jaw/muzzle rather than sphere with googly eyes.
 sphere("Mass of neck",(0,-.005,2.18),(.305,.30,.235),skindark,18,11)
-sphere("Orc wide cranium",(0,0,2.51),(.45,.355,.365),skin,24,16)
+sphere("Orc wide cranium",(0,.012,2.505),(.443,.345,.368),skin,24,16)
 # Lower jaw extends forward with angular cheek support.
 ring_loft("Broad lower jaw anatomy",[
   ((0,-.045,2.23),(.365,.31)),
@@ -216,43 +225,89 @@ ring_loft("Broad lower jaw anatomy",[
   ((0,-.045,2.47),(.43,.34)),
   ((0,.010,2.60),(.37,.32)),
 ],skin,20)
-sphere("Large flattened lower lip",(0,-.334,2.305),(.285,.108,.105),skinlight,20,10)
-sphere("Muzzle chin plane",(0,-.307,2.38),(.26,.155,.155),skin,18,10)
-sphere("Heavy nose bridge",(0,-.347,2.52),(.135,.14,.19),skin,16,10)
-sphere("Nose end",(0,-.408,2.46),(.175,.13,.095),skinlight,16,10)
+sphere("Strong lower jaw lip",(0,-.350,2.295),(.289,.103,.089),skin,20,10)
+sphere("Muzzle chin plane",(0,-.290,2.38),(.30,.155,.14),skin,18,10)
+curved_line("Angry dark lower mouth",[(-.255,-.421,2.330),(-.08,-.455,2.304),(.08,-.455,2.304),(.255,-.421,2.330)],.011,skindark)
+sphere("Heavy nose bridge",(0,-.305,2.52),(.13,.13,.18),skin,16,10)
+sphere("Nose end",(0,-.397,2.472),(.16,.108,.081),skin,16,10)
 for sx,label in [(-1,"L"),(1,"R")]:
-    sphere(f'{label} nostril',(sx*.10,-.527,2.438),(.031,.014,.026),skindark,10,7)
-    sphere(f'{label} cheek',(sx*.306,-.225,2.37),(.172,.165,.16),skin,15,10)
+    sphere(f'{label} nostril',(sx*.10,-.499,2.446),(.026,.012,.021),skindark,10,7)
+    sphere(f'{label} cheek',(sx*.309,-.222,2.37),(.155,.145,.141),skin,15,10)
     # Brow shadows, deep-set iris, heavy sloping brow over eyes.
-    sphere(f'{label} eye socket',(sx*.185,-.318,2.58),(.143,.072,.09),skindark,14,9)
-    sphere(f'{label} pale ochre eye',(sx*.192,-.378,2.56),(.087,.022,.055),eye_white,13,8)
-    sphere(f'{label} pupil',(sx*.196,-.403,2.555),(.027,.012,.039),black,11,7)
-    brow=sphere(f'{label} scowling brow ridge',(sx*.194,-.349,2.632),(.195,.094,.070),skinlight,16,10)
+    sphere(f'{label} eye socket',(sx*.182,-.325,2.585),(.139,.054,.07),skindark,14,9)
+    sphere(f'{label} pale ochre eye',(sx*.192,-.367,2.57),(.070,.018,.044),eye_white,13,8)
+    sphere(f'{label} pupil',(sx*.190,-.386,2.566),(.025,.011,.030),black,11,7)
+    brow=sphere(f'{label} scowling brow ridge',(sx*.188,-.356,2.625),(.175,.079,.055),skinlight,16,10)
     brow.rotation_euler[1]=-sx*.18
-    sphere(f'{label} broad ear base',(sx*.438,.035,2.535),(.16,.18,.15),skin,14,10)
-    sphere(f'{label} pointed ear',(sx*.570,.045,2.57),(.185,.083,.075),skin,12,8)
-    sphere(f'{label} dark inner ear',(sx*.548,-.043,2.574),(.095,.024,.052),skindark,12,8)
+    sphere(f'{label} broad ear base',(sx*.420,.044,2.529),(.13,.155,.136),skin,14,10)
+    sphere(f'{label} pointed ear',(sx*.545,.060,2.558),(.15,.085,.063),skin,12,8)
+    sphere(f'{label} dark inner ear',(sx*.536,-.025,2.561),(.081,.02,.046),skindark,12,8)
     # Pointed ivory tusks curve out then rise from lower jaw.
-    tube(f'{label} tusk base',(sx*.269,-.341,2.304),(sx*.318,-.409,2.418),.087,.066,bone,12)
-    tube(f'{label} tusk tip',(sx*.318,-.409,2.418),(sx*.350,-.405,2.555),.064,0,bone,12)
+    tube(f'{label} tusk base',(sx*.258,-.346,2.304),(sx*.305,-.396,2.403),.076,.055,bone,12)
+    tube(f'{label} tusk tip',(sx*.305,-.396,2.403),(sx*.334,-.394,2.513),.054,0,bone,12)
     sphere(f'{label} earring',(sx*.495,.010,2.437),(.03,.04,.042),gold,12,9)
 # Hard red bandana and back ribbons.
-ring_loft("Red wrap headband",[
-  ((0,.008,2.730),(.43,.33)),
-  ((0,.011,2.804),(.40,.33))
-],red,22)
-sphere("Bandana side knot",(.42,.06,2.765),(.125,.125,.093),red_dark,13,9)
+ring_loft("Red cloth bandana",[
+  ((0,.008,2.716),(.439,.334)),
+  ((0,.011,2.759),(.420,.329))
+],red,24)
+sphere("Bandana side knot",(.415,.060,2.751),(.084,.086,.070),red_dark,13,9)
 prism("Bandana tail long",[(.39,2.75),(.56,2.74),(.61,2.38),(.52,2.47)],.14,.21,red)
 prism("Bandana tail short",[(.45,2.74),(.58,2.73),(.73,2.54),(.66,2.52)],.10,.17,red_dark)
-sphere("Scalp and bandana top",(0,.045,2.775),(.35,.28,.11),red,14,9)
-sphere("Top hair crest",(0,.075,2.858),(.16,.12,.06),black,12,8)
+# Skull and hair are visible above the narrow bandana, not hidden by a round fabric cap.
+sphere("Top hair crest",(0,.075,2.859),(.17,.115,.081),black,12,8)
 
 # Separate hero weapon (held at right side), strongly tapered axe head.
 tube("Axe hardwood shaft",(1.13,-.20,.54),(1.14,-.22,1.52),.058,.050,leather_mid,13)
 tube("Axe dark wrapping",(1.14,-.22,1.06),(1.14,-.22,1.24),.071,.069,leather,13)
-prism("Axe steel head",[(1.06,1.61),(1.36,1.71),(1.61,1.60),(1.64,1.23),(1.37,1.15),(1.06,1.31)],-.30,-.14,metal_light)
-prism("Axe dark forging",[(1.06,1.61),(1.30,1.67),(1.29,1.21),(1.06,1.31)],-.323,-.31,metal)
+prism("Axe forged hook blade",[(1.06,1.62),(1.33,1.71),(1.58,1.78),(1.52,1.62),(1.54,1.32),(1.68,1.22),(1.40,1.17),(1.06,1.31)],-.30,-.14,metal_light)
+prism("Axe dark forged spine",[(1.06,1.61),(1.33,1.71),(1.33,1.24),(1.06,1.31)],-.323,-.31,metal)
 sphere("Axe connector",(1.13,-.23,1.42),(.085,.1,.15),metal,12,8)
+
+
+# Finish detailing: forms that read from our strategy-camera view.
+for sx,label in [(-1,"L"),(1,"R")]:
+    # Bracer stitching and burnished brass plates on the forearm.
+    for i in range(5):
+        z=1.27+i*.036
+        sphere(f'{label} bracer stitches {i}',(sx*1.00,-.320,z),(.013,.011,.012),leather_light,7,5)
+    box(f'{label} bracer plate',(sx*1.02,-.280,1.357),(.31,.076,.085),leather_mid,.017)
+    sphere(f'{label} plate rivet',(sx*1.10,-.323,1.364),(.023,.022,.020),gold,8,6)
+    # Harness shoulder guards are deliberately asymmetrical, like field gear.
+    if sx < 0:
+        sphere('Left hammered shoulder pad',(sx*.72,-.06,2.14),(.31,.27,.09),leather,15,9)
+        curved_line('Left pad edging',[(sx*.95,-.160,2.11),(sx*.75,-.328,2.15),(sx*.48,-.19,2.15)],.02,leather_light)
+    else:
+        curved_line('Right shoulder scar',[(sx*.61,-.301,2.08),(sx*.69,-.329,1.98),(sx*.77,-.34,1.925)],.018,skindark)
+# Brass rivets, cross-stitching and tool details keep the model readable in closeup.
+for sx in [-1,1]:
+    for z in [1.60,1.74,1.88]:
+        sphere('Leather vest lace eyelet',(sx*.35,-.394,z),(.018,.013,.018),gold,8,6)
+curved_line('Diagonal cross-body weathered leather binding',[(-.45,-.30,2.02),(-.17,-.47,1.78),(.14,-.48,1.55),(.34,-.44,1.32)],.036,leather)
+for i in range(4):
+    sphere(f'Metal strap rivet {i}',(-.27+i*.115,-.475,1.88-i*.145),(.02,.016,.02),metal_light,8,6)
+for x,z in [(-.32,.81),(-.28,.74),(.30,.83)]:
+    sphere('Apron exposed stitch',(x,-.512,z),(.017,.011,.015),bone,8,6)
+# Clean up anatomical intersections: merge body and arm skin volumes with voxel
+# remeshing, removing the most obvious sphere/cylinder seams.
+# Preserve face features, fingers, gear, leather and bone as separately editable parts.
+skin_parts=[o for o in bpy.data.objects if o.type=='MESH' and
+    (o.name.startswith('Body - anatomical') or
+     any(key in o.name for key in (
+       ' shoulder deltoid',' biceps',' elbow',' forearm',' hand palm',
+       ' knuckle ',' thumb'))
+    )]
+if skin_parts:
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in skin_parts: o.select_set(True)
+    bpy.context.view_layer.objects.active=skin_parts[0]
+    bpy.ops.object.join()
+    combined=bpy.context.object
+    combined.name='Continuous orc shoulders, arms and hands'
+    combined.data.remesh_voxel_size=.032
+    bpy.ops.object.voxel_remesh()
+    for poly in combined.data.polygons:
+        poly.use_smooth=True
 
 # Dedicated character collection for stable export. Make stage separately.
 character_objs=list(bpy.data.objects)
