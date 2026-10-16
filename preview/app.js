@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createCrashSite } from './world.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
@@ -23,7 +24,16 @@ controls.maxDistance=12;
 controls.minPolarAngle=.22;
 controls.maxPolarAngle=1.53;
 controls.enablePan=true;
-function resetView(){camera.position.set(5.1,3.8,6.8);controls.target.set(0,1.43,0);controls.update();}
+function resetView(){
+ if(sceneMode==='camp'){
+   camera.position.set(11.6,9.3,12.5);
+   controls.target.set(0,1.05,-.2);
+ } else {
+   camera.position.set(5.1,3.8,6.8);
+   controls.target.set(0,1.43,0);
+ }
+ controls.update();
+}
 resetView();
 scene.add(new THREE.HemisphereLight(0xdff4f9,0x433d2f,2.25));
 const key=new THREE.DirectionalLight(0xffe7bd,2.6);
@@ -43,6 +53,10 @@ gridMaterials.forEach(m=>{m.transparent=true;m.opacity=.18});
 scene.add(grid);
 const model=new THREE.Group();
 scene.add(model);
+const crashSite=createCrashSite(THREE);
+crashSite.visible=false;
+scene.add(crashSite);
+let sceneMode="character";
 const pivots={};
 const articulation={
   left_arm:[-.72,1.91,0],
@@ -59,6 +73,19 @@ function setPose(next){
   status.textContent=next==='idle'?'Idle — inspect the model':next==='walk'?'Walk — prototype rigid-part cycle':'Chop — prototype swing (not skeletal animation)';
 }
 document.querySelectorAll('.pose').forEach(button=>button.addEventListener('click',()=>setPose(button.dataset.pose)));
+function setScene(mode) {
+  sceneMode=mode;
+  crashSite.visible=mode==='camp';
+  floor.visible=mode==='character';
+  grid.visible=mode==='character';
+  document.getElementById('scene-label').textContent=mode==='camp'?'Crash-site diorama':'Character studio';
+  document.querySelectorAll('.scene').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scene===mode)));
+  model.position.x=mode==='camp'?-1.15:0;
+  model.position.z=mode==='camp'?1.15:0;
+  model.rotation.y=mode==='camp'?-.18:0;
+  resetView();
+}
+document.querySelectorAll('.scene').forEach(button=>button.addEventListener('click',()=>setScene(button.dataset.scene)));
 document.getElementById('spin').addEventListener('click',e=>{
  spinning=!spinning;
  e.currentTarget.setAttribute('aria-pressed',String(spinning));
