@@ -5,6 +5,7 @@ base=Path(sys.argv[1]) if len(sys.argv)>1 else Path('rig-review')
 doc=json.loads((base/'rig-metadata.json').read_text())
 assert doc['skinned'] is True and doc['humanoid_validated'] is False
 assert doc['mesh_count']>20,doc
+assert doc['converted_curve_count']>=10,'Decorative Bezier paths were not skinned'
 required={'Hips','Spine','Chest','Neck','Head'}
 for s in ('L','R'):required|={f'UpperLeg.{s}',f'LowerLeg.{s}',f'Foot.{s}',f'Shoulder.{s}',f'UpperArm.{s}',f'LowerArm.{s}',f'Hand.{s}'}
 assert required.issubset(doc['bones']),required-set(doc['bones'])
@@ -16,7 +17,9 @@ with path.open('rb') as f:
     gltf=json.loads(f.read(length))
 print('glTF skins:',len(gltf.get('skins',[])),'animations:',[a['name'] for a in gltf.get('animations',[])])
 assert gltf.get('skins'), 'No actual skin exported'
-assert any(n.get('skin') is not None for n in gltf.get('nodes',[])), 'No skinned nodes'
+mesh_nodes=[n for n in gltf.get('nodes',[]) if 'mesh' in n]
+assert mesh_nodes, 'No mesh nodes in export'
+assert all('skin' in n for n in mesh_nodes),'Unskinned meshes remain in animated GLB'
 clips=[a.get('name','') for a in gltf.get('animations',[])]
 for action in ['Idle','Walk','Chop','Carry']:
     assert any(action.lower() in s.lower() for s in clips),'Missing clip '+action
