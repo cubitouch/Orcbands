@@ -27,9 +27,10 @@ python3 tools/validate-rigged-glb.py rig-review
 This flow runs in `.github/workflows/rig-worker-orc.yml`; CI artifacts preserve
 the evidence and exported model for every PR revision.
 
-The **browser studio** can show the animated experimental GLB when it is supplied
-as `preview/assets/worker-orc-skinned-experiment.glb` (for example inside a CI
-test); the production site does **not** automatically include this experiment.
+The **browser studio** supports an optional `Rigged beta` model mode, showing
+actual animation clips from `preview/assets/worker-orc-skinned-experiment.glb`.
+The GitHub Pages workflow generates and deploys this GLB from reproducible
+Blender source. The two existing models remain separately selectable.
 
 ## Quality gates and limitations
 
@@ -40,7 +41,8 @@ test); the production site does **not** automatically include this experiment.
 - The visible character remains short of the original stylized reference art.
 - It is not Unity-validated, and Blender/GLB bone names alone do not guarantee
   Unity Humanoid Avatar validity or retargeted Mecanim animation quality.
-- CI remains private art review; no automatic merge or deployment on passing.
+- Full art review remains required; publish the rig only as a clearly identified
+  beta option, never as an approved/validated Unity Humanoid model.
 - Future work needs weight painting, better anatomy/clothing/UVs, and direct Unity
   Avatar validation once an editor is available.
 
