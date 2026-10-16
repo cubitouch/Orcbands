@@ -39,18 +39,19 @@ a{color:#b0dc9f}code{background:#25342c;border-radius:4px;padding:2px 5px}
 <main>
 <div class="viewer" id="viewer">
 <canvas id="viewport" aria-label="Interactive 3D view of an orc worker"></canvas>
-<div class="mini"><strong>Worker Orc 001</strong>Original low-poly mesh<br>OBJ · procedural assembly</div>
+<div class="mini"><strong>Worker Orc 001</strong>Original low-poly mesh<br><span id="scene-label">Character studio</span></div>
 <div id="loading" role="status">Loading 3D character…</div>
 <div class="tip">Drag to rotate · pinch or scroll to zoom · two fingers to pan</div>
 </div>
 <div class="toolbar">
+<div class="buttons" role="group" aria-label="Preview scene"><button class="scene" data-scene="character" aria-pressed="true">Character studio</button><button class="scene" data-scene="camp" aria-pressed="false">Crash site</button></div>
 <div class="buttons" role="group" aria-label="Preview animation"><button class="pose" data-pose="idle" aria-pressed="true">Idle</button><button class="pose" data-pose="walk" aria-pressed="false">Walk</button><button class="pose" data-pose="chop" aria-pressed="false">Chop wood</button></div>
 <div class="buttons"><button id="spin" aria-pressed="false">Auto rotate</button><button id="reset">Reset view</button></div>
 </div>
 <div class="status" id="status" role="status">Loading geometry and materials…</div>
 <section>
 <h1>Meet our first orc</h1>
-<p>This is <strong>actual polygon geometry</strong> loaded from the original <a href="./assets/orc-worker.obj">OBJ mesh</a> and <a href="./assets/orc-worker.mtl">materials</a>—not AI concept art or a prerecorded video.</p>
+<p>Use <strong>Crash site</strong> to inspect the character in a procedurally generated starting valley, beside our first zeppelin wreck and tiny orc shelter. This is an exploratory browser diorama, not the Unity game.<p></p>This is <strong>actual polygon geometry</strong> loaded from the original <a href="./assets/orc-worker.obj">OBJ mesh</a> and <a href="./assets/orc-worker.mtl">materials</a>—not AI concept art or a prerecorded video.</p>
 <p>The preview animates rigid body sections (arms and legs) for testing proportions and readability. It is <strong>not a skinned or verified Unity Humanoid</strong> yet. Clothing, face, topology, proper rigging, and walk/chop cycles all need further refinement.</p>
 <p>Built for the proposed isometric survival RTS <strong>Orcbands</strong>.</p>
 </section>
