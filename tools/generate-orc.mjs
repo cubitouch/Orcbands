@@ -65,9 +65,36 @@ function buildModel(){
  return {obj:lines.join('\n')+'\n',mtl:mtl.join('\n')+'\n',vertices:count,faces};
 }
 
+
+function regroupObj(source){
+ 
+ const objects=new Map(),preamble=['# Orcbands Worker Orc 001 — original procedural prototype','# Units: metres; Y-up; Z-forward','mtllib orc-worker.mtl','s off'];
+ let part=null, material=null;const oldToLocal=[null];
+ for(const line of source.split(/\r?\n/)){
+  if(line.startsWith('o ')){part=line.slice(2).trim();if(!objects.has(part))objects.set(part,{vertices:[],faces:[]});}
+  else if(line.startsWith('usemtl ')){material=line.slice(7).trim();}
+  else if(line.startsWith('v ')){const o=objects.get(part);if(!o)throw Error('vertex without object');o.vertices.push(line);oldToLocal.push([part,o.vertices.length-1]);}
+  else if(line.startsWith('f ')){const o=objects.get(part);if(!o||!material)throw Error('face without material');o.faces.push({material,indices:line.slice(2).trim().split(/\s+/).map(Number)});}
+ }
+ const lookup=new Map();let globalIdx=1;
+ for(const [name,o] of objects)for(let i=0;i<o.vertices.length;i++)lookup.set(name+':'+i,globalIdx++);
+ const out=[...preamble];
+ for(const [name,o] of objects){
+  out.push('o '+name,...o.vertices);let mat=null;
+  for(const f of o.faces){if(f.material!==mat){mat=f.material;out.push('usemtl '+mat);}
+   out.push('f '+f.indices.map(index=>{
+    const loc=oldToLocal[index];if(!loc)throw Error('bad index '+index);return lookup.get(loc[0]+':'+loc[1]);
+   }).join(' '));
+  }
+ }
+ return out.join('\n')+'\n';
+
+}
+
 const out=process.argv[2] || 'preview/assets';
 mkdirSync(out,{recursive:true});
-const {obj,mtl,vertices,faces}=buildModel();
+const {obj:rawObj,mtl,vertices,faces}=buildModel();
+const obj=regroupObj(rawObj);
 writeFileSync(`${out}/orc-worker.obj`,obj);
 writeFileSync(`${out}/orc-worker.mtl`,mtl);
 console.log(`Orcbands worker: ${vertices} vertices, ${faces} triangles -> ${out}`);
