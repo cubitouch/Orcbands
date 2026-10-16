@@ -1,0 +1,49 @@
+name: Blender Worker Orc Art Review
+
+on:
+  pull_request:
+    paths:
+      - "art/**"
+      - ".github/workflows/blender-art-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render-and-export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install headless Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
+          blender --version | head -n 2
+      - name: Generate real 3D model and multi-angle renders
+        run: |
+          mkdir -p art-review
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output art-review
+      - name: Validate outputs and document no Humanoid rig yet
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=Path('art-review')
+          info=json.loads((d/'model-info.json').read_text())
+          assert info['asset_store_dependencies'] is False
+          assert info['humanoid_validated'] is False
+          assert info['skinned'] is False
+          for name in info['outputs']:
+              path=d/name
+              assert path.is_file() and path.stat().st_size>1024, name
+              print(name,path.stat().st_size)
+          PY
+      - name: Upload original blend, GLB and 4 real renders
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-worker-orc-vnext-art-review
+          path: art-review/
+          if-no-files-found: warn
