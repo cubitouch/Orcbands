@@ -3,6 +3,7 @@ import { createCrashSite } from './world.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const canvas=document.getElementById('viewport');
 const viewer=document.getElementById('viewer');
@@ -54,6 +55,9 @@ gridMaterials.forEach(m=>{m.transparent=true;m.opacity=.18});
 scene.add(grid);
 const model=new THREE.Group();
 scene.add(model);
+let blenderModel=null;
+let modelVersion='prototype';
+let glbRequested=false;
 const crashSite=createCrashSite(THREE);
 crashSite.visible=false;
 scene.add(crashSite);
@@ -74,16 +78,54 @@ function setPose(next){
   status.textContent=next==='idle'?'Idle — inspect the model':next==='walk'?'Walk — prototype rigid-part cycle':'Chop — prototype swing (not skeletal animation)';
 }
 document.querySelectorAll('.pose').forEach(button=>button.addEventListener('click',()=>setPose(button.dataset.pose)));
+function syncCharacterPosition() {
+  const x=sceneMode==='camp'?-1.15:0;
+  const z=sceneMode==='camp'?1.15:0;
+  const angle=sceneMode==='camp'?-.18:0;
+  model.position.x=x; model.position.z=z; model.rotation.y=angle;
+  if(blenderModel) {
+    blenderModel.position.set(x,0,z);
+    blenderModel.rotation.y=angle;
+  }
+}
+function setModelVersion(version) {
+  if(version!=='prototype'&&version!=='blender')return;
+  if(version==='blender'&&!blenderModel){
+    if(glbRequested)return;
+    glbRequested=true;
+    status.textContent='Loading Blender vNext model…';
+    new GLTFLoader().load('./assets/worker-orc-vnext.glb', gltf=>{
+      blenderModel=gltf.scene;
+      scene.add(blenderModel);
+      blenderModel.traverse(child=>{
+        if(child.isMesh){ child.castShadow=true; child.receiveShadow=true; }
+      });
+      glbRequested=false;
+      setModelVersion('blender');
+    },undefined,()=>{
+      glbRequested=false;
+      status.textContent='Blender model not bundled here yet; original prototype remains available.';
+    });
+    return;
+  }
+  modelVersion=version;
+  model.visible=version==='prototype';
+  if(blenderModel)blenderModel.visible=version==='blender';
+  document.querySelectorAll('.version').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.version===version)));
+  document.querySelectorAll('.pose').forEach(b=>b.disabled=version==='blender');
+  document.getElementById('scene-label').textContent=(version==='blender'?'Blender static asset':'Original prototype')+' · '+(sceneMode==='camp'?'Crash site':'Studio');
+  syncCharacterPosition();
+  status.textContent=version==='blender'?'Blender vNext — static model; proper Humanoid rig and animation pending':'Original placeholder — rigid-part movement preview';
+}
+document.querySelectorAll('.version').forEach(button=>button.addEventListener('click',()=>setModelVersion(button.dataset.version)));
 function setScene(mode) {
   sceneMode=mode;
   crashSite.visible=mode==='camp';
   floor.visible=mode==='character';
   grid.visible=mode==='character';
-  document.getElementById('scene-label').textContent=mode==='camp'?'Crash-site diorama':'Character studio';
+  document.getElementById('scene-label').textContent=(modelVersion==='blender'?'Blender static asset':'Original prototype')+' · '+(mode==='camp'?'Crash site':'Studio');
   document.querySelectorAll('.scene').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scene===mode)));
-  model.position.x=mode==='camp'?-1.15:0;
-  model.position.z=mode==='camp'?1.15:0;
-  model.rotation.y=mode==='camp'?-.18:0;
+  syncCharacterPosition();
   resetView();
 }
 document.querySelectorAll('.scene').forEach(button=>button.addEventListener('click',()=>setScene(button.dataset.scene)));
@@ -91,7 +133,7 @@ document.getElementById('spin').addEventListener('click',e=>{
  spinning=!spinning;
  e.currentTarget.setAttribute('aria-pressed',String(spinning));
 });
-document.getElementById('reset').addEventListener('click',()=>{resetView();model.rotation.y=0;});
+document.getElementById('reset').addEventListener('click',()=>{resetView();model.rotation.y=0;if(blenderModel)blenderModel.rotation.y=0;});
 function resize(){
  const width=viewer.clientWidth,height=viewer.clientHeight;
  if(width===0||height===0)return;
@@ -145,7 +187,7 @@ function frame(){
    ra.rotation.z=chop?-.10:0;
    h.rotation.y=Math.sin(t*.85)*.035;
    model.position.y=walk?Math.abs(Math.sin(t*7))*.037:Math.sin(t*1.5)*.014;
-   if(spinning)model.rotation.y+=.0045;
+   if(spinning){if(modelVersion==='blender'&&blenderModel)blenderModel.rotation.y+=.0045;else model.rotation.y+=.0045;}
  }
  controls.update();
  renderer.render(scene,camera);
