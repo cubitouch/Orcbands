@@ -46,6 +46,22 @@ try {
     if(!await page.getByRole('button',{name:'Walk'}).isDisabled())throw new Error('Unrigged Blender model should not enable walk animation');
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
+  if(process.env.ORCBANDS_TEST_RIG==='1') {
+    await page.getByRole('button',{name:'Rigged beta'}).click();
+    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Rigged beta'),null,{timeout:60000});
+    await page.waitForTimeout(700);
+    await page.getByRole('button',{name:'Walk'}).click();
+    await page.waitForTimeout(400);
+    await page.screenshot({path:path.join(repo,'smoke-artifacts','real-rig-walk-browser.png')});
+    await page.getByRole('button',{name:'Chop wood'}).click();
+    await page.waitForTimeout(450);
+    await page.screenshot({path:path.join(repo,'smoke-artifacts','real-rig-chop-browser.png')});
+    await page.getByRole('button',{name:'Carry'}).click();
+    await page.waitForTimeout(450);
+    await page.screenshot({path:path.join(repo,'smoke-artifacts','real-rig-carry-browser.png')});
+    if(errors.length)throw new Error('GLB browser errors: '+errors.join('\\n'));
+    await page.getByRole('button',{name:'Original placeholder'}).click();
+  }
   await page.getByRole('button',{name:'Crash site'}).click();
   await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Crash site'));
   await page.screenshot({path:path.join(repo,'smoke-artifacts','crash-site.png')});

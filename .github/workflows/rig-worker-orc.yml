@@ -1,0 +1,43 @@
+name: Animated Worker Orc Rig Proof
+on:
+  pull_request:
+    paths:
+      - "art/rig_worker_orc.py"
+      - "art/worker_orc_vnext.py"
+      - "tools/validate-rigged-glb.py"
+      - ".github/workflows/rig-worker-orc.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rig-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and glTF export dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
+      - name: Build original Blender Orc source without studio renders
+        run: |
+          mkdir -p rig-review
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output rig-review --export-only
+      - name: Create skinned humanoid-oriented mesh and real action clips
+        run: blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input rig-review/worker-orc-vnext.blend --output rig-review
+      - name: Validate GLB bones, skinning and clips
+        run: python3 tools/validate-rigged-glb.py rig-review
+      - name: Render real GLB animations in Chromium
+        run: |
+          cp rig-review/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+          ORCBANDS_TEST_RIG=1 node tools/smoke-preview.mjs
+          cp smoke-artifacts/real-rig-*-browser.png rig-review/
+      - name: Upload art evidence and editable model
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-orc-real-rig-and-motion-proof
+          path: rig-review/
+          if-no-files-found: warn
