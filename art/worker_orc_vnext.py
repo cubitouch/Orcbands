@@ -28,14 +28,14 @@ def material(name, rgba, roughness=.8, metallic=0):
     bsdf.inputs['Metallic'].default_value=metallic
     return mat
 
-skin=material("01 Orc moss skin",(.32,.48,.23))
-skinlight=material("02 Face/knuckle highlight",(.43,.55,.29))
-skindark=material("03 Deep skin shade",(.18,.31,.16))
+skin=material("01 Orc moss skin",(.245,.382,.160))
+skinlight=material("02 Face/knuckle highlight",(.342,.461,.225))
+skindark=material("03 Deep skin shade",(.115,.221,.092))
 leather=material("04 Dark saddle leather",(.24,.13,.085))
-leather_mid=material("05 Worn brown leather",(.38,.22,.13))
-leather_light=material("06 Leather edge",(.56,.34,.20))
+leather_mid=material("05 Worn brown leather",(.32,.169,.095))
+leather_light=material("06 Leather edge",(.45,.273,.155))
 cloth=material("07 Warm dark cloth",(.12,.12,.105))
-red=material("08 Crimson canvas",(.48,.15,.12))
+red=material("08 Crimson canvas",(.40,.103,.082))
 red_dark=material("09 Dirty crimson",(.28,.085,.07))
 bone=material("10 Ivory tusks",(.88,.81,.63),.59)
 metal=material("11 Forged black iron",(.23,.26,.25),.38,.65)
@@ -265,6 +265,32 @@ prism("Axe dark forged spine",[(1.06,1.61),(1.33,1.71),(1.33,1.24),(1.06,1.31)],
 sphere("Axe connector",(1.13,-.23,1.42),(.085,.1,.15),metal,12,8)
 
 
+
+# Stylized but grounded personality: pronounced orc expression and lived-in armor.
+# Short face scar, colored angular war paint and a thick jaw muscle.
+curved_line("Worker cheek scar",[(.26,-.350,2.53),(.33,-.345,2.48),(.35,-.323,2.43)],.014,skindark)
+curved_line("Right forehead ridge",[(.035,-.326,2.690),(.18,-.357,2.685),(.33,-.289,2.678)],.026,skindark)
+curved_line("Left forehead ridge",[(-.035,-.326,2.690),(-.18,-.357,2.684),(-.33,-.289,2.675)],.026,skindark)
+# A face isn't merely two tusks: mouth, lips and cheek shadow.
+curved_line("Low canine mouth shadow",[(-.225,-.416,2.31),(-.12,-.455,2.305),(0,-.461,2.292),(.12,-.455,2.305),(.225,-.416,2.31)],.020,skindark)
+for side in [-1,1]:
+    sphere("Angled jaw mass",(side*.29,-.17,2.27),(.16,.17,.11),skin,14,10)
+    # Ragged tribal marking near the lower cheek.
+    prism("Red field paint",[(side*.30,2.42),(side*.37,2.38),(side*.35,2.31),(side*.31,2.34)],-.363,-.377,red_dark)
+# Linen and hide fastenings give scale to large sculpted forms.
+for z in [1.48,1.59,1.70]:
+    curved_line("Vest hand stitching",[(-.215,-.408,z),(-.12,-.413,z+.015),(.01,-.423,z+.006)],.009,leather_light)
+for j in range(4):
+    sphere("Shoulder pad rivet",(-.91+j*.106,-.253,2.15+j*.018),(.021,.019,.016),gold,8,6)
+# Simple bone and bronze necklace, a recognizable signature accessory.
+curved_line("Bone necklace", [(-.22,-.316,2.135),(-.09,-.388,2.042),(.13,-.403,2.045),(.23,-.330,2.13)],.031,leather)
+tube("Bone pendant",(0,-.404,2.064),(.02,-.462,1.944),.055,.008,bone,10)
+# Chipped steel, hide wrapping and buckle ornament on belt.
+prism("Axe worn dark stripe",[(1.35,1.66),(1.50,1.71),(1.46,1.60),(1.34,1.57)],-.307,-.332,metal)
+for z in [.91,.95,.99]:
+    curved_line("Axe grip braid",[(1.09,-.274,z),(1.17,-.267,z+.014)],.018,leather_light)
+sphere("Belt ornament",(0,-.478,1.181),(.04,.028,.039),gold,10,6)
+
 # Finish detailing: forms that read from our strategy-camera view.
 for sx,label in [(-1,"L"),(1,"R")]:
     # Bracer stitching and burnished brass plates on the forearm.
@@ -356,10 +382,10 @@ scene=bpy.context.scene
 # Cycles CPU works headlessly on GitHub Actions without EGL/OpenGL.
 scene.render.engine='CYCLES'
 scene.cycles.device='CPU'
-scene.cycles.samples=40
+scene.cycles.samples=24
 scene.cycles.use_denoising=False
-scene.render.resolution_x=720
-scene.render.resolution_y=720
+scene.render.resolution_x=760
+scene.render.resolution_y=760
 scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG'
 scene.render.film_transparent=False
