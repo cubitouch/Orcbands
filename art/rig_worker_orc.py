@@ -16,7 +16,18 @@ src=Path(flag('--input','art-review/worker-orc-vnext.blend')).resolve()
 out=Path(flag('--output','art-review')).resolve()
 out.mkdir(parents=True,exist_ok=True)
 bpy.ops.wm.open_mainfile(filepath=str(src))
+# Blender art uses Bezier curves for straps, seams and axe-wrap details.
+# A glTF export renders those curves, but an Armature modifier cannot skin
+# them: until now they remained in bind pose and floated as the limbs moved.
+# Convert EVERY curve to a proper mesh BEFORE building the bone skinning.
+curves=[o for o in bpy.context.scene.objects if o.type=='CURVE']
+for curve in curves:
+    bpy.ops.object.select_all(action='DESELECT')
+    curve.select_set(True)
+    bpy.context.view_layer.objects.active=curve
+    bpy.ops.object.convert(target='MESH')
 character=[o for o in bpy.context.scene.objects if o.type=='MESH']
+print('Skinnable objects:',len(character),'converted decorative curves:',len(curves))
 if len(character)<20: raise RuntimeError('Expected the authored original orc meshes')
 if any(o.type=='ARMATURE' for o in bpy.context.scene.objects):raise RuntimeError('Already rigged')
 bpy.ops.object.armature_add(enter_editmode=True, location=(0,0,0))
@@ -172,7 +183,7 @@ walk_action=action('Walk',walk)
 chop=action('Chop',[
  (1,{}),
  (9,{'Chest':(-.10,0,-.07),'UpperArm.R':(-1.03,.08,-.14),'LowerArm.R':(-.55,0,0),'Hand.R':(.28,0,0),'Head':(-.09,0,0)}),
- (15,{'Chest':(.25,0,.08),'UpperArm.R':(.65,-.07,.18),'LowerArm.R':(-.27,0,0),'Hand.R':(-.12,0,0),'Head':(.04,0,0)}),
+ (15,{'Chest':(.20,0,.05),'UpperArm.R':(.26,-.06,.08),'LowerArm.R':(-.20,0,0),'Hand.R':(-.10,0,0),'Head':(.02,0,0)}),
  (20,{'Chest':(.19,0,.06),'UpperArm.R':(.50,0,.12),'LowerArm.R':(-.35,0,0)}),
  (29,{})])
 carry=action('Carry',[(1,{'UpperArm.L':(-.62,0,-.18),'UpperArm.R':(-.62,0,.18),'LowerArm.L':(-.45,0,0),'LowerArm.R':(-.45,0,0)}),
