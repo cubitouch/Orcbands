@@ -1,0 +1,31 @@
+name: Validate Asset Preview
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate original orc model geometry
+        run: node tools/validate-orc.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check tools/generate-orc.mjs
+          node --check tools/validate-orc.mjs
+          node --check preview/app.js
+      - name: Verify generated 3D model is reproducible
+        run: |
+          mkdir -p /tmp/orcbands-assets
+          node tools/generate-orc.mjs /tmp/orcbands-assets
+          cmp preview/assets/orc-worker.obj /tmp/orcbands-assets/orc-worker.obj
+          cmp preview/assets/orc-worker.mtl /tmp/orcbands-assets/orc-worker.mtl
