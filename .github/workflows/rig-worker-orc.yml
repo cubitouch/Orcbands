@@ -27,6 +27,13 @@ jobs:
         run: blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input rig-review/worker-orc-vnext.blend --output rig-review
       - name: Validate GLB bones, skinning and clips
         run: python3 tools/validate-rigged-glb.py rig-review
+      - name: Render real GLB animations in Chromium
+        run: |
+          cp rig-review/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+          ORCBANDS_TEST_RIG=1 node tools/smoke-preview.mjs
+          cp smoke-artifacts/real-rig-*-browser.png rig-review/
       - name: Upload art evidence and editable model
         if: always()
         uses: actions/upload-artifact@v4
