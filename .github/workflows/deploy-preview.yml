@@ -36,6 +36,9 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output /tmp/orcbands-export --export-only
           cp /tmp/orcbands-export/worker-orc-vnext.glb preview/assets/worker-orc-vnext.glb
           test -s preview/assets/worker-orc-vnext.glb
+          blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input /tmp/orcbands-export/worker-orc-vnext.blend --output /tmp/orcbands-export --export-only
+          cp /tmp/orcbands-export/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
+          test -s preview/assets/worker-orc-skinned-experiment.glb
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
