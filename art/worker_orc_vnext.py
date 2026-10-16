@@ -54,7 +54,6 @@ def bevel(obj, width=.035, segments=2):
     mod.segments=segments
     if hasattr(mod,'affect'):
         mod.affect='EDGES'
-    obj.modifiers.new('weighted highlights','WEIGHTED_NORMAL')
     return obj
 
 def sphere(name, center, dims, mat, segments=20, rings=12):
@@ -298,14 +297,13 @@ camera.data.type='ORTHO'
 camera.data.ortho_scale=3.85
 
 scene=bpy.context.scene
-for option in ['BLENDER_EEVEE_NEXT','BLENDER_EEVEE']:
-    try:
-        scene.render.engine=option
-        break
-    except TypeError:
-        continue
-scene.render.resolution_x=900
-scene.render.resolution_y=900
+# Cycles CPU works headlessly on GitHub Actions without EGL/OpenGL.
+scene.render.engine='CYCLES'
+scene.cycles.device='CPU'
+scene.cycles.samples=20
+scene.cycles.use_denoising=True
+scene.render.resolution_x=720
+scene.render.resolution_y=720
 scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG'
 scene.render.film_transparent=False
