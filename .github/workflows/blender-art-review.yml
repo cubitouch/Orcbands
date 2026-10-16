@@ -19,12 +19,12 @@ jobs:
       - name: Install headless Blender
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
           blender --version | head -n 2
       - name: Generate real 3D model and multi-angle renders
         run: |
           mkdir -p art-review
-          blender -b -t 2 --python art/worker_orc_vnext.py -- --output art-review
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output art-review
       - name: Validate outputs and document no Humanoid rig yet
         run: |
           python3 - <<'PY'
