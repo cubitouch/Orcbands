@@ -6,7 +6,13 @@ source=Path((out/'selected-fbx.txt').read_text().strip())
 for ob in list(bpy.data.objects):bpy.data.objects.remove(ob,do_unlink=True)
 bpy.ops.import_scene.fbx(filepath=str(source),use_anim=False)
 meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
+for obj in bpy.context.scene.objects: obj.hide_render=False
 if not meshes:raise RuntimeError('FBX had no meshes')
+for obj in meshes:
+  obj.hide_render=False
+  for mat in obj.data.materials:
+    if mat:
+      mat.diffuse_color=(0.34,0.51,0.22,1) if 'goblin' in source.stem.lower() else mat.diffuse_color
 lo=Vector((float('inf'),)*3);hi=Vector((float('-inf'),)*3)
 for o in meshes:
   for v in o.bound_box:
@@ -29,6 +35,8 @@ scene.render.resolution_x=680;scene.render.resolution_y=680
 scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG'
 scene.world.color=(.19,.20,.18)
+bpy.ops.object.light_add(type='SUN',location=center+Vector((-1,-1,2))*length)
+bpy.context.object.data.energy=1.0
 for name,v in [('candidate-front.png',(0,-2,.55)),('candidate-three-quarter.png',(1.5,-2.5,1.3))]:
   camera.location=center+Vector(v)*length
   camera.rotation_euler=(center-camera.location).to_track_quat('-Z','Y').to_euler()
