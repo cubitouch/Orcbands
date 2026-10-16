@@ -38,6 +38,18 @@ try {
   await page.waitForFunction(()=>document.getElementById('loading')?.hidden===true,null,{timeout:60000});
   await mkdir(path.join(repo,'smoke-artifacts'),{recursive:true});
   await page.screenshot({path:path.join(repo,'smoke-artifacts','character-studio.png')});
+  // Keep identical camera and viewport conditions across model iterations.
+  await page.mouse.move(650,380);
+  await page.mouse.down();
+  await page.mouse.move(900,380,{steps:12});
+  await page.mouse.up();
+  await page.waitForTimeout(350);
+  await page.screenshot({path:path.join(repo,'smoke-artifacts','character-side.png')});
+  await page.getByRole('button',{name:'Reset view'}).click();
+  await page.getByRole('button',{name:'Walk'}).click();
+  await page.waitForTimeout(400);
+  await page.screenshot({path:path.join(repo,'smoke-artifacts','character-walk.png')});
+  await page.getByRole('button',{name:'Idle'}).click();
   await page.getByRole('button',{name:'Crash site'}).click();
   await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent==='Crash-site diorama');
   await page.screenshot({path:path.join(repo,'smoke-artifacts','crash-site.png')});
