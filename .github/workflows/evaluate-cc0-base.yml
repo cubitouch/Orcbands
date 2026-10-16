@@ -1,0 +1,41 @@
+name: Evaluate CC0 rigged fantasy base
+on:
+  pull_request:
+    paths:
+      - "tools/evaluate-cc0-base.py"
+      - "tools/render-cc0-candidate.py"
+      - ".github/workflows/evaluate-cc0-base.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and Python
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
+      - name: Download uploader-published 2021 CC0 character archive
+        run: |
+          mkdir -p /tmp/orcbands-cc0 source-review
+          curl --fail --location --retry 3 --max-time 180 --max-filesize 90000000             --output /tmp/orcbands-cc0/characters.zip             https://opengameart.org/sites/default/files/ultimate_animated_character_pack_by_quaternius.zip
+          test -s /tmp/orcbands-cc0/characters.zip
+      - name: Inventory candidate character rigs and licenses
+        run: python3 tools/evaluate-cc0-base.py /tmp/orcbands-cc0/characters.zip /tmp/orcbands-cc0/extracted
+      - name: Render promising candidate without importing to repository
+        run: |
+          if test -s source-review/selected-fbx.txt; then
+            blender -b -t 2 --python-exit-code 1 --python tools/render-cc0-candidate.py
+          else
+            echo "No candidate FBX found; inspect archive inventory."
+          fi
+      - name: Upload inventory and comparison render (no third-party source files)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cc0-rigged-source-visual-audit
+          path: source-review/
+          if-no-files-found: warn
