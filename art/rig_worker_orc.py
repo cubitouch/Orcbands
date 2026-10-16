@@ -207,6 +207,7 @@ skin_info={
   'bones':[b.name for b in rig.data.bones],
   'clips':['Idle','Walk','Chop','Carry'],
   'mesh_count':skinned,
+  'converted_curve_count':len(curves),
   'source':'Orcbands original Blender Worker Orc vNext',
   'mode':'experimental automatic weights; expect manual cleanup'
 }
