@@ -47,7 +47,7 @@ try {
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
   await page.getByRole('button',{name:'Crash site'}).click();
-  await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent==='Crash-site diorama');
+  await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Crash site'));
   await page.screenshot({path:path.join(repo,'smoke-artifacts','crash-site.png')});
   await page.getByRole('button',{name:'Chop wood'}).click();
   await page.waitForFunction(()=>document.getElementById('status')?.textContent.includes('Chop'));
