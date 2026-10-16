@@ -52,7 +52,8 @@ def bevel(obj, width=.035, segments=2):
     mod=obj.modifiers.new('hand-shaped softened corners','BEVEL')
     mod.width=width
     mod.segments=segments
-    mod.affect='EDGES' if hasattr(mod, 'affect') else None
+    if hasattr(mod,'affect'):
+        mod.affect='EDGES'
     obj.modifiers.new('weighted highlights','WEIGHTED_NORMAL')
     return obj
 
@@ -311,7 +312,10 @@ scene.render.film_transparent=False
 scene.camera.data.lens=50
 scene.render.image_settings.color_mode='RGBA'
 scene.view_settings.view_transform='Standard'
-scene.view_settings.look='Medium High Contrast'
+try:
+    scene.view_settings.look='Medium High Contrast'
+except (TypeError, ValueError):
+    scene.view_settings.look='Medium High Contrast' if False else 'None'
 scene.view_settings.exposure=0
 # This is an asset-facing render stage, never included in the exported GLB.
 
