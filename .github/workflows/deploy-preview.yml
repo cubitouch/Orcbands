@@ -33,7 +33,7 @@ jobs:
       - name: Export latest original Worker Orc GLB
         run: |
           mkdir -p /tmp/orcbands-export
-          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output /tmp/orcbands-export
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output /tmp/orcbands-export --export-only
           cp /tmp/orcbands-export/worker-orc-vnext.glb preview/assets/worker-orc-vnext.glb
           test -s preview/assets/worker-orc-vnext.glb
       - uses: actions/configure-pages@v5
