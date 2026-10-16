@@ -1,0 +1,125 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+
+const canvas=document.getElementById('viewport');
+const viewer=document.getElementById('viewer');
+const loading=document.getElementById('loading');
+const status=document.getElementById('status');
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(36,1,0.1,100);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setClearColor(0x1c2c28,0);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.2;
+const controls=new OrbitControls(camera,canvas);
+controls.enableDamping=true;
+controls.dampingFactor=.075;
+controls.minDistance=3.4;
+controls.maxDistance=12;
+controls.minPolarAngle=.22;
+controls.maxPolarAngle=1.53;
+controls.enablePan=true;
+function resetView(){camera.position.set(5.1,3.8,6.8);controls.target.set(0,1.43,0);controls.update();}
+resetView();
+scene.add(new THREE.HemisphereLight(0xdff4f9,0x433d2f,2.25));
+const key=new THREE.DirectionalLight(0xffe7bd,2.6);
+key.position.set(-4,8,6);
+scene.add(key);
+const fill=new THREE.DirectionalLight(0x94c5a9,1.3);
+fill.position.set(5,3,-5);
+scene.add(fill);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(2.5,64),new THREE.MeshStandardMaterial({color:0x365241,roughness:1,metalness:0}));
+floor.rotation.x=-Math.PI/2;
+floor.position.y=-.02;
+scene.add(floor);
+const grid=new THREE.GridHelper(5,10,0x52725d,0x52725d);
+grid.position.y=.001;
+const gridMaterials=Array.isArray(grid.material)?grid.material:[grid.material];
+gridMaterials.forEach(m=>{m.transparent=true;m.opacity=.18});
+scene.add(grid);
+const model=new THREE.Group();
+scene.add(model);
+const pivots={};
+const articulation={
+  left_arm:[-.72,1.91,0],
+  right_arm:[.72,1.91,0],
+  left_leg:[-.32,1.13,0],
+  right_leg:[.32,1.13,0],
+  head:[0,2.04,0],
+};
+let pose='idle',spinning=false,ready=false;
+const clock=new THREE.Clock();
+function setPose(next){
+  pose=next;
+  document.querySelectorAll('.pose').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.pose===next)));
+  status.textContent=next==='idle'?'Idle — inspect the model':next==='walk'?'Walk — prototype rigid-part cycle':'Chop — prototype swing (not skeletal animation)';
+}
+document.querySelectorAll('.pose').forEach(button=>button.addEventListener('click',()=>setPose(button.dataset.pose)));
+document.getElementById('spin').addEventListener('click',e=>{
+ spinning=!spinning;
+ e.currentTarget.setAttribute('aria-pressed',String(spinning));
+});
+document.getElementById('reset').addEventListener('click',()=>{resetView();model.rotation.y=0;});
+function resize(){
+ const width=viewer.clientWidth,height=viewer.clientHeight;
+ if(width===0||height===0)return;
+ renderer.setSize(width,height,false);
+ camera.aspect=width/height;
+ camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(viewer);
+resize();
+function onModelLoaded(object){
+  model.add(object);
+  for(const [name,origin] of Object.entries(articulation)){
+    const mesh=object.getObjectByName(name);
+    if(!mesh||!mesh.isMesh)throw new Error('Missing articulated mesh: '+name);
+    const pivot=new THREE.Group();
+    pivot.name='pivot_'+name;
+    pivot.position.set(...origin);
+    object.remove(mesh);
+    mesh.geometry.translate(-origin[0],-origin[1],-origin[2]);
+    pivot.add(mesh);
+    model.add(pivot);
+    pivots[name]=pivot;
+  }
+  object.traverse(child=>{
+    if(child.isMesh){child.castShadow=true;child.receiveShadow=true;}
+  });
+  ready=true;
+  loading.hidden=true;
+  setPose('idle');
+}
+new MTLLoader().setPath('./assets/').load('orc-worker.mtl',materials=>{
+  materials.preload();
+  new OBJLoader().setMaterials(materials).setPath('./assets/').load('orc-worker.obj',onModelLoaded,undefined,error=>{
+    loading.textContent='Could not load the orc mesh. Serve this folder over HTTP, not file://.';
+    status.textContent=String(error);
+  });
+},undefined,error=>{
+  loading.textContent='Could not load the character materials.';
+  status.textContent=String(error);
+});
+function frame(){
+ requestAnimationFrame(frame);
+ const t=clock.getElapsedTime();
+ if(ready){
+   const l=pivots.left_leg,r=pivots.right_leg,la=pivots.left_arm,ra=pivots.right_arm,h=pivots.head;
+   const walk=pose==='walk',chop=pose==='chop';
+   const stride=walk?Math.sin(t*7)*.50:0;
+   l.rotation.x=stride;r.rotation.x=-stride;
+   la.rotation.x=walk?-stride*.6:chop?.12:Math.sin(t*1.3)*.015;
+   ra.rotation.x=walk?stride*.6:chop?-.8+Math.cos(t*5.2)*.8:Math.sin(t*1.3+.8)*.025;
+   ra.rotation.z=chop?-.10:0;
+   h.rotation.y=Math.sin(t*.85)*.035;
+   model.position.y=walk?Math.abs(Math.sin(t*7))*.037:Math.sin(t*1.5)*.014;
+   if(spinning)model.rotation.y+=.0045;
+ }
+ controls.update();
+ renderer.render(scene,camera);
+}
+frame();
