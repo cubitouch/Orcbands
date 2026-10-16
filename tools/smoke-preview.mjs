@@ -38,8 +38,16 @@ try {
   await page.waitForFunction(()=>document.getElementById('loading')?.hidden===true,null,{timeout:60000});
   await mkdir(path.join(repo,'smoke-artifacts'),{recursive:true});
   await page.screenshot({path:path.join(repo,'smoke-artifacts','character-studio.png')});
+  if(process.env.ORCBANDS_TEST_BLENDER==='1') {
+    await page.getByRole('button',{name:'Blender vNext'}).click();
+    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Blender static asset'),null,{timeout:60000});
+    await page.waitForTimeout(700);
+    await page.screenshot({path:path.join(repo,'smoke-artifacts','character-blender.png')});
+    if(!await page.getByRole('button',{name:'Walk'}).isDisabled())throw new Error('Unrigged Blender model should not enable walk animation');
+    await page.getByRole('button',{name:'Original placeholder'}).click();
+  }
   await page.getByRole('button',{name:'Crash site'}).click();
-  await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent==='Crash-site diorama');
+  await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Crash site'));
   await page.screenshot({path:path.join(repo,'smoke-artifacts','crash-site.png')});
   await page.getByRole('button',{name:'Chop wood'}).click();
   await page.waitForFunction(()=>document.getElementById('status')?.textContent.includes('Chop'));
