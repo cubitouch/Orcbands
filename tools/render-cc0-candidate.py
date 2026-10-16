@@ -8,11 +8,20 @@ bpy.ops.import_scene.fbx(filepath=str(source),use_anim=False)
 meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
 for obj in bpy.context.scene.objects: obj.hide_render=False
 if not meshes:raise RuntimeError('FBX had no meshes')
+# Diagnostic material override: force opaque on any unconfigured FBX atlas.
+bpy.context.view_layer.update()
+debug=bpy.data.materials.new('Debug character opaque green')
+debug.use_nodes=True
+p=debug.node_tree.nodes.get('Principled BSDF')
+p.inputs['Base Color'].default_value=(.33,.50,.20,1)
+p.inputs['Alpha'].default_value=1
 for obj in meshes:
   obj.hide_render=False
-  for mat in obj.data.materials:
-    if mat:
-      mat.diffuse_color=(0.34,0.51,0.22,1) if 'goblin' in source.stem.lower() else mat.diffuse_color
+  obj.hide_set(False)
+  obj.data.materials.clear()
+  obj.data.materials.append(debug)
+  print('MESH',obj.name,'visible',obj.visible_get(),'hide_render',obj.hide_render,'verts',len(obj.data.vertices),'parent',obj.parent.name if obj.parent else None)
+bpy.context.view_layer.update()
 lo=Vector((float('inf'),)*3);hi=Vector((float('-inf'),)*3)
 for o in meshes:
   for v in o.bound_box:
@@ -20,7 +29,9 @@ for o in meshes:
     for k in range(3):
       lo[k]=min(lo[k],p[k]);hi[k]=max(hi[k],p[k])
 center=(lo+hi)/2;length=max((hi-lo).length,0.5)
-print('SOURCE MODEL',source,'mesh count',len(meshes),'dimensions',hi-lo)
+print('SOURCE MODEL',source,'mesh count',len(meshes),'dimensions',hi-lo,'center',center,'bbox',lo,hi)
+bpy.ops.mesh.primitive_cube_add(size=length*.16,location=center+Vector((0,-.5*length,0)))
+marker=bpy.context.object;marker.name='DEBUG bounding center marker';marker.data.materials.append(debug)
 def point(lightpos,power,size):
   bpy.ops.object.light_add(type='AREA',location=center+Vector(lightpos)*length)
   x=bpy.context.object;x.data.energy=power;x.data.size=size*length
