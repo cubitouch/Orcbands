@@ -244,7 +244,8 @@ ring_loft("Red wrap headband",[
 sphere("Bandana side knot",(.42,.06,2.765),(.125,.125,.093),red_dark,13,9)
 prism("Bandana tail long",[(.39,2.75),(.56,2.74),(.61,2.38),(.52,2.47)],.14,.21,red)
 prism("Bandana tail short",[(.45,2.74),(.58,2.73),(.73,2.54),(.66,2.52)],.10,.17,red_dark)
-sphere("Top hair crest",(0,.06,2.817),(.18,.15,.08),black,12,8)
+sphere("Scalp and bandana top",(0,.045,2.775),(.35,.28,.11),red,14,9)
+sphere("Top hair crest",(0,.075,2.858),(.16,.12,.06),black,12,8)
 
 # Separate hero weapon (held at right side), strongly tapered axe head.
 tube("Axe hardwood shaft",(1.13,-.20,.54),(1.14,-.22,1.52),.058,.050,leather_mid,13)
@@ -286,9 +287,9 @@ def area(name,pos,power,size,color):
     o=bpy.context.object;o.name=name;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=color
     o.rotation_euler=(Vector((0,0,1.5))-o.location).to_track_quat('-Z','Y').to_euler()
 
-area("Soft key",(-3,-4,7),900,5,(1,.88,.72))
-area("Cool fill",(4,-1,5),650,4,(.77,.89,1))
-area("Rim",(2,4,6),1000,4,(1,.85,.64))
+area("Soft key",(-3,-4,7),440,5,(1,.91,.82))
+area("Cool fill",(4,-1,5),250,4,(.77,.89,1))
+area("Rim",(2,4,6),500,4,(1,.86,.73))
 
 bpy.ops.object.camera_add(location=(4,-7,4))
 camera=bpy.context.object
@@ -300,7 +301,7 @@ scene=bpy.context.scene
 # Cycles CPU works headlessly on GitHub Actions without EGL/OpenGL.
 scene.render.engine='CYCLES'
 scene.cycles.device='CPU'
-scene.cycles.samples=20
+scene.cycles.samples=40
 scene.cycles.use_denoising=False
 scene.render.resolution_x=720
 scene.render.resolution_y=720
@@ -314,7 +315,7 @@ try:
     scene.view_settings.look='Medium High Contrast'
 except (TypeError, ValueError):
     scene.view_settings.look='Medium High Contrast' if False else 'None'
-scene.view_settings.exposure=0
+scene.view_settings.exposure=-.35
 # This is an asset-facing render stage, never included in the exported GLB.
 
 def render(name,pos,look_at=(0,0,1.5),scale=3.7):
