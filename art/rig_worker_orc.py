@@ -102,10 +102,25 @@ for obj in character:
     if obj.type!='MESH':continue
     groups={b.name:obj.vertex_groups.new(name=b.name) for b in rig.data.bones}
     verts=list(obj.data.vertices)
-    for vert in verts:
-        # The authoring model is Z-up, with meshes in individual object space.
-        position=obj.matrix_world@vert.co
-        weights=influences(position,obj.name)
+    # Do not bend tiny rivets, laces, stitches, eyes or decorative metal across
+    # joints. In the first proof their individual vertices picked differing
+    # nearest bones, causing scattered or floating jewelry during motion.
+    # Large organic surfaces and garments still deform with blended weights.
+    world_positions=[obj.matrix_world@v.co for v in verts]
+    mins=Vector(tuple(min(v[k] for v in world_positions) for k in range(3)))
+    maxs=Vector(tuple(max(v[k] for v in world_positions) for k in range(3)))
+    center=(mins+maxs)*.5
+    small_hard_part=(maxs-mins).length<.37
+    deformable=('Continuous orc shoulders' in obj.name or
+        any(n in obj.name.lower() for n in ('trouser','vest','tunic','apron','belt','boot shaft','shoulder harness')))
+    stable_weights=None
+    if small_hard_part and not deformable:
+        nominal=influences(center,obj.name)
+        # Select a single bone for accessories, avoiding deforming metal.
+        bone=max(nominal,key=nominal.get)
+        stable_weights={bone:1}
+    for vert,position in zip(verts,world_positions):
+        weights=stable_weights or influences(position,obj.name)
         total=sum(weights.values())
         if total<1e-7:weights={'Chest':1};total=1
         for bone,weight in weights.items():
@@ -194,6 +209,9 @@ bpy.ops.export_scene.gltf(
     export_nla_strips=True,
     export_apply=False,
 )
+if '--export-only' in args:
+    print('Exported rigged worker orc GLB (no CPU renders)')
+    sys.exit(0)
 # Small repeatable real-frame images for evidence, not concept art.
 bpy.ops.object.camera_add(location=(4,-7,3.6))
 camera=bpy.context.object
@@ -216,10 +234,10 @@ scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG'
 scene.view_settings.view_transform='Standard'
 scene.view_settings.exposure=-.35
-for clip,frame in [('Idle',13),('Walk',9),('Chop',15),('Carry',13)]:
+for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',15),('Carry',13)]:
     for tr in rig.animation_data.nla_tracks:
         tr.mute=(tr.name!=clip)
     scene.frame_set(frame)
-    scene.render.filepath=str(out/f'rig-qa-{clip.lower()}.png')
+    scene.render.filepath=str(out/f'rig-qa-{clip.lower()}-{frame:02d}.png')
     bpy.ops.render.render(write_still=True)
 print('RIG QA:',json.dumps(skin_info))
