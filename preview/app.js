@@ -16,6 +16,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.2;
+let sceneMode='character';
 const controls=new OrbitControls(camera,canvas);
 controls.enableDamping=true;
 controls.dampingFactor=.075;
@@ -56,7 +57,7 @@ scene.add(model);
 const crashSite=createCrashSite(THREE);
 crashSite.visible=false;
 scene.add(crashSite);
-let sceneMode="character";
+
 const pivots={};
 const articulation={
   left_arm:[-.72,1.91,0],
