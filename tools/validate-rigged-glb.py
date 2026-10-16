@@ -23,6 +23,6 @@ for action in ['Idle','Walk','Chop','Carry']:
 for a in gltf.get('animations',[]):
     if any(v in a.get('name','').lower() for v in ('idle','walk','chop','carry')):
         assert len(a.get('channels',[]))>=3,'Empty clip '+a.get('name','')
-for name in ['rig-qa-idle.png','rig-qa-walk.png','rig-qa-chop.png','rig-qa-carry.png','worker-orc-skinned-experiment.blend']:
+for name in ['rig-qa-idle-13.png','rig-qa-walk-09.png','rig-qa-walk-25.png','rig-qa-chop-09.png','rig-qa-chop-15.png','rig-qa-carry-13.png','worker-orc-skinned-experiment.blend']:
     assert (base/name).stat().st_size>1000,name
 print('PASS: actual skinned 3D model, bone hierarchy, four exported animation tracks and rendered pose evidence. No Unity Avatar proof yet.')
