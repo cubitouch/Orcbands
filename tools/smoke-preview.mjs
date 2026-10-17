@@ -79,9 +79,10 @@ try {
       const bytes=await page.evaluate(async path=>{
         const response=await fetch(path);
         if(!response.ok)throw new Error(path+' response '+response.status);
-        return new Uint8Array(await response.arrayBuffer());
+        const data=new Uint8Array(await response.arrayBuffer());
+        return {length:data.length,prefix:data.slice(0,24).join(',')};
       },file);
-      loadedBodies.set(id,bytes.length+':'+bytes.slice(0,24).join(','));
+      loadedBodies.set(id,bytes.length+':'+bytes.prefix);
       await page.screenshot({path:path.join(repo,'smoke-artifacts',id+'-real-webgl.png')});
     }
     if(new Set([...loadedBodies.values()]).size!==3)
