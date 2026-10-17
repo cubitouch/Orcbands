@@ -46,6 +46,17 @@ try {
     if(!await page.getByRole('button',{name:'Walk'}).isDisabled())throw new Error('Unrigged Blender model should not enable walk animation');
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
+  if(process.env.ORCBANDS_TEST_SCULPT==='1') {
+    await page.getByRole('button',{name:'Textured sculpt study'}).click();
+    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Textured sculpt study'),null,{timeout:60000});
+    await page.waitForTimeout(750);
+    if(await page.getByRole('button',{name:'Walk'}).isEnabled())
+      throw new Error('Static sculpt must disable animation controls');
+    if(await page.getByRole('button',{name:'Textured sculpt study'}).getAttribute('aria-pressed')!=='true')
+      throw new Error('Sculpt tab failed to activate');
+    await page.screenshot({path:path.join(repo,'smoke-artifacts','real-sculpt-browser.png')});
+    await page.getByRole('button',{name:'Original placeholder'}).click();
+  }
   if(process.env.ORCBANDS_TEST_RIG==='1') {
     // The real rigged model is now the default, not merely a selectable tab.
     await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Rigged beta'),null,{timeout:60000});

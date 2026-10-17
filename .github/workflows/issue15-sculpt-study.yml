@@ -1,0 +1,56 @@
+name: Worker Orc 15 sculpt study actual-GLB review
+on:
+  pull_request:
+    paths:
+      - "art/worker_orc_sculpt_study.py"
+      - "art/render_issue15_glb.py"
+      - ".github/workflows/issue15-sculpt-study.yml"
+      - "tools/smoke-preview.mjs"
+      - "preview/app.js"
+      - "preview/index.html"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sculpt-study:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install headless Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
+      - name: Create reproducible actual textured 3D sculpt study
+        run: |
+          mkdir -p issue15-sculpt
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output issue15-sculpt
+          test -s issue15-sculpt/worker-orc-sculpt-study.blend
+          test -s issue15-sculpt/worker-orc-sculpt-study.glb
+      - name: Generate exact exported baseline with no rig
+        run: |
+          mkdir -p /tmp/issue15-baseline
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output /tmp/issue15-baseline --export-only
+      - name: Render unbiased same-angle *exported GLB* comparison
+        run: |
+          blender -b -t 2 --python-exit-code 1 --python art/render_issue15_glb.py -- \
+            --baseline /tmp/issue15-baseline/worker-orc-vnext.glb \
+            --candidate issue15-sculpt/worker-orc-sculpt-study.glb \
+            --output issue15-sculpt/review
+          test -s issue15-sculpt/review/comparison.html
+      - name: Screenshot candidate in actual Chromium WebGL
+        run: |
+          cp issue15-sculpt/worker-orc-sculpt-study.glb preview/assets/worker-orc-sculpt-study.glb
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+          ORCBANDS_TEST_SCULPT=1 node tools/smoke-preview.mjs
+          cp smoke-artifacts/real-sculpt-browser.png issue15-sculpt/review/09-candidate-real-chromium.png
+      - name: Upload editable Blender source, real GLB, metrics and all review captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue15-textured-sculpt-study
+          path: issue15-sculpt/
+          if-no-files-found: warn
