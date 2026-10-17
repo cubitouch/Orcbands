@@ -382,7 +382,10 @@ face_surface=bpy.context.object
 face_surface.name='Head unified facial anatomy'
 face_surface.data.materials.clear()
 face_surface.data.materials.append(skin)
-face_surface.data.remesh_voxel_size=.022
+# Budget-aware sculpt: fine remeshing at 0.022m produced ~394k triangles,
+# far too costly for multiple RTS characters. 0.085m keeps facial planes
+# coherent while retaining separate detailed brows/tusks and eyes.
+face_surface.data.remesh_voxel_size=.085
 bpy.ops.object.voxel_remesh()
 face_smooth=face_surface.modifiers.new('Smooth sculpted transitions','SMOOTH')
 face_smooth.factor=.54
