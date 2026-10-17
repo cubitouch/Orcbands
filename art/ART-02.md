@@ -8,7 +8,8 @@ a tapered wrist and broad palm, four separately curved fingers of different
 lengths, an opposed thumb and thenar pad. Fine voxel union retains the finger
 webs; the `ART02_hand` tag excludes hands from the coarse body remesh. Joint
 folds are displaced into the skin; nails are separate muted olive plates.
-The wrist joins underneath the lowest cuff, with a small inward hand offset
+The lowest cuff extends 0.044 scene units downward to conceal the wrist join,
+with a small inward hand offset
 to clear the existing axe. The hand is relaxed, not posed to grip that axe.
 
 Build using the existing command:
