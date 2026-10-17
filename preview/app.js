@@ -76,10 +76,19 @@ const articulation={
 };
 let pose='idle',spinning=false,ready=false;
 const clock=new THREE.Clock();
+function updateRiggedProps(clipName) {
+  if(!riggedModel) return;
+  const carrying=clipName.toLowerCase()==='carry';
+  riggedModel.traverse(object=>{
+    if(object.name.startsWith('CARRY_PROP_')) object.visible=carrying;
+    if(object.name.startsWith('Axe')) object.visible=!carrying;
+  });
+}
 function playRiggedClip(name) {
   if(!riggedMixer)return;
   const clip=riggedClips.find(c=>c.name.toLowerCase().includes(name.toLowerCase()));
   if(!clip){status.textContent='Missing exported animation: '+name;return;}
+  updateRiggedProps(name);
   riggedMixer.stopAllAction();
   const action=riggedMixer.clipAction(clip);
   action.reset();
@@ -142,6 +151,7 @@ function setModelVersion(version) {
         return;
       }
       riggedModel=gltf.scene;
+      updateRiggedProps('Idle');
       riggedClips=gltf.animations;
       riggedMixer=new THREE.AnimationMixer(riggedModel);
       riggedModel.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
