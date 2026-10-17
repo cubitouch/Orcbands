@@ -1,0 +1,38 @@
+name: Worker Orc quick grip visual QA
+on:
+  pull_request:
+    paths:
+      - "art/worker_orc_sculpt_study.py"
+      - "art/worker_orc_head.py"
+      - "art/worker_orc_hands.py"
+      - "art/render_worker_grip.py"
+      - ".github/workflows/grip-visual-qa.yml"
+permissions:
+  contents: read
+jobs:
+  grip:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends blender python3-numpy
+      - name: Generate candidate sculpt
+        run: |
+          mkdir -p grip-qa/model
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output grip-qa/model
+          test -s grip-qa/model/worker-orc-sculpt-study.glb
+      - name: Render real GLB grip and body closeups
+        run: |
+          blender -b -t 2 --python-exit-code 1 --python art/render_worker_grip.py -- --input grip-qa/model/worker-orc-sculpt-study.glb --output grip-qa/images
+          test -s grip-qa/images/front-grip.png
+          test -s grip-qa/images/inside-palm.png
+          test -s grip-qa/images/three-quarter-grip.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: worker-orc-grip-four-views
+          path: grip-qa/images/
+          if-no-files-found: warn

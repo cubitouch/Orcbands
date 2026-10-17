@@ -584,7 +584,7 @@ for i in range(4):
 for axe_component in objects[axe_start:]:
     if axe_component.type=='MESH':
         for vertex in axe_component.data.vertices:
-            vertex.co.x-=.090
+            vertex.co.x-=.175
         axe_component.data.update()
     axe_component['held_by']='R'
     axe_component['character_prop']='hatchet'
