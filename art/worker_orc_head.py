@@ -11,8 +11,8 @@ sections = [
  (2.285,.19,-.20,.18),(2.32,.28,-.36,.24),
  (2.36,.36,-.47,.27),(2.40,.405,-.535,.29),
  (2.44,.425,-.565,.31),(2.48,.43,-.557,.325),
- (2.52,.423,-.526,.34),(2.56,.425,-.488,.35),
- (2.60,.44,-.451,.355),(2.65,.462,-.420,.36),
+ (2.52,.423,-.526,.34),(2.56,.425,-.548,.35),
+ (2.60,.44,-.510,.355),(2.65,.462,-.420,.36),
  (2.70,.463,-.402,.365),(2.75,.449,-.395,.368),
  (2.80,.438,-.405,.37),(2.85,.433,-.424,.366),
  (2.90,.43,-.424,.36),(2.95,.424,-.40,.348),
@@ -38,7 +38,7 @@ for z,w,front,back in rows:
         y=(front*frontness**.47 if cos(t)>=0 else back*(-cos(t))**.83)
         if frontness>0:
             # Orbital depression, zygomatic arch and sculpted muzzle pads.
-            y+=.074*gauss(abs(x),z,.235,2.783,.115,.065)*frontness
+            y+=.035*gauss(abs(x),z,.235,2.783,.115,.065)*frontness
             y-=.049*gauss(abs(x),z,.335,2.682,.105,.07)*frontness
             y-=.033*gauss(abs(x),z,.145,2.568,.14,.055)*frontness
             # Downturned mouth cut and soft roll below it are in the same skin.
@@ -64,6 +64,10 @@ nose=loft('ART01 / nasal bridge tip and alae',[
  ((0,-.493,2.744),.070,.069),((0,-.543,2.696),.117,.098),
  ((0,-.558,2.679),.139,.094),((0,-.547,2.649),.153,.080),
  ((0,-.519,2.624),.123,.051),((0,-.482,2.612),.058,.020)],skin,64)
+# Extend the nasal root into the facial plane all along the bridge/alae.
+# Keep the visible tip fixed; only the hidden rear half is pushed into skull.
+for vert in nose.data.vertices:
+    vert.co.y += .17*clamp((vert.co.y+.62)/.20)**2 + .025
 bpy.context.view_layer.objects.active=nose
 sub=nose.modifiers.new('Round nasal cartilage','SUBSURF');sub.levels=2
 bpy.ops.object.modifier_apply(modifier=sub.name)
@@ -91,6 +95,10 @@ for ob in joined_brows:objects.remove(ob)
 bpy.context.view_layer.objects.active=face
 bpy.ops.object.join()
 objects.remove(nose)
+# The nasal sections run top-to-bottom; normalize winding before voxel union.
+# Otherwise opposite signed volumes hollow out the central face in profile.
+bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT')
 face.data.remesh_voxel_size=.007
 bpy.ops.object.voxel_remesh()
 sm=face.modifiers.new('Sculpt surface relaxation','SMOOTH');sm.factor=.65;sm.iterations=3
@@ -98,12 +106,12 @@ bpy.ops.object.modifier_apply(modifier=sm.name)
 for p in face.data.polygons:p.use_smooth=True
 # Actual nostril cavities carved in the nasal wings, with shadowed interior.
 for s,label in ((-1,'L'),(1,'R')):
-    cutter=orb(label+' nostril cutter',(s*.100,-.623,2.656),(.036,.049,.025),skin,32,20)
+    cutter=orb(label+' nostril cutter',(s*.100,-.598,2.656),(.036,.049,.025),skin,32,20)
     bpy.context.view_layer.objects.active=face
     mod=face.modifiers.new('Carve '+label+' nostril','BOOLEAN');mod.operation='DIFFERENCE';mod.object=cutter
     bpy.ops.object.modifier_apply(modifier=mod.name)
     objects.remove(cutter);bpy.data.objects.remove(cutter,do_unlink=True)
-    orb(label+' nostril interior',(s*.100,-.579,2.656),(.033,.015,.019),skindark,24,16)
+    orb(label+' nostril interior',(s*.100,-.554,2.656),(.033,.015,.019),skindark,24,16)
 # Restrained post-remesh skin sculpt; shallow folds follow facial landmarks.
 for vert in face.data.vertices:
     x,y,z=vert.co
@@ -150,7 +158,7 @@ for s,label in ((-1,'L'),(1,'R')):
             a=2*pi*j/seg
             localx=(.080+.045*u)*cos(a)
             zz=(.025+.052*u)*sin(a)+.011*cos(a)*s
-            yy=-.445+.111*u-.010*sin(pi*u)
+            yy=-.445+.155*u-.010*sin(pi*u)
             vv.append((cx+localx,yy,cz+zz))
     for ring in range(4):
         for j in range(seg):
