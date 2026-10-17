@@ -423,6 +423,9 @@ if skin_parts:
 # metal, eyes and facial scars keep their original authored colors.
 def color_channel(v):
     return max(.0,min(1.,v))
+def smoothstep(low,high,value):
+    t=max(0.0,min(1.0,(value-low)/(high-low)))
+    return t*t*(3-2*t)
 def hand_painted_tint(o):
     if o.type!='MESH' or not o.data.polygons:
         return
@@ -439,11 +442,17 @@ def hand_painted_tint(o):
             # Broad painted green variation, not pixelated random stippling.
             broad=sin(p.x*7.7+p.z*2.4)*sin(p.y*9.3-p.z*3.6)
             medium=sin(p.x*18.2+p.y*12.1+p.z*6.2)
-            s=.925+.05*broad+.025*medium
+            # Hand-painted muscle planes: broad shadows rather than
+            # noisy speckles, with darker arm/neck underside for volume.
+            s=.87+.09*broad+.035*medium
+            if abs(p.x)>.60 and 1.3<p.z<2.15:
+                shoulder=smoothstep(.60,.98,abs(p.x))
+                s+=.075*shoulder
+                s-=.09*max(0, -sin(p.z*5.3))
             if m and m.name=='07 Warm dark cloth':
-                s=.945+.035*broad+.015*medium
-            # Warm olive upper body, subtle shadow under the neck.
-            green=(s*.975 if p.z>1.65 else s)
+                s=.925+.045*broad+.018*medium
+            # Warm olive upper body and subtle darkening under the jaw.
+            green=(s*.96 if p.z>1.65 else s)
             attr.data[idx].color=(color_channel(s),color_channel(green),
                                    color_channel(s*.90+.08),1.0)
     if hasattr(mesh.color_attributes,'active_color'):
