@@ -90,5 +90,26 @@ def worker_hand(s,side):
     thumb_nail=orb(side+' ART02 / thumb nail',(s*.888,-.411,.940),(.026,.007,.032),nailmat,28,16)
     for ob in objects[start:]:
         ob['ART02_hand']=True
-        # Small inward offset clears the existing axe haft without moving gear.
-        for vert in ob.data.vertices:vert.co.x-=s*.030
+        ob['anatomical_side']=side
+        # ART-03: preserve the wrist root on its OWN same-side forearm.
+        # The previous arbitrary inward offset made the two silhouettes
+        # harder to read and placed the right fingers away from the axe.
+        for vert in ob.data.vertices:
+            x,y,z=vert.co
+            if side=='L':
+                vert.co.x-=.028   # give the empty left hand room beside the hip
+                continue
+            # Right-hand *static* grip. Keep the root at the wrist bone's
+            # x=1.12 / z=1.245; bend the distal palm and digits toward the
+            # weapon at x=1.30, y=-.39. No changes to the left arm.
+            bend=clamp((1.245-z)/.29)
+            vert.co.x+=.082*bend
+            vert.co.y-=.071*bend
+            vert.co.z+=.080*bend
+            # Opposing thumb arcs across the handle instead of pointing
+            # into the opposite hand/forearm.
+            if x<1.025 and z<1.105:
+                thumb_bend=clamp((1.105-z)/.208)
+                vert.co.x+=.30*thumb_bend
+                vert.co.y-=.022*thumb_bend
+        ob.data.update()
