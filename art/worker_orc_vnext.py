@@ -416,6 +416,63 @@ if skin_parts:
     for poly in combined.data.polygons:
         poly.use_smooth=True
 
+# Deterministic subtle surface pigmentation. Per-vertex colors are part of the
+# real GLB asset, not studio-only rendering magic. Unlike random noise nodes,
+# this pattern follows the animated surface when the mesh is skin-deformed.
+# This deliberately targets primary skin and cloth only; raised leather seams,
+# metal, eyes and facial scars keep their original authored colors.
+def color_channel(v):
+    return max(.0,min(1.,v))
+def smoothstep(low,high,value):
+    t=max(0.0,min(1.0,(value-low)/(high-low)))
+    return t*t*(3-2*t)
+def hand_painted_tint(o):
+    if o.type!='MESH' or not o.data.polygons:
+        return
+    if not any(m and m.name=='01 Orc moss skin' for m in o.data.materials):
+        return
+    mesh=o.data
+    attr=mesh.color_attributes.new(name='OrcTint',type='BYTE_COLOR',domain='CORNER')
+    for polygon in mesh.polygons:
+        mat=mesh.materials[polygon.material_index] if mesh.materials else None
+        for idx in polygon.loop_indices:
+            loop=mesh.loops[idx]
+            p=o.matrix_world @ mesh.vertices[loop.vertex_index].co
+            broad=sin(p.x*7.7+p.z*2.4)*sin(p.y*9.3-p.z*3.6)
+            medium=sin(p.x*18.2+p.y*12.1+p.z*6.2)
+            strength=.87+.09*broad+.035*medium
+            if abs(p.x)>.60 and 1.3<p.z<2.15:
+                shoulder=smoothstep(.60,.98,abs(p.x))
+                strength+=.075*shoulder
+                strength-=.09*max(0, -sin(p.z*5.3))
+            strength=max(.65,min(1.07,strength))
+            green=(strength*.96 if p.z>1.65 else strength)
+            # Bake the final painted green albedo into COLOR_0.
+            # Blender's MixRGB material is not reliably expressible as a
+            # glTF PBR baseColorFactor, causing pale skin in the WebGL viewer.
+            if mat and mat.name=='01 Orc moss skin':
+                base=(.245,.382,.160)
+                attr.data[idx].color=(
+                    color_channel(base[0]*strength),
+                    color_channel(base[1]*green),
+                    color_channel(base[2]*(strength*.90+.08)),1.0)
+            else:
+                attr.data[idx].color=(1.0,1.0,1.0,1.0)
+    mesh.color_attributes.active_color=attr
+
+def use_skin_vertex_colors(mat):
+    bsdf=mat.node_tree.nodes.get('Principled BSDF')
+    node=mat.node_tree.nodes.new('ShaderNodeVertexColor')
+    node.layer_name='OrcTint'
+    node.label='Baked painted-green vertex albedo / glTF COLOR_0'
+    # A direct VertexColor -> BaseColor connection gives both Blender
+    # and the glTF exporter the same albedo. Do not multiply by the
+    # original green material color a second time.
+    mat.node_tree.links.new(node.outputs['Color'],bsdf.inputs['Base Color'])
+for obj in bpy.data.objects:
+    hand_painted_tint(obj)
+use_skin_vertex_colors(skin)
+
 # Dedicated character collection for stable export. Make stage separately.
 character_objs=list(bpy.data.objects)
 char_collection=bpy.data.collections.new("CHARACTER — Worker Orc vNext")

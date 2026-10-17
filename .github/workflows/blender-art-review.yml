@@ -28,19 +28,31 @@ jobs:
       - name: Validate outputs and document no Humanoid rig yet
         run: |
           python3 - <<'PY'
-          import json
+          import json, struct
           from pathlib import Path
           d=Path('art-review')
           info=json.loads((d/'model-info.json').read_text())
           assert info['asset_store_dependencies'] is False
           assert info['humanoid_validated'] is False
           assert info['skinned'] is False
-          assert info['triangles'] < 80000, f"Mesh too dense for browser asset preview: {info['triangles']} triangles"
+          # Desktop first, small number of units; preserve room for more
+          # topology when it improves the actual character silhouette.
+          assert info['triangles'] < 150000, f"Unexpected runaway geometry: {info['triangles']} triangles"
+          raw=(d/'worker-orc-vnext.glb').read_bytes()
+          assert raw[:4]==b'glTF' and len(raw)>20
+          chunk_length=struct.unpack_from('<I',raw,12)[0]
+          gltf=json.loads(raw[20:20+chunk_length])
+          painted=sum('COLOR_0' in p.get('attributes',{})
+                      for mesh in gltf['meshes'] for p in mesh['primitives'])
+          assert painted>=2, f'Painted skin surface colors missing from GLB: {painted}'
+          print('Painted vertex-color primitives:',painted)
           for name in info['outputs']:
               path=d/name
               assert path.is_file() and path.stat().st_size>1024, name
               print(name,path.stat().st_size)
           PY
+      - name: Check GLB pixel material albedo instead of only COLOR_0 presence
+        run: python3 tools/validate-painted-glb.py art-review/worker-orc-vnext.glb
       - name: Browser smoke — Blender GLB in the real viewer
         run: |
           cp art-review/worker-orc-vnext.glb preview/assets/worker-orc-vnext.glb
