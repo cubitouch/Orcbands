@@ -28,7 +28,7 @@ jobs:
       - name: Validate outputs and document no Humanoid rig yet
         run: |
           python3 - <<'PY'
-          import json
+          import json, struct
           from pathlib import Path
           d=Path('art-review')
           info=json.loads((d/'model-info.json').read_text())
@@ -38,6 +38,14 @@ jobs:
           # Desktop first, small number of units; preserve room for more
           # topology when it improves the actual character silhouette.
           assert info['triangles'] < 150000, f"Unexpected runaway geometry: {info['triangles']} triangles"
+          raw=(d/'worker-orc-vnext.glb').read_bytes()
+          assert raw[:4]==b'glTF' and len(raw)>20
+          chunk_length=struct.unpack_from('<I',raw,12)[0]
+          gltf=json.loads(raw[20:20+chunk_length])
+          painted=sum('COLOR_0' in p.get('attributes',{})
+                      for mesh in gltf['meshes'] for p in mesh['primitives'])
+          assert painted>=2, f'Painted skin surface colors missing from GLB: {painted}'
+          print('Painted vertex-color primitives:',painted)
           for name in info['outputs']:
               path=d/name
               assert path.is_file() and path.stat().st_size>1024, name
