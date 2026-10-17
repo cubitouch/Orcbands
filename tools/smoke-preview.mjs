@@ -52,7 +52,7 @@ try {
     await page.waitForTimeout(750);
     if(await page.getByRole('button',{name:'Walk'}).isEnabled())
       throw new Error('Static sculpt must disable animation controls');
-    if(await page.getByRole('button',{name:'Textured sculpt study'}).getAttribute('aria-pressed')!=='true')
+    if(await page.getByRole('button',{name:'Sculpt #18 · Hands'}).getAttribute('aria-pressed')!=='true')
       throw new Error('Sculpt tab failed to activate');
     await page.screenshot({path:path.join(repo,'smoke-artifacts','real-sculpt-browser.png')});
     await page.getByRole('button',{name:'Original placeholder'}).click();
