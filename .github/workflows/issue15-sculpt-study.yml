@@ -4,6 +4,7 @@ on:
     paths:
       - "art/worker_orc_sculpt_study.py"
       - "art/worker_orc_head.py"
+      - "art/worker_orc_hands.py"
       - "art/render_issue15_glb.py"
       - ".github/workflows/issue15-sculpt-study.yml"
       - "tools/smoke-preview.mjs"
@@ -30,11 +31,12 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output issue15-sculpt
           test -s issue15-sculpt/worker-orc-sculpt-study.blend
           test -s issue15-sculpt/worker-orc-sculpt-study.glb
-      - name: Generate pinned PR 16 pre-ART-01 comparison
+      - name: Generate pinned PR 17 pre-ART-02 comparison
         run: |
           mkdir -p /tmp/issue15-baseline
-          git fetch --depth=1 origin e1897aad03dde8f5f1ef95054ba86b7b8d8c5fe9
-          git show e1897aad03dde8f5f1ef95054ba86b7b8d8c5fe9:art/worker_orc_sculpt_study.py > /tmp/issue15-baseline/build.py
+          git fetch --depth=1 origin 89dabbb28b2deab966e00ef75a013707a016d231
+          git show 89dabbb28b2deab966e00ef75a013707a016d231:art/worker_orc_sculpt_study.py > /tmp/issue15-baseline/build.py
+          git show 89dabbb28b2deab966e00ef75a013707a016d231:art/worker_orc_head.py > /tmp/issue15-baseline/worker_orc_head.py
           blender -b -t 2 --python-exit-code 1 --python /tmp/issue15-baseline/build.py -- --output /tmp/issue15-baseline
       - name: Render unbiased same-angle *exported GLB* comparison
         run: |
