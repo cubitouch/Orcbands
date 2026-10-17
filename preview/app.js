@@ -9,6 +9,9 @@ const canvas=document.getElementById('viewport');
 const viewer=document.getElementById('viewer');
 const loading=document.getElementById('loading');
 const status=document.getElementById('status');
+const assetRevision=document.querySelector('meta[name="orcbands-build"]')?.content||'dev';
+const assetUrl=name=>'./assets/'+name+'?v='+encodeURIComponent(assetRevision);
+
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(36,1,0.1,100);
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
@@ -60,6 +63,7 @@ let riggedModel=null;
 let riggedMixer=null;
 let riggedClips=[];
 let modelVersion='prototype';
+let requestedVersion='rigged'; // latest skinned model is our default
 let glbRequested=false;
 let rigGlbRequested=false;
 const crashSite=createCrashSite(THREE);
@@ -122,18 +126,20 @@ function syncCharacterPosition() {
 }
 function setModelVersion(version) {
   if(!['prototype','blender','rigged'].includes(version))return;
+  requestedVersion=version;
   if(version==='blender'&&!blenderModel){
     if(glbRequested)return;
     glbRequested=true;
     status.textContent='Loading Blender vNext model…';
-    new GLTFLoader().load('./assets/worker-orc-vnext.glb', gltf=>{
+    new GLTFLoader().load(assetUrl('worker-orc-vnext.glb'), gltf=>{
       blenderModel=gltf.scene;
       scene.add(blenderModel);
       blenderModel.traverse(child=>{
         if(child.isMesh){ child.castShadow=true; child.receiveShadow=true; }
       });
       glbRequested=false;
-      setModelVersion('blender');
+      if(requestedVersion==='blender')setModelVersion('blender');
+      else blenderModel.visible=false;
     },undefined,()=>{
       glbRequested=false;
       status.textContent='Blender model not bundled here yet; original prototype remains available.';
@@ -144,7 +150,7 @@ function setModelVersion(version) {
     if(rigGlbRequested)return;
     rigGlbRequested=true;
     status.textContent='Loading animated skinned orc…';
-    new GLTFLoader().load('./assets/worker-orc-skinned-experiment.glb',gltf=>{
+    new GLTFLoader().load(assetUrl('worker-orc-skinned-experiment.glb'),gltf=>{
       if(!gltf.animations.length){
         rigGlbRequested=false;
         status.textContent='Rigged model loaded but animation clips are missing.';
@@ -157,7 +163,8 @@ function setModelVersion(version) {
       riggedModel.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}});
       scene.add(riggedModel);
       rigGlbRequested=false;
-      setModelVersion('rigged');
+      if(requestedVersion==='rigged')setModelVersion('rigged');
+      else riggedModel.visible=false;
     },undefined,()=>{
       rigGlbRequested=false;
       status.textContent='Animated GLB unavailable in this preview; no model changed.';
@@ -221,6 +228,8 @@ function onModelLoaded(object){
   ready=true;
   loading.hidden=true;
   setPose('idle');
+  // Old primitive is a compatibility fallback when the newest GLB cannot load.
+  setModelVersion(requestedVersion);
 }
 new MTLLoader().setPath('./assets/').load('orc-worker.mtl',materials=>{
   materials.preload();
