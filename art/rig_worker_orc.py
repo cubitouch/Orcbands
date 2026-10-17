@@ -211,12 +211,97 @@ for fr in range(1,34,4):
     walk.append((fr,rot))
 walk.append((33,walk[0][1]))
 walk_action=action('Walk',walk)
+# Find an actual raised-hand pose, rather than assuming a large Euler angle
+# lifts this particular bone orientation. This is a bounded FK grid search,
+# not a production IK solver. The target is outside and above the right shoulder.
+def solve_raised_hand():
+    upper=bones['UpperArm.R'];lower=bones['LowerArm.R'];hand=bones['Hand.R']
+    best=None
+    goal=Vector((1.08,-.48,2.91))
+    for ax in (-3.0,-2.55,-2.1,-1.65,-1.2,-.75,.75,1.3,1.85,2.4):
+        for ay in (-.65,-.25,.15,.55):
+            for az in (-1.0,-.50,0,.50,1.0):
+                for elbow in (-1.1,-.65,-.2,.35,.8):
+                    upper.rotation_euler=(ax,ay,az)
+                    lower.rotation_euler=(elbow,0,0)
+                    bpy.context.view_layer.update()
+                    h=hand.head.copy()
+                    e=lower.head.copy()
+                    # Keep the elbow outside the cheek, even at maximal lift.
+                    cheek_penalty=max(0,.58-e.x)**2*5
+                    shoulder_penalty=max(0,.38-h.x)**2*3
+                    score=(h-goal).length_squared+cheek_penalty+shoulder_penalty
+                    if best is None or score<best[0]:
+                        best=(score,(ax,ay,az),(elbow,0,0),tuple(h),tuple(e))
+    upper.rotation_euler=(0,0,0)
+    lower.rotation_euler=(0,0,0)
+    bpy.context.view_layer.update()
+    assert best is not None
+    print('RAISED HAND FK SEARCH:',best)
+    (out/'chop-pose-metrics.json').write_text(json.dumps({
+        'hand_target':tuple(goal),'score':best[0],
+        'upper_arm_euler':best[1],'lower_arm_euler':best[2],
+        'hand_position':best[3],'elbow_position':best[4]
+    },indent=2))
+    return best[1],best[2]
+
+raised_upper,raised_lower=solve_raised_hand()
+def solve_wrist_tool_orientation(upper_angles,lower_angles):
+    upper=bones['UpperArm.R'];lower=bones['LowerArm.R'];wrist=bones['Hand.R']
+    blade=next(o for o in character if o.name.startswith('Axe forged hook blade'))
+    original_center=sum((blade.matrix_world @ v.co for v in blade.data.vertices),
+                        Vector((0,0,0)))/len(blade.data.vertices)
+    original_in_hand=rig.data.bones['Hand.R'].matrix_local.inverted() @ original_center
+    upper.rotation_euler=upper_angles
+    lower.rotation_euler=lower_angles
+    goal=Vector((1.03,-.73,3.09))
+    best=None
+    for wx in (-3.14,-2.36,-1.57,-.78,0,.78,1.57,2.36,3.14):
+        for wy in (-1.57,-.78,0,.78,1.57):
+            for wz in (-1.57,-.78,0,.78,1.57):
+                wrist.rotation_euler=(wx,wy,wz)
+                bpy.context.view_layer.update()
+                blade_pos=wrist.matrix @ original_in_hand
+                hand_pos=wrist.head
+                score=(blade_pos-goal).length_squared
+                score+=max(0,hand_pos.z-blade_pos.z+.12)**2*5
+                score+=max(0,.77-blade_pos.x)**2*2
+                if best is None or score<best[0]:
+                    best=(score,(wx,wy,wz),tuple(blade_pos),tuple(hand_pos))
+    upper.rotation_euler=(0,0,0)
+    lower.rotation_euler=(0,0,0)
+    wrist.rotation_euler=(0,0,0)
+    bpy.context.view_layer.update()
+    assert best is not None
+    print('WIND-UP AXE ORIENTATION:',best)
+    p=out/'chop-pose-metrics.json'
+    data=json.loads(p.read_text())
+    data.update({'wrist_euler':best[1],'axe_blade_position':best[2],
+                 'wrist_position':best[3],'axe_pose_score':best[0]})
+    p.write_text(json.dumps(data,indent=2))
+    return best[1]
+raised_grip=solve_wrist_tool_orientation(raised_upper,raised_lower)
+
+def between(a,b,t):
+    return tuple(x+(y-x)*t for x,y in zip(a,b))
+
+# Slow reach for the axe wind-up, a high outside-shoulder apex, fast downward
+# strike, follow-through, then deliberate recovery. Head stays out of the swing.
 chop=action('Chop',[
- (1,{}),
- (9,{'Chest':(-.10,0,-.07),'UpperArm.R':(-1.03,.08,-.14),'LowerArm.R':(-.55,0,0),'Hand.R':(.28,0,0),'Head':(-.09,0,0)}),
- (15,{'Chest':(.20,0,.05),'UpperArm.R':(.26,-.06,.08),'LowerArm.R':(-.20,0,0),'Hand.R':(-.10,0,0),'Head':(.02,0,0)}),
- (20,{'Chest':(.19,0,.06),'UpperArm.R':(.50,0,.12),'LowerArm.R':(-.35,0,0)}),
- (29,{})])
+ (1,{'UpperArm.R':(-.28,.04,-.08),'LowerArm.R':(-.24,0,0)}),
+ (9,{'Chest':(-.12,0,-.08),
+     'UpperArm.R':between((-.28,.04,-.08),raised_upper,.70),
+     'LowerArm.R':between((-.24,0,0),raised_lower,.70),
+     'Hand.R':between((0,0,0),raised_grip,.70),
+     'Head':(-.03,0,-.04)}),
+ (14,{'Chest':(-.18,0,-.10),
+      'UpperArm.R':raised_upper,'LowerArm.R':raised_lower,
+      'Hand.R':raised_grip,'Head':(-.04,0,-.06)}),
+ (18,{'Chest':(.24,.02,.12),'UpperArm.R':(.28,-.05,.12),
+      'LowerArm.R':(-.32,0,0),'Hand.R':(-.13,0,0),'Head':(.09,0,0)}),
+ (23,{'Chest':(.16,0,.10),'UpperArm.R':(.60,0,.09),
+      'LowerArm.R':(-.40,0,0),'Head':(.05,0,0)}),
+ (33,{'UpperArm.R':(-.28,.04,-.08),'LowerArm.R':(-.24,0,0)})])
 # Carry uses both arms as a cradle; the log is a real skinned/attached mesh.
 carry=action('Carry',[
   (1,{'UpperArm.L':(-.87,-.13,-.18),'UpperArm.R':(-.87,.13,.18),
@@ -284,7 +369,7 @@ scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG'
 scene.view_settings.view_transform='Standard'
 scene.view_settings.exposure=-.35
-for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',15),('Carry',13)]:
+for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',14),('Chop',18),('Chop',23),('Carry',13)]:
     for prop in carry_props:
         prop.hide_render=(clip!='Carry')
     for obj in character:
