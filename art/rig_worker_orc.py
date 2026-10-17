@@ -246,6 +246,42 @@ def solve_raised_hand():
     return best[1],best[2]
 
 raised_upper,raised_lower=solve_raised_hand()
+def solve_wrist_tool_orientation(upper_angles,lower_angles):
+    upper=bones['UpperArm.R'];lower=bones['LowerArm.R'];wrist=bones['Hand.R']
+    blade=next(o for o in character if o.name.startswith('Axe forged hook blade'))
+    original_center=sum((blade.matrix_world @ v.co for v in blade.data.vertices),
+                        Vector((0,0,0)))/len(blade.data.vertices)
+    original_in_hand=rig.data.bones['Hand.R'].matrix_local.inverted() @ original_center
+    upper.rotation_euler=upper_angles
+    lower.rotation_euler=lower_angles
+    goal=Vector((1.03,-.73,3.09))
+    best=None
+    for wx in (-3.14,-2.36,-1.57,-.78,0,.78,1.57,2.36,3.14):
+        for wy in (-1.57,-.78,0,.78,1.57):
+            for wz in (-1.57,-.78,0,.78,1.57):
+                wrist.rotation_euler=(wx,wy,wz)
+                bpy.context.view_layer.update()
+                blade_pos=wrist.matrix @ original_in_hand
+                hand_pos=wrist.head
+                score=(blade_pos-goal).length_squared
+                score+=max(0,hand_pos.z-blade_pos.z+.12)**2*5
+                score+=max(0,.77-blade_pos.x)**2*2
+                if best is None or score<best[0]:
+                    best=(score,(wx,wy,wz),tuple(blade_pos),tuple(hand_pos))
+    upper.rotation_euler=(0,0,0)
+    lower.rotation_euler=(0,0,0)
+    wrist.rotation_euler=(0,0,0)
+    bpy.context.view_layer.update()
+    assert best is not None
+    print('WIND-UP AXE ORIENTATION:',best)
+    p=out/'chop-pose-metrics.json'
+    data=json.loads(p.read_text())
+    data.update({'wrist_euler':best[1],'axe_blade_position':best[2],
+                 'wrist_position':best[3],'axe_pose_score':best[0]})
+    p.write_text(json.dumps(data,indent=2))
+    return best[1]
+raised_grip=solve_wrist_tool_orientation(raised_upper,raised_lower)
+
 def between(a,b,t):
     return tuple(x+(y-x)*t for x,y in zip(a,b))
 
@@ -256,10 +292,11 @@ chop=action('Chop',[
  (9,{'Chest':(-.12,0,-.08),
      'UpperArm.R':between((-.28,.04,-.08),raised_upper,.70),
      'LowerArm.R':between((-.24,0,0),raised_lower,.70),
+     'Hand.R':between((0,0,0),raised_grip,.70),
      'Head':(-.03,0,-.04)}),
  (14,{'Chest':(-.18,0,-.10),
       'UpperArm.R':raised_upper,'LowerArm.R':raised_lower,
-      'Hand.R':(.12,0,0),'Head':(-.04,0,-.06)}),
+      'Hand.R':raised_grip,'Head':(-.04,0,-.06)}),
  (18,{'Chest':(.24,.02,.12),'UpperArm.R':(.28,-.05,.12),
       'LowerArm.R':(-.32,0,0),'Hand.R':(-.13,0,0),'Head':(.09,0,0)}),
  (23,{'Chest':(.16,0,.10),'UpperArm.R':(.60,0,.09),
