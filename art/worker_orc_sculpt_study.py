@@ -498,12 +498,55 @@ for s,side in ((-1,"L"),(1,"R")):
         x=s*(.34+.012*k)
         tube(side+f" bib suspender anchoring stitch {k}",[
           (x-.049,-.503,z),(x+.049,-.503,z+.009)],.008,stitch)
-# Back of apron with crossed straps and fitted cinch
-ribbon("COSTUME / rear leather back panel",[
-    ((-.36,.336,2.07),(.36,.336,2.07)),
-    ((-.47,.345,1.82),(.47,.345,1.82)),
-    ((-.47,.34,1.52),(.47,.34,1.52)),
-    ((-.43,.325,1.22),(.43,.325,1.22))],leather,22)
+# Rear clothing: apron wraps OVER the body, not through the
+# green dorsal surface. An open shoulder area preserves the characteristic
+# strong trapezius back in the owner's concept turnaround.
+back_rows=[]
+back_u=26
+back_v=18
+for i in range(back_v+1):
+    t=i/back_v
+    z=1.78-.64*t
+    width=.43+.10*sin(pi*t)-.015*t
+    for j in range(back_u+1):
+        across=2*j/back_u-1
+        x=across*width
+        # Torso's back surface is y≈.37; always retain a small gap outside
+        # it so shoulder/oblique skin does not cut the apron into triangles.
+        y=.505+.008*sin(3*t*pi)-.117*abs(across)**1.65
+        z_fold=.015*t*t*sin(6*pi*j/back_u+.7*t)
+        back_rows.append((x,y,z+z_fold))
+back_faces=[]
+for i in range(back_v):
+    for j in range(back_u):
+        p=i*(back_u+1)+j
+        back_faces.append((p,p+1,p+1+back_u+1,p+back_u+1))
+back_panel=mesh("COSTUME / fitted rear waist leather drape",
+                back_rows,back_faces,leather,smooth=True)
+rear_thickness=back_panel.modifiers.new("heavy rear waist hide","SOLIDIFY")
+rear_thickness.thickness=.021
+back_panel.modifiers.new("rounded rear leather seams","WEIGHTED_NORMAL")
+# Crossed X suspenders frame the visible upper back. Actual tapered bands
+# instead of shallow decorative lines drawn on top of the skin.
+for side_sign,side_name in ((-1,"L"),(1,"R")):
+    cross=[]
+    for i in range(17):
+        t=i/16
+        x=side_sign*(.43-.79*t)
+        y=.446+.092*sin(pi*t)+.015*t
+        z=2.18-.50*t
+        cross.append(((x-.063,y,z),(x+.063,y,z)))
+    ribbon(side_name+" CROSS BACK working-leather suspender",
+           cross,edge,6)
+    # Pair of anchors at low-back corner; stitching does not float through
+    # the bare skin and can be inspected from the right/left turnaround.
+    x=-side_sign*.35
+    for k in range(3):
+        tube(side_name+f" crossed suspender anchor {k}",[
+            (x-.039,.525,1.69-k*.052),
+            (x+.039,.525,1.686-k*.052)
+        ],.008,stitch,7)
+
 # Heavy leather belt wraps fitted waist, metal buckle inset at front.
 band("Wide supported leather belt",1.41,.505,.396,.17,leather)
 # Raised edge stitching running across front

@@ -84,3 +84,13 @@ upper bib and mismatched suspender anchor locations. This correction moves
 the upper bib forward while keeping the hem closer to the body, aligns straps
 with the upper bib edge, and adapts edge stitching to the new cloth surface.
 This is a geometry correction, **not** automatic artistic approval.
+
+## Rear turnaround correction
+
+The prior GLB close inspection confirmed a major **rear panel vs torso
+self-intersection**, even though front/RTS appeared acceptable. The rear apron
+is now an actual curved, outward-fitted waist panel below visible upper-back
+skin, with opposing crossed leather suspenders and low-back stitching.
+The target is the four-view turnaround's crossed back harness, *not* an
+armoured full-back vest. This will be reviewed from a real exported-GLB back
+camera before any claim of improvement or owner approval.
