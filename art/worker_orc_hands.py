@@ -25,6 +25,15 @@ def worker_hand(s,side):
         finger=limb(side+f' ART02 / finger {k+1} phalanges',pts,skin,24)
         sub=finger.modifiers.new('Round relaxed finger transitions','SUBSURF');sub.levels=1
         bpy.context.view_layer.objects.active=finger;bpy.ops.object.modifier_apply(modifier=sub.name)
+        if side=='R':
+            # Curl the gripping fingertips back around the shaft instead of
+            # presenting four straight dangling digits beneath it.
+            for vertex in finger.data.vertices:
+                z=vertex.co.z
+                tuck=clamp((1.010-z)/.25)
+                vertex.co.y+=.082*tuck
+                vertex.co.z+=.068*tuck
+            finger.data.update()
         tips.append((s*(x+spread*.90),tip,r))
     # Thenar pad and opposed thumb: the web remains open below the first joint.
     limb(side+' ART02 / thenar pad',[
@@ -48,7 +57,7 @@ def worker_hand(s,side):
         for vertex in thumb.data.vertices:
             x,y,z=vertex.co
             curl=clamp((1.11-z)/.22)
-            vertex.co.x+=.282*curl
+            vertex.co.x+=.090*curl
             vertex.co.y-=.022*curl
         thumb.data.update()
     pieces=objects[start:]
@@ -120,6 +129,6 @@ def worker_hand(s,side):
             # The ordinary index finger must NOT inherit the thumb motion.
             if 'thumb nail' in ob.name:
                 thumb_bend=clamp((1.11-z)/.22)
-                vert.co.x+=.282*thumb_bend
+                vert.co.x+=.090*thumb_bend
                 vert.co.y-=.022*thumb_bend
         ob.data.update()
