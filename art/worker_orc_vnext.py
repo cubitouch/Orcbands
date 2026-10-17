@@ -416,6 +416,59 @@ if skin_parts:
     for poly in combined.data.polygons:
         poly.use_smooth=True
 
+# Deterministic subtle surface pigmentation. Per-vertex colors are part of the
+# real GLB asset, not studio-only rendering magic. Unlike random noise nodes,
+# this pattern follows the animated surface when the mesh is skin-deformed.
+# This deliberately targets primary skin and cloth only; raised leather seams,
+# metal, eyes and facial scars keep their original authored colors.
+def color_channel(v):
+    return max(.0,min(1.,v))
+def hand_painted_tint(o):
+    if o.type!='MESH' or not o.data.polygons:
+        return
+    if not any(m and m.name in ('01 Orc moss skin','07 Warm dark cloth')
+               for m in o.data.materials):
+        return
+    mesh=o.data
+    attr=mesh.color_attributes.new(name='OrcTint',type='BYTE_COLOR',domain='CORNER')
+    for polygon in mesh.polygons:
+        m=mesh.materials[polygon.material_index] if mesh.materials else None
+        for idx in polygon.loop_indices:
+            loop=mesh.loops[idx]
+            p=o.matrix_world @ mesh.vertices[loop.vertex_index].co
+            # Broad painted green variation, not pixelated random stippling.
+            broad=sin(p.x*7.7+p.z*2.4)*sin(p.y*9.3-p.z*3.6)
+            medium=sin(p.x*18.2+p.y*12.1+p.z*6.2)
+            s=.925+.05*broad+.025*medium
+            if m and m.name=='07 Warm dark cloth':
+                s=.945+.035*broad+.015*medium
+            # Warm olive upper body, subtle shadow under the neck.
+            green=(s*.975 if p.z>1.65 else s)
+            attr.data[idx].color=(color_channel(s),color_channel(green),
+                                   color_channel(s*.90+.08),1.0)
+    if hasattr(mesh.color_attributes,'active_color'):
+        mesh.color_attributes.active_color=attr
+
+# Use skin-only material nodes with an explicit vertex color slot, while
+# retaining the original PBR base values and roughness for glTF export.
+def use_skin_vertex_colors(mat):
+    bsdf=mat.node_tree.nodes.get('Principled BSDF')
+    base=tuple(bsdf.inputs['Base Color'].default_value)
+    node=mat.node_tree.nodes.new('ShaderNodeVertexColor')
+    node.layer_name='OrcTint'
+    node.label='Painted skin pigmentation'
+    mixer=mat.node_tree.nodes.new('ShaderNodeMixRGB')
+    mixer.blend_type='MULTIPLY'
+    mixer.inputs[0].default_value=1.0
+    mixer.inputs[1].default_value=base
+    mat.node_tree.links.new(node.outputs['Color'],mixer.inputs[2])
+    mat.node_tree.links.new(mixer.outputs['Color'],bsdf.inputs['Base Color'])
+for obj in bpy.data.objects:
+    hand_painted_tint(obj)
+use_skin_vertex_colors(skin)
+# Cloth supports matching vertex color in the binary GLB. Keep its Blender
+# preview shader constant if the same material is used by a Bezier accessory.
+
 # Dedicated character collection for stable export. Make stage separately.
 character_objs=list(bpy.data.objects)
 char_collection=bpy.data.collections.new("CHARACTER — Worker Orc vNext")
