@@ -1,4 +1,4 @@
-name: Worker Orc #15 — exported GLB visual evidence
+name: "Worker Orc #15 — exported GLB visual evidence"
 
 on:
   workflow_dispatch:

@@ -29,6 +29,8 @@ def lit_stage():
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
     scene.cycles.samples = 14
+    # Ubuntu apt Blender is compiled without OpenImageDenoiser.
+    scene.cycles.use_denoising = False
     scene.render.resolution_x = 800
     scene.render.resolution_y = 800
     scene.render.resolution_percentage = 100
