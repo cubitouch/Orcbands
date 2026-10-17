@@ -5,6 +5,9 @@ on:
       - "art/rig_worker_orc.py"
       - "art/worker_orc_vnext.py"
       - "tools/validate-rigged-glb.py"
+      - "preview/app.js"
+      - "preview/index.html"
+      - "tools/smoke-preview.mjs"
       - ".github/workflows/rig-worker-orc.yml"
   workflow_dispatch:
 permissions:
