@@ -211,18 +211,58 @@ for fr in range(1,34,4):
     walk.append((fr,rot))
 walk.append((33,walk[0][1]))
 walk_action=action('Walk',walk)
-# High, readable one-handed axe strike (clear wind-up -> apex -> impact ->
-# follow-through -> recovery), not a small forearm swing across the chest.
-# Keep timing non-uniform so the impact is distinctly faster than the wind-up.
+# Find an actual raised-hand pose, rather than assuming a large Euler angle
+# lifts this particular bone orientation. This is a bounded FK grid search,
+# not a production IK solver. The target is outside and above the right shoulder.
+def solve_raised_hand():
+    upper=bones['UpperArm.R'];lower=bones['LowerArm.R'];hand=bones['Hand.R']
+    best=None
+    goal=Vector((1.08,-.48,2.91))
+    for ax in (-3.0,-2.55,-2.1,-1.65,-1.2,-.75,.75,1.3,1.85,2.4):
+        for ay in (-.65,-.25,.15,.55):
+            for az in (-1.0,-.50,0,.50,1.0):
+                for elbow in (-1.1,-.65,-.2,.35,.8):
+                    upper.rotation_euler=(ax,ay,az)
+                    lower.rotation_euler=(elbow,0,0)
+                    bpy.context.view_layer.update()
+                    h=hand.head.copy()
+                    e=lower.head.copy()
+                    # Keep the elbow outside the cheek, even at maximal lift.
+                    cheek_penalty=max(0,.58-e.x)**2*5
+                    shoulder_penalty=max(0,.38-h.x)**2*3
+                    score=(h-goal).length_squared+cheek_penalty+shoulder_penalty
+                    if best is None or score<best[0]:
+                        best=(score,(ax,ay,az),(elbow,0,0),tuple(h),tuple(e))
+    upper.rotation_euler=(0,0,0)
+    lower.rotation_euler=(0,0,0)
+    bpy.context.view_layer.update()
+    assert best is not None
+    print('RAISED HAND FK SEARCH:',best)
+    (out/'chop-pose-metrics.json').write_text(json.dumps({
+        'hand_target':tuple(goal),'score':best[0],
+        'upper_arm_euler':best[1],'lower_arm_euler':best[2],
+        'hand_position':best[3],'elbow_position':best[4]
+    },indent=2))
+    return best[1],best[2]
+
+raised_upper,raised_lower=solve_raised_hand()
+def between(a,b,t):
+    return tuple(x+(y-x)*t for x,y in zip(a,b))
+
+# Slow reach for the axe wind-up, a high outside-shoulder apex, fast downward
+# strike, follow-through, then deliberate recovery. Head stays out of the swing.
 chop=action('Chop',[
  (1,{'UpperArm.R':(-.28,.04,-.08),'LowerArm.R':(-.24,0,0)}),
- (9,{'Chest':(-.14,0,-.10),'UpperArm.R':(-1.70,.10,-.13),
-     'LowerArm.R':(-.85,0,0),'Hand.R':(.22,0,0),'Head':(-.10,0,0)}),
- (14,{'Chest':(-.23,-.04,-.15),'UpperArm.R':(-2.26,.12,-.22),
-      'LowerArm.R':(-.52,.05,0),'Hand.R':(.35,0,0),'Head':(-.12,0,0)}),
- (18,{'Chest':(.28,.04,.16),'UpperArm.R':(.41,-.09,.10),
-      'LowerArm.R':(-.22,0,0),'Hand.R':(-.13,0,0),'Head':(.10,0,0)}),
- (23,{'Chest':(.18,0,.12),'UpperArm.R':(.66,-.05,.10),
+ (9,{'Chest':(-.12,0,-.08),
+     'UpperArm.R':between((-.28,.04,-.08),raised_upper,.70),
+     'LowerArm.R':between((-.24,0,0),raised_lower,.70),
+     'Head':(-.03,0,-.04)}),
+ (14,{'Chest':(-.18,0,-.10),
+      'UpperArm.R':raised_upper,'LowerArm.R':raised_lower,
+      'Hand.R':(.12,0,0),'Head':(-.04,0,-.06)}),
+ (18,{'Chest':(.24,.02,.12),'UpperArm.R':(.28,-.05,.12),
+      'LowerArm.R':(-.32,0,0),'Hand.R':(-.13,0,0),'Head':(.09,0,0)}),
+ (23,{'Chest':(.16,0,.10),'UpperArm.R':(.60,0,.09),
       'LowerArm.R':(-.40,0,0),'Head':(.05,0,0)}),
  (33,{'UpperArm.R':(-.28,.04,-.08),'LowerArm.R':(-.24,0,0)})])
 # Carry uses both arms as a cradle; the log is a real skinned/attached mesh.
