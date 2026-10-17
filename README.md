@@ -54,3 +54,10 @@ Asset Lab details: [docs/asset-lab.md](docs/asset-lab.md).
 
 **All current 3D prototypes are original procedural geometry.** No purchased
 Asset Store models are included.
+
+## Worker Orc quality overhaul (#15)
+
+The [production brief](docs/worker-orc-production-brief.md) contains the original
+concept sheets, ranked visual requirements and an original-sculpt production
+workflow. Reference recovery is complete on this branch; the replacement sculpt
+and its visual acceptance remain pending.

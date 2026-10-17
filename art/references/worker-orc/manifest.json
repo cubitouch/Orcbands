@@ -1,0 +1,36 @@
+{
+  "source": "Owner-provided attachments to issue #15 implementation request, 2026-10-17",
+  "kind": "AI-generated concept artwork, not 3D assets",
+  "files": [
+    {
+      "file": "01-worker-turnaround.png",
+      "original_name": "Fiche de personnage : Orque bûcheron 3D.png",
+      "dimensions": [
+        1448,
+        1086
+      ],
+      "bytes": 2025281,
+      "sha256": "9720af3929de2dd104dc524e17e867c3e0fa904f5857c1346a3f821f14d1e52d"
+    },
+    {
+      "file": "02-artisan-showcase.png",
+      "original_name": "Planche de présentation des orcs artisans.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "bytes": 2481363,
+      "sha256": "ea6678ee212e95344135bb0afd2db963836e3dba10ca2cfec22ea75879031f52"
+    },
+    {
+      "file": "03-village-context.png",
+      "original_name": "Présentation de personnages orcs en 3D.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "bytes": 2466222,
+      "sha256": "a4e90cc1d08e4238b9953526fbb7e6520a7e990bea87cfb4c2ce60849142effd"
+    }
+  ]
+}
