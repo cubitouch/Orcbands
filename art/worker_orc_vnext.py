@@ -104,6 +104,37 @@ def ring_loft(name,rings,mat,segments=16):
     faces.append(tuple(last+j for j in range(segments)))
     return link_mesh(name,verts,faces,mat)
 
+def open_vest(name,rings,mat,segments=30,opening=.83):
+    """One continuous shaped leather waistcoat, with an open chest and *no*
+    circular face cap. Its open front intentionally reveals the underlying
+    green chest instead of stacking a solid leather barrel over the orc."""
+    verts=[];faces=[]
+    start=-math.pi/2+opening/2
+    stop=3*math.pi/2-opening/2
+    for center,rad in rings:
+        for i in range(segments+1):
+            a=start+(stop-start)*i/segments
+            verts.append((center[0]+rad[0]*math.cos(a),
+                          center[1]+rad[1]*math.sin(a),center[2]))
+    for level in range(len(rings)-1):
+        for i in range(segments):
+            q=level*(segments+1)+i
+            faces.append((q,q+1,q+segments+2,q+segments+1))
+    return link_mesh(name,verts,faces,mat)
+
+def bandana_wrap(name,center,rx,ry,zbase,thickness,mat,segments=28):
+    """Thin open-sided cloth ring (not a solid helmet or broad disc)."""
+    verts=[];faces=[]
+    for z in (zbase,zbase+thickness):
+        for j in range(segments):
+            a=2*math.pi*j/segments
+            verts.append((center[0]+rx*math.cos(a),
+                          center[1]+ry*math.sin(a),z))
+    for i in range(segments):
+        j=(i+1)%segments
+        faces.append((i,j,segments+j,segments+i))
+    return link_mesh(name,verts,faces,mat)
+
 def tube(name, start, end, r1, r2, mat, verts=12):
     a,b=Vector(start),Vector(end)
     direction=b-a
@@ -149,24 +180,36 @@ ring_loft("Body - anatomical shoulder to hip surface",[
     ((0,0,2.23),(.28,.25)),
 ],skin,24)
 # Leather waistcoat follows the torso but leaves shoulders visible.
-ring_loft("Fitted worker leather vest",[
-    ((0,-.028,1.22),(.48,.315)),
-    ((0,-.045,1.43),(.54,.363)),
-    ((0,-.035,1.65),(.55,.395)),
-    ((0,-.015,1.91),(.59,.391)),
-    ((0,-.010,2.08),(.45,.28)),
-],leather_mid,24)
+open_vest("Open tailored hide vest",[
+    ((0,-.028,1.24),(.49,.32)),
+    ((0,-.045,1.42),(.53,.361)),
+    ((0,-.033,1.68),(.565,.399)),
+    ((0,-.015,1.91),(.575,.396)),
+    ((0,-.009,2.07),(.43,.288)),
+],leather_mid,36,.95)
+# The open edges are bound to the same character and gently taper in at neck.
+curved_line("Vest right rolled front edge",[
+    (.234,-.289,2.07),(.302,-.340,1.91),(.30,-.397,1.68),
+    (.281,-.393,1.42),(.263,-.323,1.24)],.039,leather)
+curved_line("Vest left rolled front edge",[
+    (-.234,-.289,2.07),(-.302,-.340,1.91),(-.30,-.397,1.68),
+    (-.281,-.393,1.42),(-.263,-.323,1.24)],.039,leather)
 # Open collar, front bib and fabric edging; avoid cubic overlays.
-sphere("Vest collar left",(-.27,-.27,2.01),(.15,.12,.17),leather,12,8)
-sphere("Vest collar right",(.27,-.27,2.01),(.15,.12,.17),leather,12,8)
-prism("Apron asymmetrical hanging front",[(-.39,1.16),(.43,1.17),(.39,.83),(.33,.70),(.16,.57),(-.06,.61),(-.17,.57),(-.40,.66)],-.405,-.480,leather)
-prism("Apron hem facing",[(-.37,.71),(-.18,.64),(-.06,.685),(.15,.64),(.32,.765),(.30,.715),(.16,.58),(-.06,.64),(-.19,.62),(-.37,.68)],-.482,-.493,leather_light)
-curved_line("Apron worn vertical fold",[(-.12,-.497,1.06),(-.10,-.505,.86),(-.07,-.505,.69)],.013,leather_mid)
-curved_line("Apron side seam",[(.34,-.489,1.10),(.37,-.495,.90),(.32,-.505,.71)],.017,leather_mid)
-prism("Apron stitched red repair",[(-.32,.87),(-.11,.90),(-.12,.71),(-.32,.68)],-.490,-.508,red_dark)
-curved_line("Apron patch stitching",[(-.31,-.51,.85),(-.30,-.51,.71),(-.13,-.51,.725)],.011,leather_light)
+# Narrow leather collar flaps; green skin must remain visible at center.
+sphere("Vest collar left",(-.355,-.287,2.023),(.113,.069,.145),leather,14,9)
+sphere("Vest collar right",(.355,-.287,2.023),(.113,.069,.145),leather,14,9)
+# Slim off-centre field apron, free of the former giant rectangular waist flap.
+prism("Worker off-centre tapered hide apron",[(-.33,1.17),(.25,1.15),
+    (.24,.89),(.195,.68),(.06,.625),(-.225,.675),(-.31,.79)],-.414,-.474,leather)
+prism("Apron lower stitched hem",[(-.225,.681),(.065,.631),(.198,.687),
+    (.191,.652),(.067,.605),(-.23,.654)],-.478,-.490,leather_light)
+curved_line("Apron vertical folded seam",[(-.18,-.488,1.10),(-.17,-.492,.84),
+    (-.16,-.496,.700)],.012,leather_mid)
+prism("Apron tiny repair",[(-.27,.83),(-.12,.86),(-.13,.735),(-.27,.716)],-.489,-.504,red_dark)
+curved_line("Apron repair stitching",[(-.27,-.512,.822),(-.264,-.516,.726),
+    (-.135,-.516,.740)],.010,leather_light)
 for i in range(5):
-    sphere(f'Apron hand sewn stitch {i}',(-.30+i*.043,-.525,.713),(.013,.008,.012),bone,7,5)
+    sphere(f'Apron hand sewn stitch {i}',(-.265+i*.032,-.523,.73),(.010,.008,.011),bone,7,5)
 for sx in [-1,1]:
     curved_line("Shoulder harness",[ (sx*.39,-.23,2.16),(sx*.39,-.37,1.70),(sx*.31,-.41,1.32)],.077,leather)
     sphere("Harness rivet",(sx*.33,-.415,1.38),(.045,.028,.038),gold,10,7)
@@ -247,20 +290,24 @@ for sx,label in [(-1,"L"),(1,"R")]:
     tube(f'{label} tusk tip',(sx*.305,-.396,2.403),(sx*.334,-.394,2.513),.054,0,bone,12)
     sphere(f'{label} earring',(sx*.495,.010,2.437),(.03,.04,.042),gold,12,9)
 # Hard red bandana and back ribbons.
-ring_loft("Red cloth bandana",[
-  ((0,.008,2.716),(.439,.334)),
-  ((0,.011,2.759),(.420,.329))
-],red,24)
-sphere("Bandana side knot",(.415,.060,2.751),(.084,.086,.070),red_dark,13,9)
+bandana_wrap("Red cloth bandana",(0,.009,0),.412,.326,2.702,.082,red,32)
+curved_line("Bandana narrow front border",[(-.36,-.198,2.722),(-.20,-.295,2.724),
+    (0,-.320,2.723),(.20,-.294,2.722),(.36,-.198,2.719)],.013,red_dark)
+sphere("Bandana side knot",(.397,.072,2.737),(.075,.074,.063),red_dark,13,9)
 prism("Bandana tail long",[(.39,2.75),(.56,2.74),(.61,2.38),(.52,2.47)],.14,.21,red)
 prism("Bandana tail short",[(.45,2.74),(.58,2.73),(.73,2.54),(.66,2.52)],.10,.17,red_dark)
 # Skull and hair are visible above the narrow bandana, not hidden by a round fabric cap.
-sphere("Top hair crest",(0,.075,2.859),(.17,.115,.081),black,12,8)
+# Three swept-back dark hair clumps poke above the tied cloth band.
+tube("Hair central topknot",(0,.025,2.810),(.02,.098,2.965),.112,.018,black,12)
+tube("Hair left clump",(-.092,.03,2.818),(-.135,.12,2.909),.075,.012,black,10)
+tube("Hair right clump",(.087,.03,2.818),(.153,.115,2.923),.075,.012,black,10)
 
 # Separate hero weapon (held at right side), strongly tapered axe head.
 tube("Axe hardwood shaft",(1.13,-.20,.54),(1.14,-.22,1.52),.058,.050,leather_mid,13)
 tube("Axe dark wrapping",(1.14,-.22,1.06),(1.14,-.22,1.24),.071,.069,leather,13)
-prism("Axe forged hook blade",[(1.06,1.62),(1.33,1.71),(1.58,1.78),(1.52,1.62),(1.54,1.32),(1.68,1.22),(1.40,1.17),(1.06,1.31)],-.30,-.14,metal_light)
+prism("Axe forged hook blade",[(1.06,1.60),(1.31,1.65),(1.59,1.75),
+    (1.54,1.60),(1.46,1.48),(1.52,1.35),(1.68,1.22),
+    (1.37,1.26),(1.06,1.32)],-.30,-.14,metal_light)
 prism("Axe dark forged spine",[(1.06,1.61),(1.33,1.71),(1.33,1.24),(1.06,1.31)],-.323,-.31,metal)
 sphere("Axe connector",(1.13,-.23,1.42),(.085,.1,.15),metal,12,8)
 
