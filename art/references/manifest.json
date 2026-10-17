@@ -1,0 +1,34 @@
+{
+  "issue": 15,
+  "description": "Original, owner-provided AI-generated concept sheets; these are 2D art references, not model assets.",
+  "references": [
+    {
+      "file": "Fiche de personnage : Orque bûcheron 3D.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 2025281,
+      "sha256": "9720af3929de2dd104dc524e17e867c3e0fa904f5857c1346a3f821f14d1e52d",
+      "priority": "P0",
+      "purpose": "Primary Worker Orc turnaround, costume, face, idle/walk/chop"
+    },
+    {
+      "file": "Planche de présentation des orcs artisans.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2481363,
+      "sha256": "ea6678ee212e95344135bb0afd2db963836e3dba10ca2cfec22ea75879031f52",
+      "priority": "P1",
+      "purpose": "Expressions, working poses, topology and gear presentation"
+    },
+    {
+      "file": "Présentation de personnages orcs en 3D.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2466222,
+      "sha256": "a4e90cc1d08e4238b9953526fbb7e6520a7e990bea87cfb4c2ce60849142effd",
+      "priority": "P1",
+      "purpose": "RTS-scale village scene and worker/lumber-worker variant"
+    }
+  ],
+  "missing_reference": "Campement orc forestier stylisé.png (environment-only reference from issue description; not supplied in this conversation)"
+}
