@@ -75,3 +75,12 @@ wear marks/wood grain are present in real geometry.
 These are still scripted 3D geometry studies; the artist-quality benchmark and
 all animation/Unity caveats remain. Compare *actual exported GLB renders* and
 five-character RTS scale before deciding whether to preserve this pass.
+
+## Pixel QA correction after v3 render
+
+The third-pass exported GLB was built and rendered successfully, but actual
+front and face-close pixels exposed a **chest/apron intersection** near the
+upper bib and mismatched suspender anchor locations. This correction moves
+the upper bib forward while keeping the hem closer to the body, aligns straps
+with the upper bib edge, and adapts edge stitching to the new cloth surface.
+This is a geometry correction, **not** automatic artistic approval.

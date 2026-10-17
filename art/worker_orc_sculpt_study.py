@@ -441,7 +441,9 @@ for row in range(apron_v + 1):
         # proud of the torso. Fold peaks are real vertices, not shiny normals.
         roll = .130 * abs(across)**1.65
         folds = .030 * sin(3*pi*across + .9*t) * (t**1.5)
-        y = -.457 - .069*t + roll - folds
+        y = -.558 + .032*t + roll*.72 - folds
+        # Bib sits forward of the pectoral surface; fold amplitude fades
+        # toward the collar so sculpted skin cannot visibly pierce cloth.
         # Curved and irregular cloth hem; upper bib stays neatly tailored.
         z = z_base + t**3*(.022*cos(5*pi*u+0.3)+.011*sin(11*pi*u))
         z += .008*(sin(u*12 + 5*t))*sin(pi*t)
@@ -473,29 +475,29 @@ for k in range(5):
 
 # Apron ends in scalloped irregular bottom / surface edge stitching
 tube("Apron lower hand-sewn hem",[
-    (-.55,-.533,1.06),(-.38,-.537,1.043),(-.18,-.54,1.066),
-    (0,-.545,1.041),(.20,-.54,1.056),(.40,-.538,1.038),
-    (.55,-.535,1.067)],.013,edge)
+    (-.58,-.453,1.058),(-.38,-.504,1.043),(-.18,-.523,1.066),
+    (0,-.537,1.041),(.20,-.523,1.056),(.40,-.504,1.038),
+    (.58,-.453,1.067)],.013,edge)
 for s,side in ((-1,"L"),(1,"R")):
     tube(side+" apron leather seam",[
-        (s*.35,-.430,2.09),(s*.44,-.468,1.83),
-        (s*.45,-.49,1.54),(s*.50,-.52,1.30),(s*.54,-.537,1.07)
+        (s*.35,-.49,2.09),(s*.44,-.486,1.83),
+        (s*.45,-.504,1.54),(s*.50,-.522,1.30),(s*.57,-.532,1.07)
     ],.018,edge)
     # Shoulder straps are real draped strips wrapping front → top → back.
     straprows=[]
     for i in range(12):
         t=i/11
         # from chest mid-front, over shoulder, down the back
-        x=s*(.42+.13*sin(t*pi))
-        y=-.50+.99*t
-        z=1.73+.42*sin(pi*t)+.03*cos(pi*t)
+        x=s*(.34+.17*sin(t*pi))
+        y=-.480+.91*t
+        z=2.085+.19*sin(pi*t)-.37*t*t
         straprows.append(((x-s*.075,y,z),(x+s*.075,y,z+.011)))
     ribbon(side+" tailored shoulder suspender",straprows,edge,6)
-    for k in range(4):
-        z=1.85-k*.24
-        x=s*(.41+.026*k)
-        tube(side+f" suspender thread stitch {k}",[
-          (x-.052,-.49-k*.009,z),(x+.052,-.49-k*.009,z)],.011,stitch)
+    for k in range(3):
+        z=2.045-k*.075
+        x=s*(.34+.012*k)
+        tube(side+f" bib suspender anchoring stitch {k}",[
+          (x-.049,-.503,z),(x+.049,-.503,z+.009)],.008,stitch)
 # Back of apron with crossed straps and fitted cinch
 ribbon("COSTUME / rear leather back panel",[
     ((-.36,.336,2.07),(.36,.336,2.07)),
