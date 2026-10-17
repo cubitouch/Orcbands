@@ -59,13 +59,37 @@ scene.add(grid);
 const model=new THREE.Group();
 scene.add(model);
 let blenderModel=null;
-let sculptModel=null;
-let sculptRequested=false;
+const sculptFiles={
+  'sculpt-v1':'worker-orc-sculpt-v1.glb',
+  'sculpt-v2':'worker-orc-sculpt-v2-head.glb',
+  sculpt:'worker-orc-sculpt-study.glb'
+};
+const sculptLabels={
+  'sculpt-v1':'Sculpt #16 · Original',
+  'sculpt-v2':'Sculpt #17 · Face',
+  sculpt:'Sculpt #18 · Hands'
+};
+const sculptModels=new Map();
+const sculptRequested=new Set();
+const versionLabels={
+  prototype:'Original prototype',
+  blender:'Blender static asset',
+  rigged:'Rigged beta',
+  ...sculptLabels
+};
+function isSculpt(version){return Object.hasOwn(sculptFiles,version);}
+function selectedLabel(){return versionLabels[modelVersion]||versionLabels.prototype;}
+function updateModelLink(version){
+  const pageUrl=new URL(window.location.href);
+  pageUrl.searchParams.set('model',version);
+  window.history.replaceState(null,'',pageUrl.pathname+pageUrl.search+pageUrl.hash);
+}
 let riggedModel=null;
 let riggedMixer=null;
 let riggedClips=[];
 let modelVersion='prototype';
-let requestedVersion='rigged'; // latest skinned model is our default
+const requestedFromUrl=new URLSearchParams(window.location.search).get('model');
+let requestedVersion=Object.hasOwn(versionLabels,requestedFromUrl)?requestedFromUrl:'sculpt'; // latest artistic study by default
 let glbRequested=false;
 let rigGlbRequested=false;
 const crashSite=createCrashSite(THREE);
@@ -121,9 +145,9 @@ function syncCharacterPosition() {
     blenderModel.position.set(x,0,z);
     blenderModel.rotation.y=angle;
   }
-  if(sculptModel){
-    sculptModel.position.set(x,0,z);
-    sculptModel.rotation.y=angle;
+  for(const sceneObject of sculptModels.values()){
+    sceneObject.position.set(x,0,z);
+    sceneObject.rotation.y=angle;
   }
   if(riggedModel){
     riggedModel.position.set(x,0,z);
@@ -131,7 +155,7 @@ function syncCharacterPosition() {
   }
 }
 function setModelVersion(version) {
-  if(!['prototype','blender','rigged','sculpt'].includes(version))return;
+  if(!Object.hasOwn(versionLabels,version))return;
   requestedVersion=version;
   if(version==='blender'&&!blenderModel){
     if(glbRequested)return;
@@ -152,22 +176,23 @@ function setModelVersion(version) {
     });
     return;
   }
-  if(version==='sculpt'&&!sculptModel) {
-    if(sculptRequested)return;
-    sculptRequested=true;
-    status.textContent='Loading original textured sculpt study…';
-    new GLTFLoader().load(assetUrl('worker-orc-sculpt-study.glb'),gltf=>{
-      sculptModel=gltf.scene;
-      sculptModel.traverse(node=>{
+  if(isSculpt(version)&&!sculptModels.has(version)) {
+    if(sculptRequested.has(version))return;
+    sculptRequested.add(version);
+    status.textContent='Loading '+sculptLabels[version]+'…';
+    new GLTFLoader().load(assetUrl(sculptFiles[version]),gltf=>{
+      const candidate=gltf.scene;
+      candidate.traverse(node=>{
         if(node.isMesh){node.castShadow=true;node.receiveShadow=true;}
       });
-      scene.add(sculptModel);
-      sculptRequested=false;
-      if(requestedVersion==='sculpt')setModelVersion('sculpt');
-      else sculptModel.visible=false;
+      scene.add(candidate);
+      sculptModels.set(version,candidate);
+      sculptRequested.delete(version);
+      if(requestedVersion===version)setModelVersion(version);
+      else candidate.visible=false;
     },undefined,()=>{
-      sculptRequested=false;
-      status.textContent='Sculpt study GLB unavailable; previous model preserved.';
+      sculptRequested.delete(version);
+      status.textContent=sculptLabels[version]+' GLB unavailable; previous model preserved.';
     });
     return;
   }
@@ -199,22 +224,25 @@ function setModelVersion(version) {
   modelVersion=version;
   model.visible=version==='prototype';
   if(blenderModel)blenderModel.visible=version==='blender';
-  if(sculptModel)sculptModel.visible=version==='sculpt';
+  for(const [stage,candidate] of sculptModels)candidate.visible=version===stage;
   if(riggedModel)riggedModel.visible=version==='rigged';
   document.querySelectorAll('.version').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.version===version)));
-  document.querySelectorAll('.pose').forEach(b=>b.disabled=version==='blender'||version==='sculpt'||(b.dataset.pose==='carry'&&version!=='rigged'));
-  document.getElementById('scene-label').textContent=(version==='sculpt'?'Textured sculpt study':version==='blender'?'Blender static asset':version==='rigged'?'Rigged beta':'Original prototype')+' · '+(sceneMode==='camp'?'Crash site':'Studio');
+  document.querySelectorAll('.pose').forEach(b=>b.disabled=version==='blender'||isSculpt(version)||(b.dataset.pose==='carry'&&version!=='rigged'));
+  document.getElementById('scene-label').textContent=selectedLabel()+' · '+(sceneMode==='camp'?'Crash site':'Studio');
   syncCharacterPosition();
   if(version==='rigged')setPose(pose==='carry'?pose:'idle');
-  else status.textContent=version==='sculpt'?'Original static sculpt study — UV image textures; not rigged or Unity-validated':version==='blender'?'Blender vNext — static model; proper Humanoid rig and animation pending':'Original placeholder — rigid-part movement preview';
+  else status.textContent=isSculpt(version)?sculptLabels[version]+' — original static textured GLB, not rigged or Unity-validated':version==='blender'?'Blender vNext — static model; proper Humanoid rig and animation pending':'Original placeholder — rigid-part movement preview';
 }
-document.querySelectorAll('.version').forEach(button=>button.addEventListener('click',()=>setModelVersion(button.dataset.version)));
+document.querySelectorAll('.version').forEach(button=>button.addEventListener('click',()=>{
+  updateModelLink(button.dataset.version);
+  setModelVersion(button.dataset.version);
+}));
 function setScene(mode) {
   sceneMode=mode;
   crashSite.visible=mode==='camp';
   floor.visible=mode==='character';
   grid.visible=mode==='character';
-  document.getElementById('scene-label').textContent=(modelVersion==='sculpt'?'Textured sculpt study':modelVersion==='blender'?'Blender static asset':modelVersion==='rigged'?'Rigged beta':'Original prototype')+' · '+(mode==='camp'?'Crash site':'Studio');
+  document.getElementById('scene-label').textContent=selectedLabel()+' · '+(mode==='camp'?'Crash site':'Studio');
   document.querySelectorAll('.scene').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scene===mode)));
   syncCharacterPosition();
   resetView();
@@ -224,7 +252,7 @@ document.getElementById('spin').addEventListener('click',e=>{
  spinning=!spinning;
  e.currentTarget.setAttribute('aria-pressed',String(spinning));
 });
-document.getElementById('reset').addEventListener('click',()=>{resetView();model.rotation.y=0;if(blenderModel)blenderModel.rotation.y=0;if(sculptModel)sculptModel.rotation.y=0;if(riggedModel)riggedModel.rotation.y=0;});
+document.getElementById('reset').addEventListener('click',()=>{resetView();model.rotation.y=0;if(blenderModel)blenderModel.rotation.y=0;for(const candidate of sculptModels.values())candidate.rotation.y=0;if(riggedModel)riggedModel.rotation.y=0;});
 function resize(){
  const width=viewer.clientWidth,height=viewer.clientHeight;
  if(width===0||height===0)return;
@@ -282,7 +310,7 @@ function frame(){
    ra.rotation.z=chop?-.10:0;
    h.rotation.y=Math.sin(t*.85)*.035;
    model.position.y=walk?Math.abs(Math.sin(t*7))*.037:Math.sin(t*1.5)*.014;
-   if(spinning){if(modelVersion==='rigged'&&riggedModel)riggedModel.rotation.y+=.0045;else if(modelVersion==='blender'&&blenderModel)blenderModel.rotation.y+=.0045;else if(modelVersion==='sculpt'&&sculptModel)sculptModel.rotation.y+=.0045;else model.rotation.y+=.0045;}
+   if(spinning){if(modelVersion==='rigged'&&riggedModel)riggedModel.rotation.y+=.0045;else if(modelVersion==='blender'&&blenderModel)blenderModel.rotation.y+=.0045;else if(isSculpt(modelVersion)&&sculptModels.has(modelVersion))sculptModels.get(modelVersion).rotation.y+=.0045;else model.rotation.y+=.0045;}
  }
  controls.update();
  renderer.render(scene,camera);

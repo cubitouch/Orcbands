@@ -39,11 +39,17 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input /tmp/orcbands-export/worker-orc-vnext.blend --output /tmp/orcbands-export --export-only
           cp /tmp/orcbands-export/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
           test -s preview/assets/worker-orc-skinned-experiment.glb
-      - name: Generate opt-in sculpt study (do not change rigged default)
+      - name: Export pinned #16, #17 and final #18 sculpt stages
         run: |
-          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output /tmp/orcbands-export
-          cp /tmp/orcbands-export/worker-orc-sculpt-study.glb preview/assets/worker-orc-sculpt-study.glb
-          test -s preview/assets/worker-orc-sculpt-study.glb
+          python3 tools/build-sculpt-versions.py --output preview/assets
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('preview/assets/sculpt-versions.json').read_text())
+          assert set(data)=={'sculpt-v1','sculpt-v2','sculpt'}
+          assert len({v['sha256'] for v in data.values()})==3, 'Different versions must export different GLBs'
+          print('Distinct sculpt stage hashes:',[data[k]['sha256'] for k in data])
+          PY
       - name: Stamp exact deployed source and generated GLB hashes
         run: |
           python3 - <<'PY'
@@ -51,7 +57,7 @@ jobs:
           import hashlib, json, os
           root=Path('preview')
           revision=os.environ['GITHUB_SHA']
-          expected=['worker-orc-vnext.glb','worker-orc-skinned-experiment.glb','worker-orc-sculpt-study.glb']
+          expected=['worker-orc-vnext.glb','worker-orc-skinned-experiment.glb','worker-orc-sculpt-v1.glb','worker-orc-sculpt-v2-head.glb','worker-orc-sculpt-study.glb']
           assets={}
           for name in expected:
               content=(root/'assets'/name).read_bytes()
@@ -63,8 +69,9 @@ jobs:
           index.write_text(data.replace('__ORCBANDS_REVISION__',revision[:12]))
           (root/'asset-build.json').write_text(json.dumps({
               'source_commit':revision,'assets':assets,
-              'viewer_default':'rigged',
-              'quality':'experimental procedural art; not approved production model'
+              'viewer_default':'sculpt',
+              'sculpt_stages':json.loads((root/'assets/sculpt-versions.json').read_text()),
+              'quality':'experimental sculpt studies are static, unlike Rigged beta; not approved production models'
           },indent=2)+'\n')
           print('Pages source:',revision,'generated assets:',assets)
           PY
