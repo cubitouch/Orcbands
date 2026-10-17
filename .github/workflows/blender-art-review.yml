@@ -51,7 +51,9 @@ jobs:
               assert path.is_file() and path.stat().st_size>1024, name
               print(name,path.stat().st_size)
           PY
-      - name: Check GLB pixel material albedo instead of only COLOR_0 presence\n        run: python3 tools/validate-painted-glb.py art-review/worker-orc-vnext.glb\n      - name: Browser smoke — Blender GLB in the real viewer
+      - name: Check GLB pixel material albedo instead of only COLOR_0 presence
+        run: python3 tools/validate-painted-glb.py art-review/worker-orc-vnext.glb
+      - name: Browser smoke — Blender GLB in the real viewer
         run: |
           cp art-review/worker-orc-vnext.glb preview/assets/worker-orc-vnext.glb
           npm install --no-save --ignore-scripts playwright@1.56.1
