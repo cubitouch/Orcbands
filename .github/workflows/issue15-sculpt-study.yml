@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "art/worker_orc_sculpt_study.py"
+      - "art/worker_orc_head.py"
       - "art/render_issue15_glb.py"
       - ".github/workflows/issue15-sculpt-study.yml"
       - "tools/smoke-preview.mjs"
@@ -29,14 +30,16 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output issue15-sculpt
           test -s issue15-sculpt/worker-orc-sculpt-study.blend
           test -s issue15-sculpt/worker-orc-sculpt-study.glb
-      - name: Generate exact exported baseline with no rig
+      - name: Generate pinned PR 16 pre-ART-01 comparison
         run: |
           mkdir -p /tmp/issue15-baseline
-          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output /tmp/issue15-baseline --export-only
+          git fetch --depth=1 origin e1897aad03dde8f5f1ef95054ba86b7b8d8c5fe9
+          git show e1897aad03dde8f5f1ef95054ba86b7b8d8c5fe9:art/worker_orc_sculpt_study.py > /tmp/issue15-baseline/build.py
+          blender -b -t 2 --python-exit-code 1 --python /tmp/issue15-baseline/build.py -- --output /tmp/issue15-baseline
       - name: Render unbiased same-angle *exported GLB* comparison
         run: |
           blender -b -t 2 --python-exit-code 1 --python art/render_issue15_glb.py -- \
-            --baseline /tmp/issue15-baseline/worker-orc-vnext.glb \
+            --baseline /tmp/issue15-baseline/worker-orc-sculpt-study.glb \
             --candidate issue15-sculpt/worker-orc-sculpt-study.glb \
             --output issue15-sculpt/review
           test -s issue15-sculpt/review/comparison.html

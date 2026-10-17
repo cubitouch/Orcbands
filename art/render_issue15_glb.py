@@ -78,6 +78,9 @@ VIEWS = (
     ("04-right", (8, 0, 2.1), (0, 0, 1.48), 4.2),
     ("05-three-quarter", (5, -8, 5.5), (0, 0, 1.47), 4.4),
     ("06-face-close", (1, -7, 3.1), (0, 0, 2.52), 1.6),
+    ("10-face-left", (-7, 0, 2.72), (0, 0, 2.68), 1.4),
+    ("11-face-right", (7, 0, 2.72), (0, 0, 2.68), 1.4),
+    ("12-face-three-quarter", (4, -7, 3.4), (0, 0, 2.6), 1.8),
     ("07-hands-and-gear", (5, -8, 2.6), (0, 0, 1.22), 2.7),
 )
 def shoot(scene, camera, destination, name, pos, at, ortho, wide=False):

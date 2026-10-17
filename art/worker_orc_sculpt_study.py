@@ -229,88 +229,9 @@ loft("SCULPT / trapezius and neck",[
     ((0,0,2.40),.255,.23),((0,-.015,2.49),.28,.25)
 ],skin,40)
 
-# Sculpted face shell: shared, dense hand-shaped vertex grid. Eye sockets,
-# jaw, brow, nose and cheeks displace *the same mesh*, not piled spheres.
-verts=[];faces=[]
-nlat=42;nlong=80
-for i in range(nlat+1):
-    theta=pi*i/nlat
-    for j in range(nlong):
-        phi=2*pi*j/nlong
-        a=sin(theta)*cos(phi);b=sin(theta)*sin(phi)
-        # squared fantasy skull rather than a shiny smooth egg
-        x=.49*math.copysign(abs(a)**.77,a)
-        y=-.012+.365*math.copysign(abs(b)**.78,b)
-        z=2.69+.405*cos(theta)
-        if y<-.10:
-            cheek=.085*gauss(abs(x),z,.36,2.61,.16,.18)
-            jowl=.13*gauss(abs(x),z,.22,2.44,.31,.11)
-            muzzle=.12*gauss(abs(x),z,.13,2.52,.27,.11)
-            nose=.24*gauss(x,z,0,2.68,.18,.125)
-            brow=.12*gauss(abs(x),z,.24,2.87,.19,.08)
-            socket=.105*gauss(abs(x),z,.24,2.77,.12,.083)
-            chin=.075*gauss(x,z,0,2.40,.22,.07)
-            y+=-cheek-jowl-muzzle-nose-brow+socket-chin
-        # Heavy jaw / cheekbone plane with reduced taper lower face.
-        x*=1+.13*gauss(abs(x),z,.30,2.48,.3,.15)
-        verts.append((x,y,z))
-for i in range(nlat):
-    for j in range(nlong):
-        a=i*nlong+j;b=i*nlong+(j+1)%nlong
-        faces.append((a,b,b+nlong,a+nlong))
-head=mesh("SCULPT / one continuous expressive face and jaw",verts,faces,skin)
-
-# Ears are sculpted leaf-like cartilaginous surfaces, inset concha.
-for s,side in ((-1,"L"),(1,"R")):
-    v=[
-        (s*.43,.025,2.84),(s*.56,.015,2.87),(s*.73,.07,2.99),
-        (s*.67,-.06,2.78),(s*.55,-.15,2.63),(s*.44,-.11,2.70),
-        (s*.55,-.08,2.79)
-    ]
-    mesh(side+" ear / thick swept cartilage",v,[(0,1,6,5),(1,2,3,6),(3,4,5,6)],skin)
-    orb(side+" ear / inset concha",(s*.57,-.108,2.77),(.088,.017,.105),skindark)
-    # Lower tusks flow upward from the jaw, curved and irregular.
-    limb(side+" ivory jaw tusk",[
-        ((s*.355,-.495,2.44),.087,.077),
-        ((s*.362,-.536,2.51),.076,.066),
-        ((s*.37,-.548,2.61),.050,.047),
-        ((s*.387,-.529,2.69),.008,.009)
-    ],bone,18)
-    # Eyes are inset in the carved cheek/brow; make small, not googly.
-    orb(side+" deep eye socket",(s*.235,-.452,2.776),(.120,.020,.078),skindark)
-    orb(side+" amber eye",(s*.235,-.477,2.768),(.071,.017,.043),eye)
-    orb(side+" small pupil",(s*.237,-.496,2.765),(.027,.008,.033),iris)
-    # Lower eyelid and high menacing brow follow expression.
-    tube(side+" lower eyelid",[(s*.128,-.471,2.75),
-         (s*.20,-.485,2.723),(s*.30,-.477,2.732),(s*.355,-.449,2.765)],.022,skinlight)
-    # Skin crease / raised supraorbital ridge.
-    tube(side+" sharply slanted brow",[(s*.10,-.481,2.865),
-         (s*.19,-.488,2.864),(s*.32,-.455,2.895),
-         (s*.382,-.404,2.924)],.050,skindark)
-    orb(side+" nose wing",(s*.136,-.558,2.632),(.09,.030,.049),skin)
-    orb(side+" true dark nostril",(s*.132,-.600,2.635),(.034,.009,.020),skindark)
-    # Sculpted cheek/smile creases, not extra decorative tusks.
-    tube(side+" nasolabial crease",[(s*.23,-.496,2.583),(s*.29,-.49,2.552),
-                                   (s*.33,-.45,2.51)],.015,skindark)
-# Shallow anatomy creases across the sculpted cheek surface, low-cost
-# asymmetry gives age without decorating the face with large cylinders.
-for side_sign, label in ((-1,"L"),(1,"R")):
-    tube(label+" age crease below eye",[
-        (side_sign*.145,-.477,2.694),
-        (side_sign*.218,-.501,2.681),
-        (side_sign*.285,-.483,2.683)
-    ],.010,skindark,8)
-    tube(label+" temple skin fold",[
-        (side_sign*.365,-.398,2.839),
-        (side_sign*.400,-.350,2.803),
-        (side_sign*.416,-.323,2.771)
-    ],.014,skinlight,8)
-# Grumpy asymmetric broad lip line, curved lower jaw edge
-tube("Inset mouth / downturned expression",[
-    (-.29,-.515,2.476),(-.17,-.590,2.477),(0,-.618,2.465),
-    (.20,-.580,2.479),(.30,-.510,2.496)],.023,skindark)
-tube("Heavy lower lip",[
-    (-.24,-.523,2.45),(0,-.587,2.438),(.25,-.516,2.46)],.039,skinlight)
+# ART-01 fine sculpt is authored separately from the body remesh.
+exec(compile((Path(__file__).parent / "worker_orc_head.py").read_text(),
+             "worker_orc_head.py", "exec"), globals())
 
 # Muscular arms: through-elbow geometry and separately articulated fingers
 # on broad hands, not mitten lumps. Both hands down near belt/upper thigh.
@@ -392,7 +313,7 @@ for s,side in ((-1,"L"),(1,"R")):
 # Preserve separately modelled inset eyelids, teeth, accessories and cloth.
 base_skin = []
 for obj in objects:
-    if obj.type != "MESH" or not obj.data.materials or obj.data.materials[0] != skin:
+    if obj.get("ART01_head") or obj.type != "MESH" or not obj.data.materials or obj.data.materials[0] != skin:
         continue
     if ("SCULPT /" in obj.name or " finger " in obj.name or
         " curled thumb" in obj.name or " ear / thick" in obj.name or
@@ -682,7 +603,7 @@ bpy.ops.export_scene.gltf(filepath=str(out/"worker-orc-sculpt-study.glb"),
     export_format="GLB",use_selection=True,export_apply=True)
 glb=out/"worker-orc-sculpt-study.glb"
 info={
-  "art_stage":"Static sculpt study iteration 3; not approved game-ready or rigged",
+  "art_stage":"ART-01 head candidate; pending artistic review, not rigged",
   "provenance":"Original authored topology; owner-provided AI-generated 2D reference; no third-party mesh",
   "geometry_mesh_objects":len(objects),
   "source_mesh_polygons":sum(len(ob.data.polygons) for ob in objects if ob.type=="MESH"),
