@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - "art/**"
+      - "docs/issue-15-worker-orc-art-brief.md"
       - "tools/check-issue15-references.py"
       - ".github/workflows/issue15-glb-review.yml"
 

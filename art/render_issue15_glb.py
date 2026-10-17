@@ -156,15 +156,29 @@ report = {"baseline": run(baseline_path, "baseline"),
           "candidate": run(candidate_path, "candidate") if candidate_path else None,
           "notice": "Evidence only: no automatic claim of visual improvement"}
 (output / "summary.json").write_text(json.dumps(report, indent=2) + "\n")
-if candidate_path:
-    sections = ["<h1>Worker Orc #15 — exported GLB comparison</h1>",
-                "<p>Same physical camera, neutral lighting; human art approval required.</p>"]
-    for view, _, _, _ in VIEWS:
-        sections.append(f'<h2>{view}</h2><img width="45%" src="baseline/{view}.png"> '
-                        f'<img width="45%" src="candidate/{view}.png">')
-    sections.append('<h2>08-rts-five</h2><img width="45%" src="baseline/08-rts-five.png"> '
-                    '<img width="45%" src="candidate/08-rts-five.png">')
-    (output / "comparison.html").write_text(
-        "<!doctype html><html><meta charset='utf-8'><body>" +
-        "\n".join(sections) + "</body></html>\n", encoding="utf-8")
+sections = [
+    "<!doctype html><html lang='en'><meta charset='utf-8'>",
+    "<meta name='viewport' content='width=device-width,initial-scale=1'>",
+    "<title>Orcbands #15 — exported GLB evidence</title>",
+    "<style>body{background:#171b1a;color:#f1f4ef;font:16px system-ui;"
+    "max-width:1400px;margin:auto;padding:24px}section{border-top:1px solid "
+    "#4a514b;padding:20px 0}figure{margin:8px}img{max-width:100%;height:auto}"
+    ".pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));"
+    "gap:16px}figcaption{padding:10px;color:#c1d4c5}</style>",
+    "<h1>Worker Orc #15 — exported GLB review</h1>",
+    "<p>Real 3D imports, identical camera and neutral lighting. "
+    "No automated art-quality approval. Do not confuse baseline with a new model.</p>",
+]
+for view in [name for name, _, _, _ in VIEWS] + ["08-rts-five"]:
+    sections.append(f"<section><h2>{view}</h2><div class='pair'>")
+    for label in ("baseline", "candidate") if candidate_path else ("baseline",):
+        sections.append(
+            f"<figure><img loading='lazy' src='{label}/{view}.png' "
+            f"alt='{label} {view} from actual exported GLB'>"
+            f"<figcaption>{label}</figcaption></figure>"
+        )
+    sections.append("</div></section>")
+sections.append("</html>")
+(output / "comparison.html").write_text(
+    "\n".join(sections) + "\n", encoding="utf-8")
 print("ISSUE15_REPORT", json.dumps(report, indent=2))
