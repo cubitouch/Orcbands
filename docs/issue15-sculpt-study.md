@@ -59,3 +59,19 @@ Upon eventual owner-approved merge, the existing Asset Lab will gain a
 separate opt-in `Textured sculpt study` button; the **Rigged beta default
 is deliberately unchanged**. The GLB remains unrigged, so animation controls
 disable in this mode. The deployment records its actual GLB SHA-256.
+
+## Third iteration — directed soft-surface refinement
+
+The next pass focuses on silhouette and material form rather than increasing
+primitive ornamentation. The front apron is now a single curved, tapered
+mesh with deliberate vertical drape folds, physical thickness, and an
+asymmetric lower hem; one stitched repair patch provides workwear character.
+The red headscarf is rebuilt as a continuous radially sampled cloth crown,
+replacing stacked rigid circular band/cap forms. A softer folded brow welt,
+rear fabric ties and cheek/temple creases add closer-reading detail. Organic
+skin joints receive a denser voxel union and additional smoothing. Small axe
+wear marks/wood grain are present in real geometry.
+
+These are still scripted 3D geometry studies; the artist-quality benchmark and
+all animation/Unity caveats remain. Compare *actual exported GLB renders* and
+five-character RTS scale before deciding whether to preserve this pass.

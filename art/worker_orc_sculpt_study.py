@@ -218,6 +218,9 @@ for v in torso.data.vertices:
         v.co.y+=.035*gauss(abs(x),z,.06,1.97,.06,.11)
     if y>.12:
         v.co.y+=.055*gauss(abs(x),z,.40,2.0,.34,.20)
+    # Broad scapula, not a perfect cylinder seen from the RTS angle.
+    if z>1.80 and y>.11:
+        v.co.y += .035*gauss(abs(x),z,.49,2.0,.21,.18)
 torso.data.update()
 
 # Integral organic neck rising naturally from pectoral collar.
@@ -289,6 +292,19 @@ for s,side in ((-1,"L"),(1,"R")):
     # Sculpted cheek/smile creases, not extra decorative tusks.
     tube(side+" nasolabial crease",[(s*.23,-.496,2.583),(s*.29,-.49,2.552),
                                    (s*.33,-.45,2.51)],.015,skindark)
+# Shallow anatomy creases across the sculpted cheek surface, low-cost
+# asymmetry gives age without decorating the face with large cylinders.
+for side_sign, label in ((-1,"L"),(1,"R")):
+    tube(label+" age crease below eye",[
+        (side_sign*.145,-.477,2.694),
+        (side_sign*.218,-.501,2.681),
+        (side_sign*.285,-.483,2.683)
+    ],.010,skindark,8)
+    tube(label+" temple skin fold",[
+        (side_sign*.365,-.398,2.839),
+        (side_sign*.400,-.350,2.803),
+        (side_sign*.416,-.323,2.771)
+    ],.014,skinlight,8)
 # Grumpy asymmetric broad lip line, curved lower jaw edge
 tube("Inset mouth / downturned expression",[
     (-.29,-.515,2.476),(-.17,-.590,2.477),(0,-.618,2.465),
@@ -391,11 +407,11 @@ bpy.context.view_layer.objects.active = base_skin[0]
 bpy.ops.object.join()
 fused = bpy.context.object
 fused.name = "SCULPT / watertight body neck face arms hands and ears"
-fused.data.remesh_voxel_size = .022
+fused.data.remesh_voxel_size = .020
 bpy.ops.object.voxel_remesh()
 smoothing=fused.modifiers.new("gentle organic transition smoothing","SMOOTH")
 smoothing.factor=1.25
-smoothing.iterations=3
+smoothing.iterations=5
 bpy.ops.object.modifier_apply(modifier=smoothing.name)
 for polygon in fused.data.polygons:polygon.use_smooth=True
 # UVs must be regenerated AFTER voxel remeshing; the skin is truly image mapped.
@@ -405,17 +421,56 @@ bpy.ops.uv.smart_project(island_margin=.020)
 bpy.ops.object.mode_set(mode="OBJECT")
 objects.append(fused)
 
-# Sculpted fitted worker apron: front segmented rows hug the figure and flare
-# into visibly draped, thick leather around the thighs. NOT a hanging cube.
-front=[]
-for i in range(17):
-    t=i/16
-    z=2.115-t*1.075
-    width=.36+.10*sin(pi*t)+.19*t
-    yf=-.45-.06*t+.010*sin(t*3*pi)
-    hem=.008*sin(t*21)
-    front.append(((-width,yf,z+hem),(width,yf,z-hem)))
-ribbon("COSTUME / fitted leather smith-worker bib and apron",front,leather,30)
+# A purpose-built draped, curved leather surface, rather than the old
+# rectangular ribbon. Side edges roll around the waist and the lower hem
+# has asymmetric vertical folds. Keeping topology in one sheet makes later
+# sculpting/retopology possible without detached overlays.
+apron_verts = []
+apron_faces = []
+apron_u = 32
+apron_v = 25
+for row in range(apron_v + 1):
+    t = row / apron_v  # collar/bib = 0, wide working hem = 1
+    width = .365 + .065 * sin(pi*t) + .220 * (t*t*(3-2*t))
+    z_base = 2.095 - 1.055*t
+    for col in range(apron_u + 1):
+        u = col / apron_u
+        across = 2*u-1
+        x = across * width + .006*sin(t*8+u*6)*t
+        # Wide lower apron wraps around each thigh while the front center is
+        # proud of the torso. Fold peaks are real vertices, not shiny normals.
+        roll = .130 * abs(across)**1.65
+        folds = .030 * sin(3*pi*across + .9*t) * (t**1.5)
+        y = -.457 - .069*t + roll - folds
+        # Curved and irregular cloth hem; upper bib stays neatly tailored.
+        z = z_base + t**3*(.022*cos(5*pi*u+0.3)+.011*sin(11*pi*u))
+        z += .008*(sin(u*12 + 5*t))*sin(pi*t)
+        apron_verts.append((x,y,z))
+for row in range(apron_v):
+    for col in range(apron_u):
+        a=row*(apron_u+1)+col
+        apron_faces.append((a,a+apron_u+1,a+apron_u+2,a+1))
+apron = mesh("COSTUME / draped anatomically fitted leather work apron",
+             apron_verts,apron_faces,leather,smooth=True)
+thickness = apron.modifiers.new("working leather sheet thickness", "SOLIDIFY")
+thickness.thickness = .022
+thickness.offset = -1.0
+soft = apron.modifiers.new("soft sewn leather edges", "BEVEL")
+soft.width = .009
+soft.segments = 2
+apron.modifiers.new("weighted apron normals", "WEIGHTED_NORMAL")
+# Repair patch: real stitched thick leather panel held to lower bib.
+ribbon("COSTUME / practical worn apron repair patch",[
+    ((.12,-.546,1.35),(.31,-.535,1.355)),
+    ((.10,-.554,1.22),(.30,-.547,1.218)),
+    ((.115,-.56,1.13),(.33,-.540,1.14))
+], edge, 8)
+for k in range(5):
+    z = 1.16 + k*.044
+    tube(f"Apron repair stitch {k}",[
+        (.105,-.568,z),(.14,-.572,z+.01)
+    ],.0065,stitch,6)
+
 # Apron ends in scalloped irregular bottom / surface edge stitching
 tube("Apron lower hand-sewn hem",[
     (-.55,-.533,1.06),(-.38,-.537,1.043),(-.18,-.54,1.066),
@@ -464,44 +519,57 @@ for x in (-.125,.125):
     tube(f"Buckle vertical at x {x}",[(x,-.464,1.32),(x,-.464,1.49)],.027,steel)
 tube("Buckle tongue",[(-.014,-.497,1.40),(.102,-.495,1.40)],.016,steel)
 
-# The woven headscarf COVERS the cranium; the earlier halo left a bald dome.
-loft("COSTUME / cap over scalp not a floating band",[
-    ((0,-.012,3.050),.510,.385),
-    ((0,-.012,3.088),.47,.362),
-    ((0,-.012,3.122),.34,.275),
-    ((0,-.012,3.149),.13,.122),
-    ((0,-.012,3.151),.008,.008),
-],red,52)
-
-# Bandana: twisted cloth wrapped across forehead as an actually layered fold,
-# with a tied knot and loose ribbon tails trailing behind the right ear.
-headrows=[]
-for k in range(4):
-    z=2.965+.038*k
-    row=[]
-    for j in range(49):
-        th=2*pi*j/48
-        row.append((.505*cos(th),-.012+.384*sin(th),z+.015*sin(3*th)))
-    headrows.append(row)
-v=[p for row in headrows for p in row]
-faces=[]
-for k in range(3):
-    for j in range(48):
-        a=k*49+j
-        faces.append((a,a+1,a+1+49,a+49))
-mesh("COSTUME / real wrapped terracotta bandana",v,faces,red,False)
-tube("Bandana hand-fold top lip",[
-    (-.45,-.215,3.08),(-.28,-.352,3.094),(0,-.411,3.085),
-    (.29,-.355,3.094),(.48,-.187,3.083)],.021,redlight)
-orb("Fabric knot at right rear side",(.49,.16,3.02),(.112,.118,.095),red,18,12)
-ribbon("Scarf folded tail 1",[
-    ((.47,.2,3.01),(.63,.2,2.98)),
-    ((.51,.30,2.81),(.69,.30,2.78)),
-    ((.48,.39,2.60),(.62,.42,2.59))],red,5)
-ribbon("Scarf flutter tail 2",[
-    ((.43,.24,3.03),(.54,.24,2.98)),
-    ((.35,.47,2.88),(.52,.50,2.84)),
-    ((.34,.58,2.71),(.46,.61,2.71))],redlight,5)
+# Sculpted headscarf: one continuous cloth-like radial mesh, following the
+# squarish skull under it. Soft asymmetric crown folds remove the rigid pancake
+# look. Its narrow front hem covers the hairline, with a right-rear knot.
+scarf_verts=[]
+scarf_faces=[]
+scarf_rings=[
+    (.518,.405,3.001),(.519,.402,3.038),
+    (.490,.385,3.076),(.450,.355,3.111),
+    (.375,.303,3.140),(.275,.235,3.162),
+    (.150,.149,3.174),(.020,.020,3.178)
+]
+scarf_segments=72
+for k,(rx,ry,z) in enumerate(scarf_rings):
+    t=k/(len(scarf_rings)-1)
+    for j in range(scarf_segments):
+        angle=2*pi*j/scarf_segments
+        radial=1.0+.016*sin(7*angle+.7*t)+.013*sin(11*angle-1.3*t)
+        p=(rx*cos(angle)*radial,
+           -.010+ry*sin(angle)*radial,
+           z+.009*sin(4*angle+2*t)*(1.-t)+.006*sin(9*angle)*t)
+        scarf_verts.append(p)
+for k in range(len(scarf_rings)-1):
+    for j in range(scarf_segments):
+        a=k*scarf_segments+j
+        b=k*scarf_segments+(j+1)%scarf_segments
+        scarf_faces.append((a,b,b+scarf_segments,a+scarf_segments))
+mesh("COSTUME / unified crumpled red head scarf", scarf_verts,
+     scarf_faces,red,smooth=True)
+tube("Bandana folded forehead welt",[
+    (-.48,-.207,3.032),(-.34,-.34,3.027),
+    (-.12,-.417,3.025),(.13,-.415,3.027),
+    (.35,-.33,3.039),(.48,-.19,3.042)
+],.019,redlight,11)
+# Double-band upper seam sweeps around forehead, NOT stacked torus rings.
+tube("Bandana diagonal soft sewn fold",[
+    (-.42,-.252,3.092),(-.22,-.395,3.074),
+    (0,-.427,3.068),(.22,-.384,3.084),(.42,-.239,3.096)
+],.012,red,11)
+orb("Scarf pinched cloth knot beneath folds",(.50,.15,3.046),
+    (.086,.089,.079),red,18,12)
+ribbon("Cloth tie tail 1 / bent by gravity",[
+    ((.47,.20,3.055),(.60,.20,3.05)),
+    ((.52,.305,2.94),(.665,.305,2.92)),
+    ((.48,.39,2.77),(.61,.39,2.77)),
+    ((.52,.45,2.63),(.62,.45,2.62))
+],red,7)
+ribbon("Cloth tie tail 2 / uneven split",[
+    ((.43,.23,3.05),(.54,.23,3.05)),
+    ((.34,.44,2.94),(.50,.45,2.93)),
+    ((.31,.57,2.79),(.42,.59,2.81))
+],redlight,7)
 
 # A practical wood axe carried near the worker's right hand/hip.
 # Wood shaft follows a tapered swept topology; forged cutting blade is a
@@ -542,6 +610,19 @@ ribbon("EQUIPMENT / pale sharpened working edge",[
 for z in (1.25,1.32):
     orb("Riveted axe head pin", (1.47,-.473,z),(.022,.018,.022),steel,12,8)
 
+# Genuine wood grain along visible handle front; follows the tapered
+# wooden shaft instead of floating as a flat image overlay.
+for offset in (-.025,.021):
+    tube("Axe wood longitudinal grain "+str(offset),[
+        (1.391+offset,-.441,.92),(1.394+offset*.8,-.435,1.16),
+        (1.40+offset*.6,-.436,1.31)
+    ],.0055,edge,7)
+for i in range(4):
+    z=1.16+i*.091
+    tube(f"Forged blade hand-hammer nicks {i}",[
+        (1.72+i*.027,-.472,z),(1.75+i*.027,-.468,z+.038)
+    ],.006,steel,7)
+
 # Scene origin + metadata; export selection omits cameras/render staging.
 for ob in objects:
     ob["Orcbands"] = "Original Worker Orc #15 static sculpt study"
@@ -556,10 +637,11 @@ bpy.ops.export_scene.gltf(filepath=str(out/"worker-orc-sculpt-study.glb"),
     export_format="GLB",use_selection=True,export_apply=True)
 glb=out/"worker-orc-sculpt-study.glb"
 info={
-  "art_stage":"Static sculpt study; not approved game-ready or rigged",
+  "art_stage":"Static sculpt study iteration 3; not approved game-ready or rigged",
   "provenance":"Original authored topology; owner-provided AI-generated 2D reference; no third-party mesh",
   "geometry_mesh_objects":len(objects),
-  "mesh_triangles":sum(len(ob.data.polygons) for ob in objects if ob.type=="MESH"),
+  "source_mesh_polygons":sum(len(ob.data.polygons) for ob in objects if ob.type=="MESH"),
+  "source_mesh_triangles":sum(sum(max(0,len(p.vertices)-2) for p in ob.data.polygons) for ob in objects if ob.type=="MESH"),
   "uv_image_albedo_materials":len(image_names),
   "exported_glb_bytes":glb.stat().st_size,
   "source_blend_bytes":(out/"worker-orc-sculpt-study.blend").stat().st_size,
