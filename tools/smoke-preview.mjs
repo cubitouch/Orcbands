@@ -47,8 +47,8 @@ try {
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
   if(process.env.ORCBANDS_TEST_SCULPT==='1') {
-    await page.getByRole('button',{name:'Textured sculpt study'}).click();
-    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Textured sculpt study'),null,{timeout:60000});
+    await page.getByRole('button',{name:'Sculpt #18 · Hands'}).click();
+    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Sculpt #18'),null,{timeout:60000});
     await page.waitForTimeout(750);
     if(await page.getByRole('button',{name:'Walk'}).isEnabled())
       throw new Error('Static sculpt must disable animation controls');
@@ -57,11 +57,44 @@ try {
     await page.screenshot({path:path.join(repo,'smoke-artifacts','real-sculpt-browser.png')});
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
+  if(process.env.ORCBANDS_TEST_SCULPT_STAGES==='1') {
+    const stages=[
+      ['sculpt-v1','Sculpt #16 · Original','Sculpt #16'],
+      ['sculpt-v2','Sculpt #17 · Face','Sculpt #17'],
+      ['sculpt','Sculpt #18 · Hands','Sculpt #18']
+    ];
+    const loadedBodies=new Map();
+    for(const [id,buttonName,sceneLabel] of stages) {
+      await page.getByRole('button',{name:buttonName}).click();
+      await page.waitForFunction(label=>document.getElementById('scene-label')?.textContent.includes(label),sceneLabel,{timeout:90000});
+      await page.waitForTimeout(800);
+      if(await page.getByRole('button',{name:'Walk'}).isEnabled())
+        throw new Error(id+': static sculpt incorrectly allows animation');
+      const info=await page.evaluate(id=>{
+        const btn=document.querySelector('[data-version="'+id+'"]');
+        return {pressed:btn?.getAttribute('aria-pressed'),url:new URL(location.href).searchParams.get('model')};
+      },id);
+      if(info.pressed!=='true'||info.url!==id)throw new Error(id+': selected version or permalink mismatch: '+JSON.stringify(info));
+      const file='/assets/'+({ 'sculpt-v1':'worker-orc-sculpt-v1.glb','sculpt-v2':'worker-orc-sculpt-v2-head.glb',sculpt:'worker-orc-sculpt-study.glb'}[id]);
+      const bytes=await page.evaluate(async path=>{
+        const response=await fetch(path);
+        if(!response.ok)throw new Error(path+' response '+response.status);
+        return new Uint8Array(await response.arrayBuffer());
+      },file);
+      loadedBodies.set(id,bytes.length+':'+bytes.slice(0,24).join(','));
+      await page.screenshot({path:path.join(repo,'smoke-artifacts',id+'-real-webgl.png')});
+    }
+    if(new Set([...loadedBodies.values()]).size!==3)
+      throw new Error('Distinct sculpt choices must load distinct GLB bytes: '+JSON.stringify([...loadedBodies]));
+    const direct=await browser.newPage({viewport:{width:1024,height:768},deviceScaleFactor:1});
+    await direct.goto(url+'/?model=sculpt-v2',{waitUntil:'domcontentloaded'});
+    await direct.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Sculpt #17'),null,{timeout:90000});
+    await direct.close();
+    await page.getByRole('button',{name:'Original placeholder'}).click();
+  }
   if(process.env.ORCBANDS_TEST_RIG==='1') {
-    // The real rigged model is now the default, not merely a selectable tab.
-    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Rigged beta'),null,{timeout:60000});
-    if(await page.getByRole('button',{name:'Original placeholder'}).getAttribute('aria-pressed')==='true')
-      throw new Error('Default still presents obsolete prototype');
+    // The latest *sculpt* is the default. Rigged beta remains independently
+    // selectable for the only genuine skinned/animated character.
     await page.getByRole('button',{name:'Rigged beta'}).click();
     await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Rigged beta'),null,{timeout:60000});
     await page.waitForTimeout(700);
