@@ -47,6 +47,10 @@ try {
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
   if(process.env.ORCBANDS_TEST_RIG==='1') {
+    // The real rigged model is now the default, not merely a selectable tab.
+    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Rigged beta'),null,{timeout:60000});
+    if(await page.getByRole('button',{name:'Original placeholder'}).getAttribute('aria-pressed')==='true')
+      throw new Error('Default still presents obsolete prototype');
     await page.getByRole('button',{name:'Rigged beta'}).click();
     await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Rigged beta'),null,{timeout:60000});
     await page.waitForTimeout(700);
