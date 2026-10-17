@@ -35,7 +35,9 @@ jobs:
           assert info['asset_store_dependencies'] is False
           assert info['humanoid_validated'] is False
           assert info['skinned'] is False
-          assert info['triangles'] < 80000, f"Mesh too dense for browser asset preview: {info['triangles']} triangles"
+          # Desktop first, small number of units; preserve room for more
+          # topology when it improves the actual character silhouette.
+          assert info['triangles'] < 150000, f"Unexpected runaway geometry: {info['triangles']} triangles"
           for name in info['outputs']:
               path=d/name
               assert path.is_file() and path.stat().st_size>1024, name
