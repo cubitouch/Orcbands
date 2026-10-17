@@ -105,6 +105,14 @@ def worker_hand(s,side):
             for col in range(8):
                 a=row*9+col;ff.append((a,a+1,a+10,a+9))
         nail=mesh(side+f' ART02 / nail {k+1}',vv,ff,nailmat)
+        if side=='R':
+            # Nails MUST follow the same fingertip curl, or detach visually.
+            for vertex in nail.data.vertices:
+                z=vertex.co.z
+                tuck=clamp((1.010-z)/.25)
+                vertex.co.y+=.082*tuck
+                vertex.co.z+=.068*tuck
+            nail.data.update()
         solid=nail.modifiers.new('Nail plate thickness','SOLIDIFY');solid.thickness=.004
     thumb_nail=orb(side+' ART02 / thumb nail',(s*.888,-.411,.940),(.026,.007,.032),nailmat,28,16)
     for ob in objects[start:]:
