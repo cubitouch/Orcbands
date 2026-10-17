@@ -102,3 +102,43 @@ sculpt/retopo/material work described above. Estimated specialized artist
 effort is several working days to a few weeks depending on revision count,
 texture finish, and animation scope; commission scope must be bid from the
 real references rather than treating any estimate as a guarantee.
+
+
+## Direct baseline pixel inspection (real CI artifacts)
+
+Inspected Blender baseline GLB imports and the matching browser screenshot from
+[exact-head #15 review run](https://github.com/cubitouch/Orcbands/actions/runs/39042483402).
+The reference artwork's thick cloth folds, eyelid anatomy, angular lower jaw,
+olive skin variations and fitted apron were compared against **actual model
+pixels**, not just source-code descriptions.
+
+Observed, still-unacceptable discrepancies:
+
+- **Face:** flattened simple nostrils/muzzle with very shallow eye sockets,
+  segmented broad eyebrow pieces, large separately apparent tusk elements and
+  a thin rigid halo-like red headband in place of tied textured fabric.
+- **Body:** abrupt shoulder/upper-arm cylinder transitions, glove/mitten-like
+  finger silhouettes, insufficient neck/torso sculpting and simple boot shapes.
+- **Clothing:** mostly rigid hanging panels, bare torso/exposed green abdomen,
+  asymmetrical single shoulder pad, rounded gear blobs; the reference's
+  continuous fitted leather apron and layered stitching are not present.
+- **Axe:** basic flat jagged geometric head instead of an authored forged-metal
+  cutting head with visible thickness, edge wear and convincing handle wrap.
+- **RTS:** five *real instances* are recognizable as orcs but still read like
+  identical blocky toys beside the cohesive sculpted reference workers.
+- **Materials:** exported GLB contains **zero image textures**. Its color
+  relies on 18 material slots / vertex color, rather than authored UV-mapped
+  skin/leather/cloth/metal textures and baked relief.
+
+Recorded from `issue15-review/baseline/glb-metrics.json` on the exact candidate
+review workflow: **131 mesh objects, 94,416 imported/triangulated triangles,
+18 Blender material names, 0 image textures, 2,239,104-byte GLB**, SHA-256
+`7678338bd25606fdc0947c324ab2a4cb10b0579369f30b142d1b5f8b9887b132`.
+These are baseline evidence measurements, **not candidate budgets** and not an
+art-quality pass. The other historical pipeline's `model-info.json` reported
+43,187 *mesh polygons* while labeling that figure "triangles"; for review,
+use actual triangulated-face counts from the imported GLB.
+
+Full-size evidence is attached as workflow artifact
+`issue15-exported-glb-review`: front, left, back, right, 3/4, face, hands,
+five actor RTS, actual Chromium WebGL and machine-readable metrics.
