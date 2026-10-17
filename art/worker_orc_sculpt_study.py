@@ -62,7 +62,7 @@ def imgmat(name, base, variation, grain, rough=.82, metal=0):
     image_names.append(im.name)
     return m
 
-skin=imgmat("01 Olive skin with subtle mottling",(.34,.43,.18),.078,29,.85)
+skin=imgmat("01 Olive skin with subtle mottling",(.385,.456,.215),.061,29,.85)
 skindark=imgmat("02 Deep skin creases",(.18,.245,.102),.036,38)
 skinlight=imgmat("03 Green highlight raised tissue",(.42,.49,.245),.039,33)
 leather=imgmat("04 Worn walnut leather apron",(.255,.145,.085),.075,79)
@@ -268,15 +268,15 @@ for s,side in ((-1,"L"),(1,"R")):
     orb(side+" ear / inset concha",(s*.57,-.108,2.77),(.088,.017,.105),skindark)
     # Lower tusks flow upward from the jaw, curved and irregular.
     limb(side+" ivory jaw tusk",[
-        ((s*.365,-.49,2.43),.115,.098),
-        ((s*.385,-.555,2.52),.097,.087),
-        ((s*.403,-.576,2.64),.064,.060),
-        ((s*.42,-.557,2.78),.015,.014)
+        ((s*.355,-.495,2.44),.087,.077),
+        ((s*.362,-.536,2.51),.076,.066),
+        ((s*.37,-.548,2.61),.050,.047),
+        ((s*.387,-.529,2.69),.008,.009)
     ],bone,18)
     # Eyes are inset in the carved cheek/brow; make small, not googly.
-    orb(side+" deep eye socket",(s*.235,-.452,2.776),(.134,.027,.091),skindark)
-    orb(side+" amber eye",(s*.235,-.477,2.768),(.085,.022,.052),eye)
-    orb(side+" small pupil",(s*.237,-.496,2.765),(.034,.009,.045),iris)
+    orb(side+" deep eye socket",(s*.235,-.452,2.776),(.120,.020,.078),skindark)
+    orb(side+" amber eye",(s*.235,-.477,2.768),(.071,.017,.043),eye)
+    orb(side+" small pupil",(s*.237,-.496,2.765),(.027,.008,.033),iris)
     # Lower eyelid and high menacing brow follow expression.
     tube(side+" lower eyelid",[(s*.128,-.471,2.75),
          (s*.20,-.485,2.723),(s*.30,-.477,2.732),(s*.355,-.449,2.765)],.022,skinlight)
@@ -284,8 +284,8 @@ for s,side in ((-1,"L"),(1,"R")):
     tube(side+" sharply slanted brow",[(s*.10,-.481,2.865),
          (s*.19,-.488,2.864),(s*.32,-.455,2.895),
          (s*.382,-.404,2.924)],.050,skindark)
-    orb(side+" nose wing",(s*.136,-.558,2.632),(.105,.053,.060),skin)
-    orb(side+" true dark nostril",(s*.132,-.600,2.635),(.041,.010,.026),skindark)
+    orb(side+" nose wing",(s*.136,-.558,2.632),(.09,.030,.049),skin)
+    orb(side+" true dark nostril",(s*.132,-.600,2.635),(.034,.009,.020),skindark)
     # Sculpted cheek/smile creases, not extra decorative tusks.
     tube(side+" nasolabial crease",[(s*.23,-.496,2.583),(s*.29,-.49,2.552),
                                    (s*.33,-.45,2.51)],.015,skindark)
@@ -370,6 +370,41 @@ for s,side in ((-1,"L"),(1,"R")):
            (s*.34,-.335,.420+k*.045),
            (s*(.34+.1),-.30,.40+k*.048)],.012,stitch)
 
+# Fuse overlapping sculpted skin into ONE continuous watertight anatomical
+# surface before dressing the worker. This is categorically different from
+# merely putting large disconnected shoulder/finger spheres together.
+# Preserve separately modelled inset eyelids, teeth, accessories and cloth.
+base_skin = []
+for obj in objects:
+    if obj.type != "MESH" or not obj.data.materials or obj.data.materials[0] != skin:
+        continue
+    if ("SCULPT /" in obj.name or " finger " in obj.name or
+        " curled thumb" in obj.name or " ear / thick" in obj.name or
+        " nose wing" in obj.name):
+        base_skin.append(obj)
+if len(base_skin) < 10:
+    raise RuntimeError("Missing anatomically sculpted pieces for continuous skin join")
+objects[:] = [obj for obj in objects if obj not in base_skin]
+bpy.ops.object.select_all(action="DESELECT")
+for obj in base_skin:obj.select_set(True)
+bpy.context.view_layer.objects.active = base_skin[0]
+bpy.ops.object.join()
+fused = bpy.context.object
+fused.name = "SCULPT / watertight body neck face arms hands and ears"
+fused.data.remesh_voxel_size = .022
+bpy.ops.object.voxel_remesh()
+smoothing=fused.modifiers.new("gentle organic transition smoothing","SMOOTH")
+smoothing.factor=1.25
+smoothing.iterations=3
+bpy.ops.object.modifier_apply(modifier=smoothing.name)
+for polygon in fused.data.polygons:polygon.use_smooth=True
+# UVs must be regenerated AFTER voxel remeshing; the skin is truly image mapped.
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.uv.smart_project(island_margin=.020)
+bpy.ops.object.mode_set(mode="OBJECT")
+objects.append(fused)
+
 # Sculpted fitted worker apron: front segmented rows hug the figure and flare
 # into visibly draped, thick leather around the thighs. NOT a hanging cube.
 front=[]
@@ -377,8 +412,8 @@ for i in range(17):
     t=i/16
     z=2.115-t*1.075
     width=.36+.10*sin(pi*t)+.19*t
-    yf=-.42-.11*t+.045*sin(t*5*pi)
-    hem=.025*sin(t*21)
+    yf=-.45-.06*t+.010*sin(t*3*pi)
+    hem=.008*sin(t*21)
     front.append(((-width,yf,z+hem),(width,yf,z-hem)))
 ribbon("COSTUME / fitted leather smith-worker bib and apron",front,leather,30)
 # Apron ends in scalloped irregular bottom / surface edge stitching
@@ -428,6 +463,15 @@ for z in (1.32,1.49):
 for x in (-.125,.125):
     tube(f"Buckle vertical at x {x}",[(x,-.464,1.32),(x,-.464,1.49)],.027,steel)
 tube("Buckle tongue",[(-.014,-.497,1.40),(.102,-.495,1.40)],.016,steel)
+
+# The woven headscarf COVERS the cranium; the earlier halo left a bald dome.
+loft("COSTUME / cap over scalp not a floating band",[
+    ((0,-.012,3.050),.510,.385),
+    ((0,-.012,3.088),.47,.362),
+    ((0,-.012,3.122),.34,.275),
+    ((0,-.012,3.149),.13,.122),
+    ((0,-.012,3.151),.008,.008),
+],red,52)
 
 # Bandana: twisted cloth wrapped across forehead as an actually layered fold,
 # with a tied knot and loose ribbon tails trailing behind the right ear.
