@@ -12,6 +12,20 @@ write text but does not take the conversation's local binary attachments.
 **Do not check off issue #15's "references inside repository" acceptance item
 until the actual full-resolution PNGs are committed here.**
 
+## Available owner-uploaded issue images
+
+The owner has now also uploaded the **actual reference images** in
+[issue #15's comment](https://github.com/cubitouch/Orcbands/issues/15#issuecomment-6236454614).
+These links are directly reviewable at full resolution:
+
+- [1536 × 1024 source sheet A](https://github.com/user-attachments/assets/2a212cb5-c600-4e6d-ba0a-0aaac1bb00a0)
+- [1536 × 1024 source sheet B](https://github.com/user-attachments/assets/03a60a42-3dc5-4b71-bc90-0718694fd77f)
+- [1448 × 1086 primary four-view worker turnaround](https://github.com/user-attachments/assets/b576e041-18dc-4ead-ac45-e69cb1cb3fa5)
+
+GitHub comment attachments are accessible on the issue, but **not the same as
+committing immutable PNG bytes inside the repository**. Continue to use the
+strict manifest checker before claiming that acceptance item.
+
 ## Add originals
 
 Unzip the owner-provided `Orcbands_issue15_original_art_refs.zip`. Copy all

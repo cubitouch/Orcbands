@@ -39,6 +39,11 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input /tmp/orcbands-export/worker-orc-vnext.blend --output /tmp/orcbands-export --export-only
           cp /tmp/orcbands-export/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
           test -s preview/assets/worker-orc-skinned-experiment.glb
+      - name: Generate opt-in sculpt study (do not change rigged default)
+        run: |
+          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output /tmp/orcbands-export
+          cp /tmp/orcbands-export/worker-orc-sculpt-study.glb preview/assets/worker-orc-sculpt-study.glb
+          test -s preview/assets/worker-orc-sculpt-study.glb
       - name: Stamp exact deployed source and generated GLB hashes
         run: |
           python3 - <<'PY'
@@ -46,7 +51,7 @@ jobs:
           import hashlib, json, os
           root=Path('preview')
           revision=os.environ['GITHUB_SHA']
-          expected=['worker-orc-vnext.glb','worker-orc-skinned-experiment.glb']
+          expected=['worker-orc-vnext.glb','worker-orc-skinned-experiment.glb','worker-orc-sculpt-study.glb']
           assets={}
           for name in expected:
               content=(root/'assets'/name).read_bytes()

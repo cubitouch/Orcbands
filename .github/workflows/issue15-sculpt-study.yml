@@ -6,6 +6,8 @@ on:
       - "art/render_issue15_glb.py"
       - ".github/workflows/issue15-sculpt-study.yml"
       - "tools/smoke-preview.mjs"
+      - "preview/app.js"
+      - "preview/index.html"
   workflow_dispatch:
 
 permissions:
@@ -40,11 +42,11 @@ jobs:
           test -s issue15-sculpt/review/comparison.html
       - name: Screenshot candidate in actual Chromium WebGL
         run: |
-          cp issue15-sculpt/worker-orc-sculpt-study.glb preview/assets/worker-orc-vnext.glb
+          cp issue15-sculpt/worker-orc-sculpt-study.glb preview/assets/worker-orc-sculpt-study.glb
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx playwright install --with-deps chromium
-          ORCBANDS_TEST_BLENDER=1 node tools/smoke-preview.mjs
-          cp smoke-artifacts/character-blender.png issue15-sculpt/review/09-candidate-real-chromium.png
+          ORCBANDS_TEST_SCULPT=1 node tools/smoke-preview.mjs
+          cp smoke-artifacts/real-sculpt-browser.png issue15-sculpt/review/09-candidate-real-chromium.png
       - name: Upload editable Blender source, real GLB, metrics and all review captures
         if: always()
         uses: actions/upload-artifact@v4

@@ -37,3 +37,25 @@ References can be viewed via the GitHub issue without requiring the original
 binary PNGs to be duplicated in the repository; issue #15's explicit
 **"inside repository"** checkbox remains unchecked until actual PNGs are
 committed with the manifest checker.
+
+## Baseline vs static sculpt candidate — measured second iteration
+
+Exact run: https://github.com/cubitouch/Orcbands/actions/runs/39049757150
+(original editable Blender file, textured GLB, 16 imported image textures,
+one comparison HTML, 16 matching camera renders and Chromium screenshot).
+Second-iteration GLB: 4,047,624 bytes, SHA-256
+`e075708fa9fdb8d83b6fdff088cc954c6c387331cd80210ad9ad9831d0f62950`,
+103 mesh objects and **96,416 imported triangles**. Do not mistake code
+generator polygon count for actual exported triangle count.
+
+Direct pixel inspection: outfit now has a more fitted textured apron rather
+than the exposed-belly baseline; face looks sterner, bandana covers scalp,
+visible fingers and metal axe profile. **Still stylized and far less polished**
+than the original sculpted reference: face planes, shoulder masses, boots,
+eyelids, and material wear remain relatively synthetic. A manual Blender
+artist can replace pieces without disturbing the CI comparison contract.
+
+Upon eventual owner-approved merge, the existing Asset Lab will gain a
+separate opt-in `Textured sculpt study` button; the **Rigged beta default
+is deliberately unchanged**. The GLB remains unrigged, so animation controls
+disable in this mode. The deployment records its actual GLB SHA-256.
