@@ -211,12 +211,20 @@ for fr in range(1,34,4):
     walk.append((fr,rot))
 walk.append((33,walk[0][1]))
 walk_action=action('Walk',walk)
+# High, readable one-handed axe strike (clear wind-up -> apex -> impact ->
+# follow-through -> recovery), not a small forearm swing across the chest.
+# Keep timing non-uniform so the impact is distinctly faster than the wind-up.
 chop=action('Chop',[
- (1,{}),
- (9,{'Chest':(-.10,0,-.07),'UpperArm.R':(-1.03,.08,-.14),'LowerArm.R':(-.55,0,0),'Hand.R':(.28,0,0),'Head':(-.09,0,0)}),
- (15,{'Chest':(.20,0,.05),'UpperArm.R':(.26,-.06,.08),'LowerArm.R':(-.20,0,0),'Hand.R':(-.10,0,0),'Head':(.02,0,0)}),
- (20,{'Chest':(.19,0,.06),'UpperArm.R':(.50,0,.12),'LowerArm.R':(-.35,0,0)}),
- (29,{})])
+ (1,{'UpperArm.R':(-.28,.04,-.08),'LowerArm.R':(-.24,0,0)}),
+ (9,{'Chest':(-.14,0,-.10),'UpperArm.R':(-1.70,.10,-.13),
+     'LowerArm.R':(-.85,0,0),'Hand.R':(.22,0,0),'Head':(-.10,0,0)}),
+ (14,{'Chest':(-.23,-.04,-.15),'UpperArm.R':(-2.26,.12,-.22),
+      'LowerArm.R':(-.52,.05,0),'Hand.R':(.35,0,0),'Head':(-.12,0,0)}),
+ (18,{'Chest':(.28,.04,.16),'UpperArm.R':(.41,-.09,.10),
+      'LowerArm.R':(-.22,0,0),'Hand.R':(-.13,0,0),'Head':(.10,0,0)}),
+ (23,{'Chest':(.18,0,.12),'UpperArm.R':(.66,-.05,.10),
+      'LowerArm.R':(-.40,0,0),'Head':(.05,0,0)}),
+ (33,{'UpperArm.R':(-.28,.04,-.08),'LowerArm.R':(-.24,0,0)})])
 # Carry uses both arms as a cradle; the log is a real skinned/attached mesh.
 carry=action('Carry',[
   (1,{'UpperArm.L':(-.87,-.13,-.18),'UpperArm.R':(-.87,.13,.18),
@@ -284,7 +292,7 @@ scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG'
 scene.view_settings.view_transform='Standard'
 scene.view_settings.exposure=-.35
-for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',15),('Carry',13)]:
+for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',14),('Chop',18),('Chop',23),('Carry',13)]:
     for prop in carry_props:
         prop.hide_render=(clip!='Carry')
     for obj in character:
