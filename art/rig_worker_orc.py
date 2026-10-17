@@ -167,9 +167,9 @@ def carry_piece(name,location,radius,depth,material):
     obj.parent=rig
     return obj
 carry_props=[
-    carry_piece('CARRY_PROP_Log_body',(0,-.49,1.15),.16,1.26,bark),
-    carry_piece('CARRY_PROP_Log_cut_left',(-.636,-.49,1.15),.155,.024,endgrain),
-    carry_piece('CARRY_PROP_Log_cut_right',(.636,-.49,1.15),.155,.024,endgrain),
+    carry_piece('CARRY_PROP_Log_body',(0,-.55,1.32),.16,1.26,bark),
+    carry_piece('CARRY_PROP_Log_cut_left',(-.636,-.55,1.32),.155,.024,endgrain),
+    carry_piece('CARRY_PROP_Log_cut_right',(.636,-.55,1.32),.155,.024,endgrain),
 ]
 
 # FK action prototypes, enough to verify actual deformation and test controls.
@@ -287,6 +287,9 @@ scene.view_settings.exposure=-.35
 for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',15),('Carry',13)]:
     for prop in carry_props:
         prop.hide_render=(clip!='Carry')
+    for obj in character:
+        if obj.name.startswith('Axe'):
+            obj.hide_render=(clip=='Carry')
     for tr in rig.animation_data.nla_tracks:
         tr.mute=(tr.name!=clip)
     scene.frame_set(frame)
