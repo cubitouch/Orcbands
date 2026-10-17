@@ -141,6 +141,37 @@ for obj in character:
     obj.parent=rig
     skinned+=1
 
+# Real carried resource prop. It is skin-bound to the chest for a repeatable
+# gameplay animation proof; the viewer toggles it for Carry only.
+def prop_material(name,color):
+    m=bpy.data.materials.new(name)
+    m.diffuse_color=(*color,1.0)
+    m.use_nodes=True
+    bs=m.node_tree.nodes.get('Principled BSDF')
+    bs.inputs['Base Color'].default_value=(*color,1.0)
+    bs.inputs['Roughness'].default_value=.95
+    return m
+
+bark=prop_material('Carry log bark',(.29,.15,.075))
+endgrain=prop_material('Carry log exposed end grain',(.61,.39,.18))
+def carry_piece(name,location,radius,depth,material):
+    bpy.ops.mesh.primitive_cylinder_add(vertices=14,radius=radius,depth=depth,
+        location=location,rotation=(0,math.pi/2,0))
+    obj=bpy.context.object
+    obj.name=name
+    obj.data.materials.append(material)
+    verts=list(range(len(obj.data.vertices)))
+    obj.vertex_groups.new(name='Chest').add(verts,1.0,'REPLACE')
+    mod=obj.modifiers.new('Log attached to chest bone','ARMATURE')
+    mod.object=rig
+    obj.parent=rig
+    return obj
+carry_props=[
+    carry_piece('CARRY_PROP_Log_body',(0,-.49,1.15),.16,1.26,bark),
+    carry_piece('CARRY_PROP_Log_cut_left',(-.636,-.49,1.15),.155,.024,endgrain),
+    carry_piece('CARRY_PROP_Log_cut_right',(.636,-.49,1.15),.155,.024,endgrain),
+]
+
 # FK action prototypes, enough to verify actual deformation and test controls.
 scene=bpy.context.scene
 scene.render.fps=24
@@ -186,9 +217,15 @@ chop=action('Chop',[
  (15,{'Chest':(.20,0,.05),'UpperArm.R':(.26,-.06,.08),'LowerArm.R':(-.20,0,0),'Hand.R':(-.10,0,0),'Head':(.02,0,0)}),
  (20,{'Chest':(.19,0,.06),'UpperArm.R':(.50,0,.12),'LowerArm.R':(-.35,0,0)}),
  (29,{})])
-carry=action('Carry',[(1,{'UpperArm.L':(-.62,0,-.18),'UpperArm.R':(-.62,0,.18),'LowerArm.L':(-.45,0,0),'LowerArm.R':(-.45,0,0)}),
-  (13,{'UpperArm.L':(-.66,0,-.18),'UpperArm.R':(-.66,0,.18),'LowerArm.L':(-.45,0,0),'LowerArm.R':(-.45,0,0),'Chest':(.025,0,0)}),
-  (25,{'UpperArm.L':(-.62,0,-.18),'UpperArm.R':(-.62,0,.18),'LowerArm.L':(-.45,0,0),'LowerArm.R':(-.45,0,0)})])
+# Carry uses both arms as a cradle; the log is a real skinned/attached mesh.
+carry=action('Carry',[
+  (1,{'UpperArm.L':(-.87,-.13,-.18),'UpperArm.R':(-.87,.13,.18),
+      'LowerArm.L':(-.74,0,0),'LowerArm.R':(-.74,0,0),'Chest':(.03,0,0)}),
+  (13,{'UpperArm.L':(-.91,-.13,-.18),'UpperArm.R':(-.91,.13,.18),
+       'LowerArm.L':(-.73,0,0),'LowerArm.R':(-.73,0,0),'Chest':(.044,0,0),
+       'Head':(.025,0,0)}),
+  (25,{'UpperArm.L':(-.87,-.13,-.18),'UpperArm.R':(-.87,.13,.18),
+       'LowerArm.L':(-.74,0,0),'LowerArm.R':(-.74,0,0),'Chest':(.03,0,0)})])
 # Ensure each clip becomes a discrete NLA strip for the glTF exporter.
 for a in [idle,walk_action,chop,carry]:
     tr=rig.animation_data.nla_tracks.new()
@@ -207,6 +244,7 @@ skin_info={
   'bones':[b.name for b in rig.data.bones],
   'clips':['Idle','Walk','Chop','Carry'],
   'mesh_count':skinned,
+  'carry_prop_mesh_count':len(carry_props),
   'converted_curve_count':len(curves),
   'source':'Orcbands original Blender Worker Orc vNext',
   'mode':'experimental automatic weights; expect manual cleanup'
@@ -247,6 +285,8 @@ scene.render.image_settings.file_format='PNG'
 scene.view_settings.view_transform='Standard'
 scene.view_settings.exposure=-.35
 for clip,frame in [('Idle',13),('Walk',9),('Walk',25),('Chop',9),('Chop',15),('Carry',13)]:
+    for prop in carry_props:
+        prop.hide_render=(clip!='Carry')
     for tr in rig.animation_data.nla_tracks:
         tr.mute=(tr.name!=clip)
     scene.frame_set(frame)
