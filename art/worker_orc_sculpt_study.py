@@ -523,6 +523,9 @@ ribbon("Cloth tie tail 2 / uneven split",[
     ((.31,.57,2.79),(.42,.59,2.81))
 ],redlight,7)
 
+# Track ALL separately authored axe submeshes so the same grip
+# alignment correction is applied to wood, steel, rivets and grain.
+axe_start=len(objects)
 # A practical wood axe carried near the worker's right hand/hip.
 # Wood shaft follows a tapered swept topology; forged cutting blade is a
 # bevelled CLOSED VOLUME shaped by a manually authored outline.
@@ -575,6 +578,21 @@ for i in range(4):
         (1.72+i*.027,-.472,z),(1.75+i*.027,-.468,z+.038)
     ],.006,steel,7)
 
+# ART-03: original axe's grip axis was too far lateral to be grasped.
+# Align the full assembled tool with the now-cupped right hand, rather than
+# adjusting only the main shaft and leaving metal/grain floating in space.
+for axe_component in objects[axe_start:]:
+    if axe_component.type=='MESH':
+        for vertex in axe_component.data.vertices:
+            vertex.co.x-=.090
+        axe_component.data.update()
+    axe_component['held_by']='R'
+    axe_component['character_prop']='hatchet'
+# Make the relationship explicit and auditable across source/model exports.
+# Both left and right hands retain their own side labels and root positions.
+assert any(o.get('anatomical_side')=='L' for o in objects)
+assert any(o.get('anatomical_side')=='R' for o in objects)
+assert len(objects[axe_start:])>=5, 'Axe assembly unexpectedly incomplete'
 # Scene origin + metadata; export selection omits cameras/render staging.
 for ob in objects:
     ob["Orcbands"] = "Original Worker Orc #15 static sculpt study"
