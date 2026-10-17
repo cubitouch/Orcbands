@@ -361,6 +361,37 @@ for i in range(4):
     sphere(f'Metal strap rivet {i}',(-.27+i*.115,-.475,1.88-i*.145),(.02,.016,.02),metal_light,8,6)
 for x,z in [(-.32,.81),(-.28,.74),(.30,.83)]:
     sphere('Apron exposed stitch',(x,-.512,z),(.017,.011,.015),bone,8,6)
+# Continuously sculpt the main facial volumes into ONE surface, avoiding
+# round cheek/nose/jaw seams. Keep eyes, nostrils, brows, tusks, piercings,
+# paint and ears' interior as separate crisp features.
+face_piece_names={
+    'Orc wide cranium','Broad lower jaw anatomy','Strong lower jaw lip',
+    'Muzzle chin plane','Heavy nose bridge','Nose end',
+    'L cheek','R cheek','Angled jaw mass','Angled jaw mass.001',
+    'L broad ear base','R broad ear base','L pointed ear','R pointed ear',
+}
+face_parts=[o for o in bpy.data.objects if o.type=='MESH' and
+    o.name in face_piece_names]
+if len(face_parts)<10:
+    raise RuntimeError(f'Expected modeled anatomical face pieces, got {len(face_parts)}')
+bpy.ops.object.select_all(action='DESELECT')
+for obj in face_parts:obj.select_set(True)
+bpy.context.view_layer.objects.active=face_parts[0]
+bpy.ops.object.join()
+face_surface=bpy.context.object
+face_surface.name='Head unified facial anatomy'
+face_surface.data.materials.clear()
+face_surface.data.materials.append(skin)
+face_surface.data.remesh_voxel_size=.022
+bpy.ops.object.voxel_remesh()
+face_smooth=face_surface.modifiers.new('Smooth sculpted transitions','SMOOTH')
+face_smooth.factor=.54
+face_smooth.iterations=3
+bpy.context.view_layer.objects.active=face_surface
+bpy.ops.object.modifier_apply(modifier=face_smooth.name)
+for polygon in face_surface.data.polygons:
+    polygon.use_smooth=True
+
 # Clean up anatomical intersections: merge body and arm skin volumes with voxel
 # remeshing, removing the most obvious sphere/cylinder seams.
 # Preserve face features, fingers, gear, leather and bone as separately editable parts.
