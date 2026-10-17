@@ -31,12 +31,13 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/worker_orc_sculpt_study.py -- --output issue15-sculpt
           test -s issue15-sculpt/worker-orc-sculpt-study.blend
           test -s issue15-sculpt/worker-orc-sculpt-study.glb
-      - name: Generate pinned PR 17 pre-ART-02 comparison
+      - name: Generate pinned previous production preview #18 as visual baseline
         run: |
           mkdir -p /tmp/issue15-baseline
-          git fetch --depth=1 origin 89dabbb28b2deab966e00ef75a013707a016d231
-          git show 89dabbb28b2deab966e00ef75a013707a016d231:art/worker_orc_sculpt_study.py > /tmp/issue15-baseline/build.py
-          git show 89dabbb28b2deab966e00ef75a013707a016d231:art/worker_orc_head.py > /tmp/issue15-baseline/worker_orc_head.py
+          git fetch --depth=1 origin 9c994e3caf11bd59afdfaa2bfebd23c8fcc94d76
+          git show 9c994e3caf11bd59afdfaa2bfebd23c8fcc94d76:art/worker_orc_sculpt_study.py > /tmp/issue15-baseline/build.py
+          git show 9c994e3caf11bd59afdfaa2bfebd23c8fcc94d76:art/worker_orc_head.py > /tmp/issue15-baseline/worker_orc_head.py
+          git show 9c994e3caf11bd59afdfaa2bfebd23c8fcc94d76:art/worker_orc_hands.py > /tmp/issue15-baseline/worker_orc_hands.py
           blender -b -t 2 --python-exit-code 1 --python /tmp/issue15-baseline/build.py -- --output /tmp/issue15-baseline
       - name: Render unbiased same-angle *exported GLB* comparison
         run: |

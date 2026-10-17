@@ -204,8 +204,8 @@ def band(name,center_z,rx,ry,thickness,mat):
 rings=[]
 for z,rx,ry in [
     (1.12,.37,.235),(1.19,.43,.28),(1.30,.47,.30),(1.47,.45,.29),
-    (1.64,.53,.33),(1.77,.65,.34),(1.92,.76,.36),(2.04,.79,.37),
-    (2.15,.67,.36),(2.23,.45,.28),(2.29,.30,.22)
+    (1.64,.51,.33),(1.77,.59,.34),(1.92,.68,.36),(2.04,.70,.37),
+    (2.15,.62,.36),(2.23,.44,.28),(2.29,.30,.22)
 ]:
     rings.append(((0,.03,z),rx,ry))
 torso=loft("SCULPT / continuous barrel chest and obliques",rings,skin,48)
@@ -214,13 +214,13 @@ torso=loft("SCULPT / continuous barrel chest and obliques",rings,skin,48)
 for v in torso.data.vertices:
     x,y,z=v.co
     if y<-.10:
-        v.co.y-=.10*gauss(abs(x),z,.36,1.98,.28,.14)
+        v.co.y-=.082*gauss(abs(x),z,.34,1.98,.25,.14)
         v.co.y+=.035*gauss(abs(x),z,.06,1.97,.06,.11)
     if y>.12:
-        v.co.y+=.055*gauss(abs(x),z,.40,2.0,.34,.20)
+        v.co.y+=.045*gauss(abs(x),z,.38,2.0,.30,.20)
     # Broad scapula, not a perfect cylinder seen from the RTS angle.
     if z>1.80 and y>.11:
-        v.co.y += .035*gauss(abs(x),z,.49,2.0,.21,.18)
+        v.co.y += .024*gauss(abs(x),z,.45,2.0,.20,.18)
 torso.data.update()
 
 # Integral organic neck rising naturally from pectoral collar.
@@ -240,10 +240,10 @@ exec(compile((Path(__file__).parent / "worker_orc_hands.py").read_text(),
 # on broad hands, not mitten lumps. Both hands down near belt/upper thigh.
 for s,side in ((-1,"L"),(1,"R")):
     limb(side+" SCULPT / continuous deltoid, elbow, forearm, palm",[
-        ((s*.69,.015,2.09),.215,.235),
-        ((s*.81,-.018,2.04),.280,.245),
-        ((s*.93,-.037,1.91),.288,.255),
-        ((s*1.02,-.064,1.69),.241,.214),
+        ((s*.63,.015,2.09),.188,.215),
+        ((s*.74,-.018,2.04),.226,.222),
+        ((s*.86,-.037,1.91),.247,.230),
+        ((s*.98,-.064,1.69),.220,.203),
         ((s*1.045,-.106,1.56),.178,.161),
         ((s*1.085,-.123,1.41),.205,.188),
         ((s*1.10,-.140,1.25),.225,.20),
@@ -523,6 +523,9 @@ ribbon("Cloth tie tail 2 / uneven split",[
     ((.31,.57,2.79),(.42,.59,2.81))
 ],redlight,7)
 
+# Track ALL separately authored axe submeshes so the same grip
+# alignment correction is applied to wood, steel, rivets and grain.
+axe_start=len(objects)
 # A practical wood axe carried near the worker's right hand/hip.
 # Wood shaft follows a tapered swept topology; forged cutting blade is a
 # bevelled CLOSED VOLUME shaped by a manually authored outline.
@@ -575,6 +578,21 @@ for i in range(4):
         (1.72+i*.027,-.472,z),(1.75+i*.027,-.468,z+.038)
     ],.006,steel,7)
 
+# ART-03: original axe's grip axis was too far lateral to be grasped.
+# Align the full assembled tool with the now-cupped right hand, rather than
+# adjusting only the main shaft and leaving metal/grain floating in space.
+for axe_component in objects[axe_start:]:
+    if axe_component.type=='MESH':
+        for vertex in axe_component.data.vertices:
+            vertex.co.x-=.090
+        axe_component.data.update()
+    axe_component['held_by']='R'
+    axe_component['character_prop']='hatchet'
+# Make the relationship explicit and auditable across source/model exports.
+# Both left and right hands retain their own side labels and root positions.
+assert any(o.get('anatomical_side')=='L' for o in objects)
+assert any(o.get('anatomical_side')=='R' for o in objects)
+assert len(objects[axe_start:])>=5, 'Axe assembly unexpectedly incomplete'
 # Scene origin + metadata; export selection omits cameras/render staging.
 for ob in objects:
     ob["Orcbands"] = "Original Worker Orc #15 static sculpt study"

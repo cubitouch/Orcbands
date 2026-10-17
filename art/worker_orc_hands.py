@@ -41,6 +41,16 @@ def worker_hand(s,side):
       ((s*.911,-.369,.897),.009,.011)],skin,28)
     sub=thumb.modifiers.new('Thumb joints','SUBSURF');sub.levels=1
     bpy.context.view_layer.objects.active=thumb;bpy.ops.object.modifier_apply(modifier=sub.name)
+    if side=='R':
+        # Only the thumb mesh gets the opposing curl. Applying this test
+        # after the hand voxel-union also caught the adjacent index finger,
+        # making the grip fingers cross unnaturally.
+        for vertex in thumb.data.vertices:
+            x,y,z=vertex.co
+            curl=clamp((1.11-z)/.22)
+            vertex.co.x+=.282*curl
+            vertex.co.y-=.022*curl
+        thumb.data.update()
     pieces=objects[start:]
     bpy.ops.object.select_all(action='DESELECT')
     for ob in pieces:ob.select_set(True)
@@ -90,5 +100,26 @@ def worker_hand(s,side):
     thumb_nail=orb(side+' ART02 / thumb nail',(s*.888,-.411,.940),(.026,.007,.032),nailmat,28,16)
     for ob in objects[start:]:
         ob['ART02_hand']=True
-        # Small inward offset clears the existing axe haft without moving gear.
-        for vert in ob.data.vertices:vert.co.x-=s*.030
+        ob['anatomical_side']=side
+        # ART-03: preserve the wrist root on its OWN same-side forearm.
+        # The previous arbitrary inward offset made the two silhouettes
+        # harder to read and placed the right fingers away from the axe.
+        for vert in ob.data.vertices:
+            x,y,z=vert.co
+            if side=='L':
+                vert.co.x-=.028   # give the empty left hand room beside the hip
+                continue
+            # Right-hand *static* grip. Keep the root at the wrist bone's
+            # x=1.12 / z=1.245; bend the distal palm and digits toward the
+            # weapon at x=1.30, y=-.39. No changes to the left arm.
+            bend=clamp((1.245-z)/.29)
+            vert.co.x+=.082*bend
+            vert.co.y-=.071*bend
+            vert.co.z+=.080*bend
+            # Match the thumb nail to the separate, pre-union thumb curl.
+            # The ordinary index finger must NOT inherit the thumb motion.
+            if 'thumb nail' in ob.name:
+                thumb_bend=clamp((1.11-z)/.22)
+                vert.co.x+=.282*thumb_bend
+                vert.co.y-=.022*thumb_bend
+        ob.data.update()

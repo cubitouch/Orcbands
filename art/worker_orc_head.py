@@ -9,14 +9,14 @@ head_start = len(objects)
 # tucked temple, and long occipital arc instead of spherical skull proportions.
 sections = [
  (2.285,.19,-.20,.18),(2.32,.28,-.36,.24),
- (2.36,.36,-.47,.27),(2.40,.405,-.535,.29),
- (2.44,.425,-.565,.31),(2.48,.43,-.557,.325),
- (2.52,.423,-.526,.34),(2.56,.425,-.548,.35),
- (2.60,.44,-.510,.355),(2.65,.462,-.420,.36),
- (2.70,.463,-.402,.365),(2.75,.449,-.395,.368),
- (2.80,.438,-.405,.37),(2.85,.433,-.424,.366),
- (2.90,.43,-.424,.36),(2.95,.424,-.40,.348),
- (3.00,.392,-.358,.32),(3.05,.31,-.28,.265),
+ (2.36,.335,-.47,.27),(2.40,.375,-.535,.29),
+ (2.44,.399,-.565,.31),(2.48,.410,-.557,.325),
+ (2.52,.408,-.526,.34),(2.56,.407,-.548,.35),
+ (2.60,.418,-.510,.355),(2.65,.436,-.420,.36),
+ (2.70,.440,-.402,.365),(2.75,.433,-.395,.368),
+ (2.80,.422,-.405,.37),(2.85,.412,-.424,.366),
+ (2.90,.406,-.424,.36),(2.95,.396,-.40,.348),
+ (3.00,.368,-.358,.32),(3.05,.296,-.28,.265),
  (3.09,.19,-.17,.18),(3.11,.025,-.025,.025)]
 # Catmull-Rom interpolation retains deliberately placed facial landmarks.
 def cat(a,b,c,d,t):
@@ -33,9 +33,9 @@ for z,w,front,back in rows:
     for j in range(N):
         t=2*pi*j/N
         x=w*sin(t)
-        # Broad flat facial planes become rounded at the cheek's lateral edge.
+        # Rounded facial silhouette: avoid broad square planes along the quarter profile.
         frontness=max(0,cos(t))
-        y=(front*frontness**.47 if cos(t)>=0 else back*(-cos(t))**.83)
+        y=(front*frontness**.85 if cos(t)>=0 else back*(-cos(t))**1.04)
         if frontness>0:
             # Orbital depression, zygomatic arch and sculpted muzzle pads.
             y+=.035*gauss(abs(x),z,.235,2.783,.115,.065)*frontness
