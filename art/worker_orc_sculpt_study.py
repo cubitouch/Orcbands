@@ -233,6 +233,9 @@ loft("SCULPT / trapezius and neck",[
 exec(compile((Path(__file__).parent / "worker_orc_head.py").read_text(),
              "worker_orc_head.py", "exec"), globals())
 
+exec(compile((Path(__file__).parent / "worker_orc_hands.py").read_text(),
+             "worker_orc_hands.py", "exec"), globals())
+
 # Muscular arms: through-elbow geometry and separately articulated fingers
 # on broad hands, not mitten lumps. Both hands down near belt/upper thigh.
 for s,side in ((-1,"L"),(1,"R")):
@@ -244,31 +247,14 @@ for s,side in ((-1,"L"),(1,"R")):
         ((s*1.045,-.106,1.56),.178,.161),
         ((s*1.085,-.123,1.41),.205,.188),
         ((s*1.10,-.140,1.25),.225,.20),
-        ((s*1.12,-.173,1.13),.178,.166),
-        ((s*1.125,-.182,1.055),.18,.17),
-        ((s*1.13,-.206,.945),.20,.15)
+        ((s*1.12,-.173,1.215),.150,.135)
     ],skin,36)
-    # Visible digit arcs and knuckle ridges at the end of broad palm.
-    for k in range(4):
-        x=s*(.99+k*.083)
-        limb(f"{side} finger {k+1} / sculpted joint chain",[
-           ((x,-.24,.993),.053,.058),
-           ((x+s*.01,-.264,.911),.054,.051),
-           ((x+s*.005,-.278,.849),.044,.045),
-           ((x,-.277,.832),.026,.031)
-        ],skin,14)
-        tube(f"{side} knuckle crease {k}",[
-            (x-s*.03,-.310,.906),(x,-.319,.902),(x+s*.031,-.305,.910)
-        ],.007,skindark,6)
-    limb(side+" curled thumb",[
-        ((s*.975,-.28,1.10),.080,.075),
-        ((s*.90,-.34,1.039),.067,.060),
-        ((s*.915,-.369,.976),.043,.041)],skin,18)
+    worker_hand(s,side)
     # Wrist guards curved around forearms, actually at wrists.
     for dz in (0,.10,.205):
         z=1.23+dz
         limb(side+f" leather wrist cuff {dz:.2f}",[
-          ((s*1.10,-.154,z-.041),.225,.210),
+          ((s*1.10,-.154,z-(.085 if dz == 0 else .041)),.225,.210),
           ((s*1.10,-.154,z+.041),.225,.210)
         ],leather,28)
     for ix in (-1,0,1):
@@ -313,13 +299,13 @@ for s,side in ((-1,"L"),(1,"R")):
 # Preserve separately modelled inset eyelids, teeth, accessories and cloth.
 base_skin = []
 for obj in objects:
-    if obj.get("ART01_head") or obj.type != "MESH" or not obj.data.materials or obj.data.materials[0] != skin:
+    if obj.get("ART01_head") or obj.get("ART02_hand") or obj.type != "MESH" or not obj.data.materials or obj.data.materials[0] != skin:
         continue
     if ("SCULPT /" in obj.name or " finger " in obj.name or
         " curled thumb" in obj.name or " ear / thick" in obj.name or
         " nose wing" in obj.name):
         base_skin.append(obj)
-if len(base_skin) < 10:
+if len(base_skin) != 4:
     raise RuntimeError("Missing anatomically sculpted pieces for continuous skin join")
 objects[:] = [obj for obj in objects if obj not in base_skin]
 bpy.ops.object.select_all(action="DESELECT")
@@ -603,7 +589,7 @@ bpy.ops.export_scene.gltf(filepath=str(out/"worker-orc-sculpt-study.glb"),
     export_format="GLB",use_selection=True,export_apply=True)
 glb=out/"worker-orc-sculpt-study.glb"
 info={
-  "art_stage":"ART-01 head candidate; pending artistic review, not rigged",
+  "art_stage":"ART-02 hand candidate on ART-01 head; pending artistic review, not rigged",
   "provenance":"Original authored topology; owner-provided AI-generated 2D reference; no third-party mesh",
   "geometry_mesh_objects":len(objects),
   "source_mesh_polygons":sum(len(ob.data.polygons) for ob in objects if ob.type=="MESH"),
