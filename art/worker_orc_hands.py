@@ -41,6 +41,16 @@ def worker_hand(s,side):
       ((s*.911,-.369,.897),.009,.011)],skin,28)
     sub=thumb.modifiers.new('Thumb joints','SUBSURF');sub.levels=1
     bpy.context.view_layer.objects.active=thumb;bpy.ops.object.modifier_apply(modifier=sub.name)
+    if side=='R':
+        # Only the thumb mesh gets the opposing curl. Applying this test
+        # after the hand voxel-union also caught the adjacent index finger,
+        # making the grip fingers cross unnaturally.
+        for vertex in thumb.data.vertices:
+            x,y,z=vertex.co
+            curl=clamp((1.11-z)/.22)
+            vertex.co.x+=.282*curl
+            vertex.co.y-=.022*curl
+        thumb.data.update()
     pieces=objects[start:]
     bpy.ops.object.select_all(action='DESELECT')
     for ob in pieces:ob.select_set(True)
@@ -106,10 +116,10 @@ def worker_hand(s,side):
             vert.co.x+=.082*bend
             vert.co.y-=.071*bend
             vert.co.z+=.080*bend
-            # Opposing thumb arcs across the handle instead of pointing
-            # into the opposite hand/forearm.
-            if x<1.025 and z<1.105:
-                thumb_bend=clamp((1.105-z)/.208)
-                vert.co.x+=.30*thumb_bend
+            # Match the thumb nail to the separate, pre-union thumb curl.
+            # The ordinary index finger must NOT inherit the thumb motion.
+            if 'thumb nail' in ob.name:
+                thumb_bend=clamp((1.11-z)/.22)
+                vert.co.x+=.282*thumb_bend
                 vert.co.y-=.022*thumb_bend
         ob.data.update()
