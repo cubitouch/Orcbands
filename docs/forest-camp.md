@@ -1,5 +1,7 @@
 # Forest camp and campfire
 
+For the subsequent torch and visibility addition, including current counters and screenshots, see [Trail torches and fog of war](torches-fog.md). The captures below document the original forest expansion.
+
 The hut clearing now sits inside **244 pines**, up from 36. The original inner tree placements and Pine 01 geometry/palette remain unchanged; 208 additional instances create woodland on all sides, with a second northern layer and connecting trees between the larger pockets. The clearing and winding routes stay open.
 
 ## Actual WebGL views

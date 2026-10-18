@@ -3,7 +3,7 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createRockGeometry} from './environment.js?v=__ORCBANDS_REVISION__';
 import {groundHeight,seededRandom} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 
-function flameGeometry(radius,height,lean){
+export function flameGeometry(radius,height,lean){
  const vertices=[],n=5;
  const low=Array.from({length:n},(_,i)=>[Math.cos(i/n*Math.PI*2)*radius,0,Math.sin(i/n*Math.PI*2)*radius]);
  const mid=Array.from({length:n},(_,i)=>[Math.cos(i/n*Math.PI*2+.2)*radius*.64+lean*.36,height*.45,Math.sin(i/n*Math.PI*2+.2)*radius*.64]);
