@@ -1,0 +1,383 @@
+# Original Orcbands low-poly pine; metres, +Y up
+mtllib low-poly-pine-01.mtl
+o Orcbands_Pine_01
+v 0.26309 0.035 0.03172
+v 0.18115 0.035 0.19342
+v 0.01444 0.035 0.26461
+v -0.15902 0.035 0.21198
+v -0.25808 0.035 0.06017
+v -0.23638 0.035 -0.11979
+v -0.10407 0.035 -0.24371
+v 0.07693 0.035 -0.25359
+v 0.22193 0.035 -0.14481
+v 0.24845 1.5 0.01074
+v 0.18197 1.5 0.14192
+v 0.04672 1.5 0.19968
+v -0.09402 1.5 0.15699
+v -0.17438 1.5 0.03382
+v -0.15678 1.5 -0.11219
+v -0.04944 1.5 -0.21273
+v 0.09741 1.5 -0.22074
+v 0.21506 1.5 -0.13249
+v 0.21403 2.91 -0.04884
+v 0.17228 2.91 0.03353
+v 0.08736 2.91 0.0698
+v -0.00101 2.91 0.04299
+v -0.05147 2.91 -0.03435
+v -0.04042 2.91 -0.12603
+v 0.02698 2.91 -0.18915
+v 0.11919 2.91 -0.19419
+v 0.19306 2.91 -0.13877
+v 0 0.035 0
+v 0.08 2.91 -0.065
+v 1.48439 0.89311 0.07428
+v 0.98086 0.82937 0.91035
+v 0.15709 0.76758 1.25488
+v -0.82931 0.89896 1.28365
+v -1.14495 0.81693 0.353
+v -1.32743 0.77535 -0.55977
+v -0.63592 0.9029 -1.24082
+v 0.2746 0.80484 -1.20237
+v 1.20707 0.78464 -0.91407
+v 0.89648 1.72651 0.04486
+v 0.65791 1.67222 0.61061
+v 0.11149 1.66185 0.89065
+v -0.48709 1.71059 0.75394
+v -0.85776 1.74704 0.26446
+v -0.82707 1.7178 -0.34877
+v -0.40939 1.6657 -0.7988
+v 0.19985 1.66707 -0.87507
+v 0.71558 1.71991 -0.54188
+v 0.03366 2.61 0.01891
+v 0 0.865 0
+v 1.16534 1.7082 0.3351
+v 0.63249 1.57655 0.93922
+v -0.11944 1.64126 1.12831
+v -0.89171 1.70207 0.85983
+v -1.05808 1.57079 0.07319
+v -0.99367 1.65369 -0.72308
+v -0.28074 1.69422 -1.12957
+v 0.47185 1.56695 -0.96561
+v 1.18141 1.66575 -0.52494
+v 0.73578 2.49837 0.21158
+v 0.42764 2.47266 0.63503
+v -0.0806 2.51205 0.76135
+v -0.55112 2.55884 0.53142
+v -0.76377 2.54448 0.05283
+v -0.61905 2.49001 -0.45047
+v -0.18466 2.47523 -0.743
+v 0.33613 2.52179 -0.68787
+v 0.69964 2.56148 -0.31087
+v 0.03637 3.43 -0.01457
+v 0 1.675 0
+v 0.78874 2.45058 0.43089
+v 0.33891 2.37207 0.86694
+v -0.31453 2.50378 0.93202
+v -0.76231 2.43811 0.46444
+v -0.95388 2.37829 -0.14508
+v -0.62409 2.50945 -0.70909
+v -0.0217 2.42569 -0.91949
+v 0.59511 2.38622 -0.7442
+v 0.93117 2.51319 -0.18695
+v 0.54445 3.18925 0.29744
+v 0.22589 3.21576 0.57782
+v -0.19837 3.2687 0.58783
+v -0.52981 3.27051 0.32279
+v -0.61335 3.21854 -0.09328
+v -0.40989 3.18893 -0.46571
+v -0.01464 3.22506 -0.62023
+v 0.38746 3.27399 -0.48453
+v 0.60826 3.26405 -0.12212
+v 0.00564 4.06 -0.03465
+v 0 2.475 0
+v 0.61252 3.08324 0.07386
+v 0.47102 3.13004 0.50291
+v 0.03974 3.20766 0.72793
+v -0.35815 3.07589 0.47744
+v -0.73789 3.14252 0.17205
+v -0.57374 3.20135 -0.29076
+v -0.25993 3.07032 -0.60868
+v 0.21483 3.15493 -0.70819
+v 0.51069 3.19334 -0.33322
+v 0.44557 3.81619 0.05373
+v 0.30679 3.87055 0.32757
+v 0.02446 3.88836 0.44813
+v -0.26932 3.84353 0.35901
+v -0.43708 3.80173 0.10191
+v -0.40033 3.8242 -0.20288
+v -0.17626 3.87802 -0.41274
+v 0.13028 3.88434 -0.42947
+v 0.37586 3.83391 -0.24525
+v -0.03027 4.58 -0.02288
+v 0 3.175 0
+usemtl bark
+f 1 10 11 2
+usemtl bark_light
+f 2 11 12 3
+usemtl bark
+f 3 12 13 4
+usemtl bark_shadow
+f 4 13 14 5
+usemtl bark
+f 5 14 15 6
+usemtl bark_light
+f 6 15 16 7
+usemtl bark
+f 7 16 17 8
+usemtl bark_shadow
+f 8 17 18 9
+usemtl bark
+f 9 18 10 1
+f 10 19 20 11
+usemtl bark_light
+f 11 20 21 12
+usemtl bark
+f 12 21 22 13
+f 13 22 23 14
+usemtl bark_light
+f 14 23 24 15
+usemtl bark
+f 15 24 25 16
+f 16 25 26 17
+usemtl bark_light
+f 17 26 27 18
+usemtl bark
+f 18 27 19 10
+usemtl bark_shadow
+f 1 2 28
+usemtl bark_light
+f 19 29 20
+usemtl bark_shadow
+f 2 3 28
+usemtl bark_light
+f 20 29 21
+usemtl bark_shadow
+f 3 4 28
+usemtl bark_light
+f 21 29 22
+usemtl bark_shadow
+f 4 5 28
+usemtl bark_light
+f 22 29 23
+usemtl bark_shadow
+f 5 6 28
+usemtl bark_light
+f 23 29 24
+usemtl bark_shadow
+f 6 7 28
+usemtl bark_light
+f 24 29 25
+usemtl bark_shadow
+f 7 8 28
+usemtl bark_light
+f 25 29 26
+usemtl bark_shadow
+f 8 9 28
+usemtl bark_light
+f 26 29 27
+usemtl bark_shadow
+f 9 1 28
+usemtl bark_light
+f 27 29 19
+usemtl needle_light
+f 30 39 40 31
+usemtl needle_main
+f 31 40 41 32
+usemtl needle_shadow
+f 32 41 42 33
+usemtl needle_main
+f 33 42 43 34
+usemtl needle_sun
+f 34 43 44 35
+usemtl needle_main
+f 35 44 45 36
+usemtl needle_light
+f 36 45 46 37
+usemtl needle_main
+f 37 46 47 38
+usemtl needle_shadow
+f 38 47 39 30
+f 39 48 40
+f 30 31 49
+usemtl needle_main
+f 40 48 41
+usemtl needle_shadow
+f 31 32 49
+usemtl needle_sun
+f 41 48 42
+usemtl needle_shadow
+f 32 33 49
+usemtl needle_main
+f 42 48 43
+usemtl needle_shadow
+f 33 34 49
+usemtl needle_light
+f 43 48 44
+usemtl needle_shadow
+f 34 35 49
+usemtl needle_main
+f 44 48 45
+usemtl needle_shadow
+f 35 36 49
+f 45 48 46
+f 36 37 49
+usemtl needle_main
+f 46 48 47
+usemtl needle_shadow
+f 37 38 49
+usemtl needle_sun
+f 47 48 39
+usemtl needle_shadow
+f 38 30 49
+usemtl needle_main
+f 50 59 60 51
+usemtl needle_shadow
+f 51 60 61 52
+usemtl needle_main
+f 52 61 62 53
+usemtl needle_sun
+f 53 62 63 54
+usemtl needle_main
+f 54 63 64 55
+usemtl needle_light
+f 55 64 65 56
+usemtl needle_main
+f 56 65 66 57
+usemtl needle_shadow
+f 57 66 67 58
+usemtl needle_main
+f 58 67 59 50
+f 59 68 60
+usemtl needle_shadow
+f 50 51 69
+usemtl needle_sun
+f 60 68 61
+usemtl needle_shadow
+f 51 52 69
+usemtl needle_main
+f 61 68 62
+usemtl needle_shadow
+f 52 53 69
+usemtl needle_light
+f 62 68 63
+usemtl needle_shadow
+f 53 54 69
+usemtl needle_main
+f 63 68 64
+usemtl needle_shadow
+f 54 55 69
+f 64 68 65
+f 55 56 69
+usemtl needle_main
+f 65 68 66
+usemtl needle_shadow
+f 56 57 69
+usemtl needle_sun
+f 66 68 67
+usemtl needle_shadow
+f 57 58 69
+usemtl needle_main
+f 67 68 59
+usemtl needle_shadow
+f 58 50 69
+f 70 79 80 71
+usemtl needle_main
+f 71 80 81 72
+usemtl needle_sun
+f 72 81 82 73
+usemtl needle_main
+f 73 82 83 74
+usemtl needle_light
+f 74 83 84 75
+usemtl needle_main
+f 75 84 85 76
+usemtl needle_shadow
+f 76 85 86 77
+usemtl needle_main
+f 77 86 87 78
+usemtl needle_sun
+f 78 87 79 70
+f 79 88 80
+usemtl needle_shadow
+f 70 71 89
+usemtl needle_main
+f 80 88 81
+usemtl needle_shadow
+f 71 72 89
+usemtl needle_light
+f 81 88 82
+usemtl needle_shadow
+f 72 73 89
+usemtl needle_main
+f 82 88 83
+usemtl needle_shadow
+f 73 74 89
+f 83 88 84
+f 74 75 89
+usemtl needle_main
+f 84 88 85
+usemtl needle_shadow
+f 75 76 89
+usemtl needle_sun
+f 85 88 86
+usemtl needle_shadow
+f 76 77 89
+usemtl needle_main
+f 86 88 87
+usemtl needle_shadow
+f 77 78 89
+usemtl needle_light
+f 87 88 79
+usemtl needle_shadow
+f 78 70 89
+usemtl needle_main
+f 90 99 100 91
+usemtl needle_sun
+f 91 100 101 92
+usemtl needle_main
+f 92 101 102 93
+usemtl needle_light
+f 93 102 103 94
+usemtl needle_main
+f 94 103 104 95
+usemtl needle_shadow
+f 95 104 105 96
+usemtl needle_main
+f 96 105 106 97
+usemtl needle_sun
+f 97 106 107 98
+usemtl needle_main
+f 98 107 99 90
+f 99 108 100
+usemtl needle_shadow
+f 90 91 109
+usemtl needle_light
+f 100 108 101
+usemtl needle_shadow
+f 91 92 109
+usemtl needle_main
+f 101 108 102
+usemtl needle_shadow
+f 92 93 109
+f 102 108 103
+f 93 94 109
+usemtl needle_main
+f 103 108 104
+usemtl needle_shadow
+f 94 95 109
+usemtl needle_sun
+f 104 108 105
+usemtl needle_shadow
+f 95 96 109
+usemtl needle_main
+f 105 108 106
+usemtl needle_shadow
+f 96 97 109
+usemtl needle_light
+f 106 108 107
+usemtl needle_shadow
+f 97 98 109
+usemtl needle_main
+f 107 108 99
+usemtl needle_shadow
+f 98 90 109

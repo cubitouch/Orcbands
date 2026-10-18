@@ -1,4 +1,5 @@
-name: Validate Asset Preview
+name: Validate Tree Preview
+
 on:
   push:
     branches: [main]
@@ -16,30 +17,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Validate original orc model geometry
-        run: node tools/validate-orc.mjs
       - name: Check JavaScript syntax
         run: |
-          node --check tools/generate-orc.mjs
-          node --check tools/validate-orc.mjs
+          node --check tools/generate-tree.mjs
           node --check preview/app.js
-          node --check preview/world.js
           node --check tools/smoke-preview.mjs
-      - name: Verify generated 3D model is reproducible
+      - name: Verify deterministic tree export and actual geometry
         run: |
-          mkdir -p /tmp/orcbands-assets
-          node tools/generate-orc.mjs /tmp/orcbands-assets
-          cmp preview/assets/orc-worker.obj /tmp/orcbands-assets/orc-worker.obj
-          cmp preview/assets/orc-worker.mtl /tmp/orcbands-assets/orc-worker.mtl
-      - name: Browser smoke test (real WebGL)
+          mkdir -p /tmp/orcbands-tree
+          node tools/generate-tree.mjs /tmp/orcbands-tree
+          cmp preview/assets/low-poly-pine-01.obj /tmp/orcbands-tree/low-poly-pine-01.obj
+          cmp preview/assets/low-poly-pine-01.mtl /tmp/orcbands-tree/low-poly-pine-01.mtl
+          node -e "const fs=require('fs');const s=fs.readFileSync('preview/assets/low-poly-pine-01.obj','utf8');if((s.match(/^v /gm)||[]).length!==109||(s.match(/^f /gm)||[]).length!==144)throw Error('Unexpected mesh geometry')"
+      - name: Run real WebGL browser smoke test
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx playwright install --with-deps chromium
           node tools/smoke-preview.mjs
-      - name: Upload rendered preview screenshots
+      - name: Attach browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: orcbands-webgl-smoke-screenshots
+          name: orcbands-tree-webgl-smoke
           path: smoke-artifacts/*.png
           if-no-files-found: ignore

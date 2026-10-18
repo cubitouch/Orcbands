@@ -1,11 +1,11 @@
-name: Deploy Orcbands Asset Lab
+name: Deploy Orcbands Tree Asset Lab
 
 on:
   push:
     branches: [main]
     paths:
       - "preview/**"
-      - "art/**"
+      - "tools/generate-tree.mjs"
       - ".github/workflows/deploy-preview.yml"
   workflow_dispatch:
 
@@ -26,59 +26,40 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Blender for export
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Rebuild and check the original Pine 01 asset
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends blender python3-numpy
-      - name: Export latest original Worker Orc GLB
-        run: |
-          mkdir -p /tmp/orcbands-export
-          blender -b -t 2 --python-exit-code 1 --python art/worker_orc_vnext.py -- --output /tmp/orcbands-export --export-only
-          cp /tmp/orcbands-export/worker-orc-vnext.glb preview/assets/worker-orc-vnext.glb
-          test -s preview/assets/worker-orc-vnext.glb
-          blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input /tmp/orcbands-export/worker-orc-vnext.blend --output /tmp/orcbands-export --export-only
-          cp /tmp/orcbands-export/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
-          test -s preview/assets/worker-orc-skinned-experiment.glb
-      - name: Export historical #16/#17 and current sculpt stage
-        run: |
-          python3 tools/build-sculpt-versions.py --output preview/assets
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          data=json.loads(Path('preview/assets/sculpt-versions.json').read_text())
-          assert set(data)=={'sculpt-v1','sculpt-v2','sculpt'}
-          assert len({v['sha256'] for v in data.values()})==3, 'Different versions must export different GLBs'
-          print('Distinct sculpt stage hashes:',[data[k]['sha256'] for k in data])
-          PY
-      - name: Stamp exact deployed source and generated GLB hashes
+          mkdir -p /tmp/orcbands-tree
+          node tools/generate-tree.mjs /tmp/orcbands-tree
+          cmp preview/assets/low-poly-pine-01.obj /tmp/orcbands-tree/low-poly-pine-01.obj
+          cmp preview/assets/low-poly-pine-01.mtl /tmp/orcbands-tree/low-poly-pine-01.mtl
+      - name: Stamp deployed revision and asset hashes
+        env:
+          REVISION: ${{ github.sha }}
         run: |
           python3 - <<'PY'
+          import os, json, hashlib
           from pathlib import Path
-          import hashlib, json, os
           root=Path('preview')
-          revision=os.environ['GITHUB_SHA']
-          expected=['worker-orc-vnext.glb','worker-orc-skinned-experiment.glb','worker-orc-sculpt-v1.glb','worker-orc-sculpt-v2-head.glb','worker-orc-sculpt-study.glb']
+          revision=os.environ['REVISION']
+          html=root/'index.html'
+          html.write_text(html.read_text().replace('__ORCBANDS_REVISION__',revision[:12]))
           assets={}
-          for name in expected:
-              content=(root/'assets'/name).read_bytes()
-              assert len(content)>100_000, f'GLB unexpectedly small: {name}'
-              assets[name]={'bytes':len(content),'sha256':hashlib.sha256(content).hexdigest()}
-          index=root/'index.html'
-          data=index.read_text()
-          assert '__ORCBANDS_REVISION__' in data
-          index.write_text(data.replace('__ORCBANDS_REVISION__',revision[:12]))
+          for name in ('low-poly-pine-01.obj','low-poly-pine-01.mtl'):
+              data=(root/'assets'/name).read_bytes()
+              assets[name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
           (root/'asset-build.json').write_text(json.dumps({
-              'source_commit':revision,'assets':assets,
-              'viewer_default':'sculpt',
-              'sculpt_stages':json.loads((root/'assets/sculpt-versions.json').read_text()),
-              'quality':'experimental sculpt studies are static, unlike Rigged beta; not approved production models'
+              'source_commit':revision,'asset':'low-poly-pine-01','assets':assets,
+              'viewer_default':'studio','quality':'static experimental environment asset'
           },indent=2)+'\n')
-          print('Pages source:',revision,'generated assets:',assets)
+          print('Asset build:',assets)
           PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: preview
-      - name: Deploy static asset viewer to GitHub Pages
+      - name: Deploy browser viewer to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
