@@ -1,5 +1,7 @@
 import {noise} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 // Metres, +Y up. This module is independent of Three.js so placement can be audited.
+export const TORCH_PLACEMENTS=[{x:-7,z:0},{x:5,z:5},{x:4,z:-11},{x:-1,z:9}];
+export function nearTorch(x,z,margin=0){return TORCH_PLACEMENTS.some(p=>Math.hypot(x-p.x,z-p.z)<.38+margin)}
 export const GROVE_SEED = 2302;
 export const CAMPFIRE_PLACEMENT={x:.1,z:.15};
 export function nearCampfire(x,z,margin=0){return Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)<1.15+margin;}
@@ -136,6 +138,6 @@ export function createLayout(seed = GROVE_SEED) {
    const radius=[.30,.36,.55][type]*scale;
    if(pathDistance(x,z)>radius+.25)plants.push({x,z,type,scale,angle:forestRandom()*6.28,color:forestRandom()});
   }
-  return {seed,trees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)),
-   plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT}};
+  return {seed,trees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)),
+   plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearTorch(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT}};
 }

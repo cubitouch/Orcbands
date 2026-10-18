@@ -77,13 +77,22 @@ try{
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
  }
  const desktopMetrics=await metrics();
+ check(desktopMetrics.visibility.enabled&&desktopMetrics.visibility.sources===6,'Grove fog reveal sources missing');
+ check(desktopMetrics.torches.count===4,'Four torches must render');
+ await page.getByRole('button',{name:'Fog of war',exact:true}).click();
+ check(!(await metrics()).visibility.enabled,'Fog toggle must reveal full forest');
+ await page.evaluate(()=>window.__orcbandsReview.view('overall'));
+ await page.waitForTimeout(200);
+ await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-fog-off.png')});
+ await page.getByRole('button',{name:'Fog of war',exact:true}).click();
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(1.1));
+ check(JSON.stringify((await metrics()).torches.scales)!==JSON.stringify(desktopMetrics.torches.scales),'Torch flames must animate');
  check(JSON.stringify((await metrics()).campfire.scales)!==JSON.stringify(desktopMetrics.campfire.scales),'Campfire pose must animate');
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(null));
  const resumeTime=(await metrics()).campfire.time;
  await page.waitForFunction(start=>window.__orcbandsReview.metrics().campfire.time>start+.05,resumeTime);
- check(desktopMetrics.calls<=50,'Grove draw-call budget exceeded');
- check(desktopMetrics.triangles<180000,'Grove triangle budget exceeded');
+ check(desktopMetrics.calls<=66,'Grove draw-call budget exceeded');
+ check(desktopMetrics.triangles<182000,'Grove triangle budget exceeded');
  const signature=await page.evaluate(()=>JSON.stringify(window.__orcbandsLayout));
  // Exercise actual pointer orbit and wheel zoom, rather than only camera presets.
  await page.getByRole('button',{name:'Reset camera'}).click();
@@ -108,6 +117,7 @@ try{
  await page.getByRole('button',{name:'Single tree',exact:true}).click();
  await page.waitForTimeout(200);
  await page.screenshot({path:path.join(repo,'smoke-artifacts/pine-studio-return.png')});
+ check(!(await metrics()).visibility.enabled,'Studio must not have fog of war');
  check((await page.getByRole('button',{name:'Single tree',exact:true}).getAttribute('aria-pressed'))==='true','Return to studio failed');
 
  const direct=await context.newPage();
