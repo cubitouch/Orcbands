@@ -17,7 +17,11 @@ Place both files in the same Assets folder. Unity can import the OBJ; reconnect 
 
 ## Viewer
 
-`Single tree` offers close inspection. `Forest grove` uses 36 uniformly scaled and rotated instances of the preserved pine, a terrain-integrated worn earth path, three grass forms and three rock silhouettes. It opens onto a broad forest floor with a central clearing. See [ENV-02](environment-env-02.md) for the original composition and [path naturalism](path-naturalism.md) for the current ground treatment and WebGL screenshots. `Wireframe`, `Auto rotate`, `Reset camera` and `?scene=grove` support review. The grove also offers RTS, path, ground-level and wide camera presets; portrait screens receive wider camera framing. Reset clears orbit damping and rotation for a repeatable starting view.
+`Single tree` offers close inspection. `Forest grove` uses 244 uniformly scaled and rotated instances of the preserved pine, a terrain-integrated worn earth path, three grass forms and three rock silhouettes. It opens onto a broad forest floor with a central clearing. See [ENV-02](environment-env-02.md) for the original composition and [path naturalism](path-naturalism.md) for the current ground treatment and WebGL screenshots. `Wireframe`, `Auto rotate`, `Reset camera` and `?scene=grove` support review. The grove also offers RTS, path, ground-level and wide camera presets; portrait screens receive wider camera framing. Reset clears orbit damping and rotation for a repeatable starting view.
+
+## Forest camp and campfire
+
+The hut clearing now sits within 244 pines, with denser connecting woodland and a stone-ring campfire. [Forest camp](forest-camp.md) records the current composition, deterministic animated geometry, screenshots and performance.
 
 ## Timber Hut 01
 

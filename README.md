@@ -4,7 +4,7 @@ A small-scale fantasy survival RTS, planned for Unity 6 with direct unit control
 
 ## [View the original low-poly Pine 01](https://cubitouch.github.io/Orcbands/)
 
-The browser Asset Lab shows **real original static meshes**, not AI concept art. Inspect the model from all angles, explore a 36-tree forest clearing with a winding path, three grass forms and three rock silhouettes, inspect the red-roofed Timber Hut 01, or toggle wireframe.
+The browser Asset Lab shows **real original static meshes**, not AI concept art. Inspect the model from all angles, explore a 244-tree forest camp with a winding path, three grass forms, three rock silhouettes and an animated campfire, inspect the red-roofed Timber Hut 01, or toggle wireframe.
 
 - [Original OBJ geometry](preview/assets/low-poly-pine-01.obj) and [MTL material palette](preview/assets/low-poly-pine-01.mtl)
 - [Original hut OBJ](preview/assets/timber-hut-01.obj), [hut MTL](preview/assets/timber-hut-01.mtl) and [Timber Hut 01 review](docs/timber-hut-01.md)

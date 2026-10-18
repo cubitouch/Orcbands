@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 import {buildEnvironment,instanceAsset} from './environment.js?v=__ORCBANDS_REVISION__';
+import {buildCampfire} from './campfire.js?v=__ORCBANDS_REVISION__';
 import {HUT_PLACEMENT} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 
@@ -38,6 +39,7 @@ const grid=new THREE.GridHelper(6,12,0xd7e6ce,0x49604b);
 grid.position.y=.006;
 for(const m of (Array.isArray(grid.material)?grid.material:[grid.material])){m.transparent=true;m.opacity=.16}
 studio.add(grid);
+let campfire=null,fireTimeOverride=null,treeCount=36;
 let sourceTree=null,sourceHut=null,mode='studio',spin=false,wireframe=false;
 const assetRevision=document.querySelector('meta[name="orcbands-build"]')?.content||'dev';
 function assetUrl(name){return './assets/'+name+'?v='+encodeURIComponent(assetRevision)}
@@ -45,7 +47,7 @@ function resetCamera(){
  controls.enableDamping=false;controls.update();controls.enableDamping=true;
  spin=false;document.getElementById('spin').setAttribute('aria-pressed','false');
  grove.rotation.y=0;studio.rotation.y=0;hutStudio.rotation.y=0;renderer.shadowMap.needsUpdate=true;
- controls.minDistance=mode==='grove'?6:2.5;controls.maxDistance=mode==='grove'?90:26;
+ controls.minDistance=mode==='grove'?6:2.5;controls.maxDistance=mode==='grove'?115:26;
  if(mode==='grove'){camera.position.set(27,27,32);controls.target.set(0,0,0)}
  else if(mode==='hut'){camera.position.set(7.3,5.0,9);controls.target.set(.3,1.8,0)}
  else{camera.position.set(5.8,4.9,7.2);controls.target.set(0,2.2,0)}
@@ -54,18 +56,18 @@ function resetCamera(){
 function setMode(next){
  mode=next;
  scene.background=next==='grove'?new THREE.Color(0x9da98c):null;
- scene.fog=next==='grove'?new THREE.Fog(0x9da98c,65,110):null;
+ scene.fog=next==='grove'?new THREE.Fog(0x9da98c,85,135):null;
  sun.position.set(...(next==='grove'?[-22,36,18]:[-5,11,7]));
- const extent=next==='grove'?28:13;
+ const extent=next==='grove'?51:13;
  Object.assign(sun.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent,far:100});
  sun.shadow.camera.updateProjectionMatrix();renderer.shadowMap.needsUpdate=true;
  studio.visible=next==='studio';grove.visible=next==='grove';hutStudio.visible=next==='hut';
  document.querySelectorAll('.scene').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===mode)));
  document.getElementById('grove-views').hidden=next!=='grove';
  document.getElementById('hut-views').hidden=next!=='hut';
- document.getElementById('status').textContent=next==='grove'?'Forest grove · Pine 01 + Timber Hut 01':next==='hut'?'Timber Hut 01 · original static OBJ/MTL · timber frame, red roof and open entrance':'Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
+ document.getElementById('status').textContent=next==='grove'?`Forest camp · ${treeCount} pines · Timber Hut 01 · campfire`:next==='hut'?'Timber Hut 01 · original static OBJ/MTL · timber frame, red roof and open entrance':'Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
  resize();
- document.getElementById('scene-label').textContent=mode==='studio'?'Single tree · inspect geometry':mode==='hut'?'Timber Hut · 01':'Forest grove · 36 pines + hut';
+ document.getElementById('scene-label').textContent=mode==='studio'?'Single tree · inspect geometry':mode==='hut'?'Timber Hut · 01':`Forest camp · ${treeCount} pines + hut`;
  const url=new URL(location.href);
  if(next!=='studio')url.searchParams.set('scene',next);else url.searchParams.delete('scene');
  history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -104,6 +106,7 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  const layout=buildEnvironment(grove,tree);
  instanceAsset(hutStudio,hut,[{x:0,z:0,scale:1,angle:0}]);
  instanceAsset(grove,hut,[HUT_PLACEMENT]);
+ campfire=buildCampfire(grove,layout.campfire);treeCount=layout.trees.length;
  window.__orcbandsLayout=layout;
  document.getElementById('loading').hidden=true;
  window.__orcbandsTreeLoaded=true;window.__orcbandsHutLoaded=true;
@@ -115,7 +118,9 @@ const reviewViews={
  path:{position:[12,12,17],target:[0,0,1]},
  low:{position:[3,4.6,13],target:[-3,1,0]},
  hut:{position:[7,7,10],target:[-3,1,-3.8]},
- wide:{position:[-36,35,44],target:[0,0,0]}
+ campfire:{position:[6.5,5.8,8.7],target:[-1,1,-1.7]},
+ fire:{position:[3,2.8,5.8],target:[.1,.65,.15]},
+ wide:{position:[-48,43,57],target:[0,0,0]}
 };
 function reviewView(name){
  const view=reviewViews[name];if(!view)throw Error('Unknown view');
@@ -128,13 +133,15 @@ window.__orcbandsHutReview={
 };
 document.querySelectorAll('[data-hut-view]').forEach(button=>button.addEventListener('click',()=>window.__orcbandsHutReview.view(button.dataset.hutView)));
 window.__orcbandsReview={
+ setFireTime(value){fireTimeOverride=Number.isFinite(value)?value:null;campfire?.update(fireTimeOverride??clock.elapsedTime)},
  view(name){if(mode!=='grove')setMode('grove');reviewView(name)},
- metrics(){return {calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
+ metrics(){return {campfire:campfire?.metrics(),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
 };
 const clock=new THREE.Clock();
 function frame(){
  requestAnimationFrame(frame);
  const dt=Math.min(clock.getDelta(),.06);
+ campfire?.update(fireTimeOverride??clock.elapsedTime);
  if(spin){(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y+=dt*.25;renderer.shadowMap.needsUpdate=true}
  if(mode==='grove'){
   const previous=controls.target.clone();controls.target.x=THREE.MathUtils.clamp(controls.target.x,-19,19);

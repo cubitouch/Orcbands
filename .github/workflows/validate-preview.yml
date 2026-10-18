@@ -23,6 +23,8 @@ jobs:
           node --check tools/generate-hut.mjs
           node --check tools/validate-hut.mjs
           node --check preview/app.js
+          node --check preview/campfire.js
+          node --check tools/validate-campfire.mjs
           node --check preview/environment.js
           node --check preview/environment-layout.js
           node --check preview/ground-surface.js
@@ -46,6 +48,7 @@ jobs:
           npx playwright install --with-deps chromium
           node tools/validate-environment.mjs
           node tools/validate-hut.mjs
+          node tools/validate-campfire.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
       - name: Attach browser screenshots
         if: always()
