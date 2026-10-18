@@ -1,6 +1,6 @@
 """Fast visual QA of the *actual exported* worker-orc GLB hand/axe interface.
 
-Not a replacement for the full art review. Captures 3 close views using the
+Not a replacement for the full art review. Captures close views and whole-character views using the
 same GLB that the web preview will publish. CPU Blender, no Unity required.
 """
 import bpy, sys
@@ -16,7 +16,7 @@ if not mesh:raise RuntimeError("Exported GLB contains no mesh")
 scene=bpy.context.scene
 scene.render.engine='CYCLES'
 scene.cycles.device='CPU'
-scene.cycles.samples=10
+scene.cycles.samples=18
 scene.cycles.use_denoising=False
 scene.render.resolution_x=720
 scene.render.resolution_y=720
@@ -37,11 +37,19 @@ bpy.ops.object.camera_add()
 camera=bpy.context.object
 scene.camera=camera
 camera.data.type='ORTHO'
-for name,cam,point,scale in [
- ("front-grip",(1.18,-5,1.15),(1.18,-.2,1.08),1.02),
- ("inside-palm",(1.18,5,1.15),(1.18,-.2,1.08),1.02),
- ("three-quarter-grip",(3,-4,2),(1.22,-.2,1.08),1.27),
- ("front-full",(0,-7,3.0),(0,0,1.5),4.1)]:
+# Isolated medial view exposes contact otherwise obscured by the torso.
+for name,cam,point,scale,isolate in [
+ ("front-grip",(1.13,-5,1.10),(1.13,-.27,1.02),.85,False),
+ ("inside-palm",(-4,-.35,1.12),(1.13,-.27,1.02),.85,True),
+ ("outside-knuckles",(5,-.35,1.12),(1.13,-.27,1.02),.85,False),
+ ("rear-grip",(1.13,5,1.12),(1.13,-.27,1.02),.85,False),
+ ("three-quarter-grip",(3,-4,2),(1.13,-.27,1.02),1.10,False),
+ ("right-empty-hand",(-4,-4,1.2),(-1.12,-.17,1.03),.90,False),
+ ("front-full",(0,-7,3.0),(0,0,1.5),4.3,False),
+ ("three-quarter-full",(5,-8,5.5),(0,0,1.5),4.4,False),
+ ("back-full",(0,7,3.0),(0,0,1.5),4.3,False)]:
+ for obj in mesh:
+  obj.hide_render=isolate and not (obj.get('anatomical_side')=='L' or obj.get('character_prop')=='hatchet')
  camera.location=cam
  camera.rotation_euler=(Vector(point)-camera.location).to_track_quat('-Z','Y').to_euler()
  camera.data.ortho_scale=scale
