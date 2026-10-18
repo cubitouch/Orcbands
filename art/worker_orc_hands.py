@@ -84,8 +84,9 @@ def right_relaxed():
     for ob in [palm]+nails:
         for v in ob.data.vertices:
             x,y,z=v.co;dx=x+1.12;dy=y+.172
-            # Blend twist above palm into wrist for an unbroken cuff junction.
-            t=clamp((1.245-z)/.12);angle=-pi*.5*t
+            # Rotate as a unit: the nearly round wrist stays centered under
+            # the cuff without twisting the broad thenar web into a fin.
+            angle=-pi*.5
             v.co.x=-1.12+dx*cos(angle)-dy*sin(angle)
             v.co.y=-.172+dx*sin(angle)+dy*cos(angle)
         ob['ART02_hand']=True;ob['anatomical_side']='R';ob.data.update()
