@@ -23,6 +23,7 @@ jobs:
           node --check preview/app.js
           node --check preview/environment.js
           node --check preview/environment-layout.js
+          node --check preview/ground-surface.js
           node --check tools/validate-environment.mjs
           node --check tools/smoke-preview.mjs
       - name: Verify deterministic tree export and actual geometry

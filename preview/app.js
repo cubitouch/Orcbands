@@ -11,6 +11,8 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.05;
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.shadowMap.enabled=true;
+// Static art only needs new shadows after a scene/material change or active rotation.
+renderer.shadowMap.autoUpdate=false;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.1,240);
 const controls=new OrbitControls(camera,canvas);
@@ -41,7 +43,7 @@ function assetUrl(name){return './assets/'+name+'?v='+encodeURIComponent(assetRe
 function resetCamera(){
  controls.enableDamping=false;controls.update();controls.enableDamping=true;
  spin=false;document.getElementById('spin').setAttribute('aria-pressed','false');
- grove.rotation.y=0;studio.rotation.y=0;
+ grove.rotation.y=0;studio.rotation.y=0;renderer.shadowMap.needsUpdate=true;
  controls.minDistance=mode==='grove'?6:2.5;controls.maxDistance=mode==='grove'?90:26;
  if(mode==='grove'){camera.position.set(27,27,32);controls.target.set(0,0,0)}
  else{camera.position.set(5.8,4.9,7.2);controls.target.set(0,2.2,0)}
@@ -54,7 +56,7 @@ function setMode(next){
  sun.position.set(...(next==='grove'?[-22,36,18]:[-5,11,7]));
  const extent=next==='grove'?28:13;
  Object.assign(sun.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent,far:100});
- sun.shadow.camera.updateProjectionMatrix();
+ sun.shadow.camera.updateProjectionMatrix();renderer.shadowMap.needsUpdate=true;
  studio.visible=next==='studio';grove.visible=next==='grove';
  document.querySelectorAll('.scene').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===mode)));
  document.getElementById('grove-views').hidden=next!=='grove';
@@ -73,6 +75,7 @@ document.getElementById('spin').addEventListener('click',e=>{
  spin=!spin;e.currentTarget.setAttribute('aria-pressed',String(spin));
 });
 document.getElementById('wireframe').addEventListener('click',e=>{
+ renderer.shadowMap.needsUpdate=true;
  wireframe=!wireframe;e.currentTarget.setAttribute('aria-pressed',String(wireframe));
  for(const root of [sourceTree,grove])root?.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
 });
@@ -119,7 +122,7 @@ const clock=new THREE.Clock();
 function frame(){
  requestAnimationFrame(frame);
  const dt=Math.min(clock.getDelta(),.06);
- if(spin)(mode==='studio'?studio:grove).rotation.y+=dt*.25;
+ if(spin){(mode==='studio'?studio:grove).rotation.y+=dt*.25;renderer.shadowMap.needsUpdate=true}
  if(mode==='grove'){
   const previous=controls.target.clone();controls.target.x=THREE.MathUtils.clamp(controls.target.x,-19,19);
   controls.target.z=THREE.MathUtils.clamp(controls.target.z,-19,19);controls.target.y=THREE.MathUtils.clamp(controls.target.y,0,6);
