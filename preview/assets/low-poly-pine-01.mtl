@@ -1,0 +1,41 @@
+newmtl bark
+Ka 0.05 0.05 0.05
+Kd 0.315 0.215 0.13
+Ks 0 0 0
+illum 1
+
+newmtl bark_light
+Ka 0.05 0.05 0.05
+Kd 0.43 0.306 0.18
+Ks 0 0 0
+illum 1
+
+newmtl bark_shadow
+Ka 0.05 0.05 0.05
+Kd 0.22 0.16 0.11
+Ks 0 0 0
+illum 1
+
+newmtl needle_main
+Ka 0.05 0.05 0.05
+Kd 0.25 0.405 0.29
+Ks 0 0 0
+illum 1
+
+newmtl needle_light
+Ka 0.05 0.05 0.05
+Kd 0.325 0.48 0.32
+Ks 0 0 0
+illum 1
+
+newmtl needle_shadow
+Ka 0.05 0.05 0.05
+Kd 0.18 0.325 0.23
+Ks 0 0 0
+illum 1
+
+newmtl needle_sun
+Ka 0.05 0.05 0.05
+Kd 0.39 0.51 0.335
+Ks 0 0 0
+illum 1
