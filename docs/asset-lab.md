@@ -1,4 +1,4 @@
-# Orcbands Tree Asset Lab
+# Orcbands Asset Lab
 
 [Interactive viewer](https://cubitouch.github.io/Orcbands/) — original low-poly evergreen, shown as an actual WebGL mesh. This is **not** the Unity game.
 
@@ -19,8 +19,12 @@ Place both files in the same Assets folder. Unity can import the OBJ; reconnect 
 
 `Single tree` offers close inspection. `Forest grove` uses 36 uniformly scaled and rotated instances of the preserved pine, a terrain-integrated worn earth path, three grass forms and three rock silhouettes. It opens onto a broad forest floor with a central clearing. See [ENV-02](environment-env-02.md) for the original composition and [path naturalism](path-naturalism.md) for the current ground treatment and WebGL screenshots. `Wireframe`, `Auto rotate`, `Reset camera` and `?scene=grove` support review. The grove also offers RTS, path, ground-level and wide camera presets; portrait screens receive wider camera framing. Reset clears orbit damping and rotation for a repeatable starting view.
 
+## Timber Hut 01
+
+`Timber hut` and `?scene=hut` open the new original building. Front/rear/roof/entrance presets, wireframe, auto rotation and reset support inspection; the hut is also placed in the grove clearing. [Timber Hut 01](timber-hut-01.md) documents the authored mesh, downloadable OBJ/MTL, actual browser captures and limitations. Pine 01's source assets and generator remain unchanged.
+
 ## CI and deployment
 
-GitHub Actions checks that the OBJ and MTL regenerate bit-for-bit, checks JavaScript syntax and runs a headless Chromium/WebGL visual smoke test on desktop and portrait viewports. The test exercises pointer orbit, wheel zoom, pan, auto rotation, reset and actual CDP touch gestures. Layout validation checks path clearance, clearing space, finite buffers, upward-facing path triangles and bit-for-bit geometry reproduction. CI captures the unchanged Single Tree plus four grove angles and mobile framing in the `orcbands-forest-webgl-smoke` artifact. Pushes to main publish the static preview via GitHub Pages.
+GitHub Actions checks that the OBJ and MTL regenerate bit-for-bit, checks JavaScript syntax and runs a headless Chromium/WebGL visual smoke test on desktop and portrait viewports. The test exercises pointer orbit, wheel zoom, pan, auto rotation, reset and actual CDP touch gestures. Layout validation checks path clearance, clearing space, finite buffers, upward-facing path triangles and bit-for-bit geometry reproduction. CI captures the unchanged Single Tree, hut studio and detail angles, grove views and mobile framing in the `orcbands-forest-webgl-smoke` artifact. Pushes to main publish the static preview via GitHub Pages.
 
 The earlier bespoke orc modelling assets and workflows have been retired. Their history remains accessible through old commits/PRs.

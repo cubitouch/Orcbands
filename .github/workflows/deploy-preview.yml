@@ -1,4 +1,4 @@
-name: Deploy Orcbands Tree Asset Lab
+name: Deploy Orcbands Asset Lab
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     paths:
       - "preview/**"
       - "tools/generate-tree.mjs"
+      - "tools/generate-hut.mjs"
       - ".github/workflows/deploy-preview.yml"
   workflow_dispatch:
 
@@ -29,12 +30,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Rebuild and check the original Pine 01 asset
+      - name: Rebuild and check original static assets
         run: |
           mkdir -p /tmp/orcbands-tree
           node tools/generate-tree.mjs /tmp/orcbands-tree
           cmp preview/assets/low-poly-pine-01.obj /tmp/orcbands-tree/low-poly-pine-01.obj
           cmp preview/assets/low-poly-pine-01.mtl /tmp/orcbands-tree/low-poly-pine-01.mtl
+          node tools/generate-hut.mjs /tmp/orcbands-tree
+          cmp preview/assets/timber-hut-01.obj /tmp/orcbands-tree/timber-hut-01.obj
+          cmp preview/assets/timber-hut-01.mtl /tmp/orcbands-tree/timber-hut-01.mtl
       - name: Stamp deployed revision and asset hashes
         env:
           REVISION: ${{ github.sha }}
@@ -46,8 +50,10 @@ jobs:
           revision=os.environ['REVISION']
           html=root/'index.html'
           html.write_text(html.read_text().replace('__ORCBANDS_REVISION__',revision[:12]))
+          for module in root.glob('*.js'):
+              module.write_text(module.read_text().replace('__ORCBANDS_REVISION__',revision[:12]))
           assets={}
-          for name in ('low-poly-pine-01.obj','low-poly-pine-01.mtl'):
+          for name in ('low-poly-pine-01.obj','low-poly-pine-01.mtl','timber-hut-01.obj','timber-hut-01.mtl'):
               data=(root/'assets'/name).read_bytes()
               assets[name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
           (root/'asset-build.json').write_text(json.dumps({
