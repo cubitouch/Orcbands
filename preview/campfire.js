@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createFlameMotion,fireSignal} from './fire-motion.js?v=__ORCBANDS_REVISION__';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createRockGeometry} from './environment.js?v=__ORCBANDS_REVISION__';
 import {groundHeight,seededRandom} from './environment-layout.js?v=__ORCBANDS_REVISION__';
@@ -59,15 +60,17 @@ export function buildCampfire(parent,placement){
  const heart=new THREE.Mesh(flameGeometry(.18,.65,-.04),core);heart.position.set(.03,.18,.10);heart.name='Flame heart';root.add(heart);tongues.push(heart);
  // A small local light provides warmth; it never creates a dynamic shadow-map pass.
  const light=new THREE.PointLight(0xff963d,1.2,4.5,2);light.name='Fire warmth';light.position.y=.72;light.castShadow=false;root.add(light);
+ const motion=tongues.map((mesh,i)=>createFlameMotion(mesh,i*1.9));
  let time=0;
  function update(t){
   time=t;
-  tongues.forEach((mesh,i)=>{
-   const pulse=Math.sin(t*(6.4+i*.47)+i*1.9),sway=Math.sin(t*4.3+i*2.1);
-   mesh.scale.set(1+pulse*.055,1+pulse*.10+sway*.035,1-pulse*.04);mesh.rotation.y=sway*.10;
-  });
-  light.intensity=1.2+.13*Math.sin(t*8.1)+.08*Math.sin(t*13.3);
+  motion.forEach(animate=>animate(t));
+  const warmth=fireSignal(t,.8);
+  light.intensity=7.2+warmth*1.6;
+  light.color.setHSL(.075+warmth*.012,1,.62);
+  light.position.set(Math.sin(t*2.8)*.055,.76+warmth*.035,Math.cos(t*3.1)*.045);
+  emberMaterial.color.setHSL(.045+warmth*.008,.95,.42+warmth*.035);
  }
  update(0);
- return {root,update,metrics(){return {time,scales:tongues.map(m=>m.scale.y),lightIntensity:light.intensity}}};
+ return {root,update,metrics(){return {time,scales:tongues.map(m=>m.scale.y),lightIntensity:light.intensity,lightColor:light.color.getHex(),tip:Array.from(tongues[0].geometry.attributes.position.array.slice(21,24))}}};
 }

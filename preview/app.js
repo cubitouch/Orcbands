@@ -4,8 +4,9 @@ import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 import {buildEnvironment,instanceAsset} from './environment.js?v=__ORCBANDS_REVISION__';
 import {buildTorches} from './torches.js?v=__ORCBANDS_REVISION__';
 import {buildCampVisibility} from './camp-visibility.js?v=__ORCBANDS_REVISION__';
+import {buildFireAtmosphere} from './fire-atmosphere.js?v=__ORCBANDS_REVISION__';
 import {buildCampfire} from './campfire.js?v=__ORCBANDS_REVISION__';
-import {HUT_PLACEMENT} from './environment-layout.js?v=__ORCBANDS_REVISION__';
+import {HUT_PLACEMENT,TORCH_PLACEMENTS} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 
 const host=document.getElementById('viewer'),canvas=document.getElementById('viewport');
@@ -41,7 +42,7 @@ const grid=new THREE.GridHelper(6,12,0xd7e6ce,0x49604b);
 grid.position.y=.006;
 for(const m of (Array.isArray(grid.material)?grid.material:[grid.material])){m.transparent=true;m.opacity=.16}
 studio.add(grid);
-let torches=null,campVisibility=null,fogEnabled=true;
+let atmosphere=null,torches=null,campVisibility=null,fogEnabled=true;
 let campfire=null,fireTimeOverride=null,treeCount=36;
 let sourceTree=null,sourceHut=null,mode='studio',spin=false,wireframe=false;
 const assetRevision=document.querySelector('meta[name="orcbands-build"]')?.content||'dev';
@@ -116,7 +117,7 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  instanceAsset(hutStudio,hut,[{x:0,z:0,scale:1,angle:0}]);
  instanceAsset(grove,hut,[HUT_PLACEMENT]);
  campfire=buildCampfire(grove,layout.campfire);treeCount=layout.trees.length;
- torches=buildTorches(grove);campVisibility=buildCampVisibility(grove);
+ torches=buildTorches(grove);atmosphere=buildFireAtmosphere(grove,[layout.campfire,...TORCH_PLACEMENTS]);campVisibility=buildCampVisibility(grove);
  window.__orcbandsLayout=layout;
  document.getElementById('loading').hidden=true;
  window.__orcbandsTreeLoaded=true;window.__orcbandsHutLoaded=true;
@@ -143,16 +144,16 @@ window.__orcbandsHutReview={
 };
 document.querySelectorAll('[data-hut-view]').forEach(button=>button.addEventListener('click',()=>window.__orcbandsHutReview.view(button.dataset.hutView)));
 window.__orcbandsReview={
- setFireTime(value){fireTimeOverride=Number.isFinite(value)?value:null;campfire?.update(fireTimeOverride??clock.elapsedTime);torches?.update(fireTimeOverride??clock.elapsedTime)},
+ setFireTime(value){fireTimeOverride=Number.isFinite(value)?value:null;campfire?.update(fireTimeOverride??clock.elapsedTime);torches?.update(fireTimeOverride??clock.elapsedTime);atmosphere?.update(fireTimeOverride??clock.elapsedTime)},
  view(name){if(mode!=='grove')setMode('grove');reviewView(name)},
- metrics(){return {torches:torches?.metrics(),visibility:campVisibility?.metrics(),campfire:campfire?.metrics(),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
+ metrics(){return {atmosphere:atmosphere?.metrics(),torches:torches?.metrics(),visibility:campVisibility?.metrics(),campfire:campfire?.metrics(),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
 };
 const clock=new THREE.Clock();
 function frame(){
  requestAnimationFrame(frame);
  const dt=Math.min(clock.getDelta(),.06);
  campfire?.update(fireTimeOverride??clock.elapsedTime);
- torches?.update(fireTimeOverride??clock.elapsedTime);
+ torches?.update(fireTimeOverride??clock.elapsedTime);atmosphere?.update(fireTimeOverride??clock.elapsedTime);
  if(spin){(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y+=dt*.25;renderer.shadowMap.needsUpdate=true}
  campVisibility?.update();
  if(mode==='grove'){

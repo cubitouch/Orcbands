@@ -21,7 +21,7 @@ export function buildCampVisibility(root){
  const materials=new Set();
  root.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))materials.add(m)});
  for(const material of materials){
-  const previous=material.onBeforeCompile;
+  const previous=material.onBeforeCompile,previousKey=material.customProgramCacheKey();
   material.onBeforeCompile=function(shader,renderer){
    previous.call(this,shader,renderer);
    Object.assign(shader.uniforms,{campFogEnabled:enabled,campFogInverse:inverse,campFogSources:sources});
@@ -53,7 +53,7 @@ export function buildCampVisibility(root){
     outgoingLight=mix(outgoingLight,distantLight,obscured);
     #include <opaque_fragment>`);
   };
-  material.customProgramCacheKey=()=> 'camp-visibility-v2';material.needsUpdate=true;
+  material.customProgramCacheKey=()=> previousKey+'|camp-visibility-v2';material.needsUpdate=true;
  }
  function update(){root.updateWorldMatrix(true,false);inverse.value.copy(root.matrixWorld).invert()}
  update();

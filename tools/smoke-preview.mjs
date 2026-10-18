@@ -1,5 +1,5 @@
 import {createServer} from 'node:http';
-import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import {readFile,mkdir,writeFile,rm} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
@@ -77,6 +77,19 @@ try{
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
  }
  const desktopMetrics=await metrics();
+ if(process.env.ORCBANDS_CAPTURE_FIRE_VIDEO==='1'){
+  await page.setViewportSize({width:960,height:660});
+  await page.evaluate(()=>window.__orcbandsReview.view('campfire'));
+  const frames=path.join(repo,'smoke-artifacts/fire-frames');await rm(frames,{recursive:true,force:true});await mkdir(frames,{recursive:true});
+  for(let i=0;i<36;i++){
+   await page.evaluate(t=>window.__orcbandsReview.setFireTime(t),i/12);
+   await page.waitForTimeout(40);
+   await page.locator('canvas').screenshot({path:path.join(frames,String(i).padStart(3,'0')+'.png')});
+  }
+  await page.setViewportSize({width:1280,height:800});
+  await page.evaluate(()=>{window.__orcbandsReview.setFireTime(0);window.__orcbandsReview.view('fire')});
+ }
+ check(desktopMetrics.atmosphere.puffs===28&&desktopMetrics.atmosphere.sparks===18,'Smoke and spark pools missing');
  check(desktopMetrics.visibility.enabled&&desktopMetrics.visibility.sources===6,'Grove fog reveal sources missing');
  check(desktopMetrics.torches.count===4,'Four torches must render');
  await page.getByRole('button',{name:'Fog of war',exact:true}).click();
@@ -86,8 +99,16 @@ try{
  await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-fog-off.png')});
  await page.getByRole('button',{name:'Fog of war',exact:true}).click();
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(1.1));
+ check(JSON.stringify((await metrics()).atmosphere.smokeSample)!==JSON.stringify(desktopMetrics.atmosphere.smokeSample),'Smoke must rise and drift');
+ check((await metrics()).campfire.lightColor!==desktopMetrics.campfire.lightColor,'Firelight warmth must vary');
  check(JSON.stringify((await metrics()).torches.scales)!==JSON.stringify(desktopMetrics.torches.scales),'Torch flames must animate');
  check(JSON.stringify((await metrics()).campfire.scales)!==JSON.stringify(desktopMetrics.campfire.scales),'Campfire pose must animate');
+ await page.evaluate(()=>{window.__orcbandsReview.view('campfire');window.__orcbandsReview.setFireTime(1.1)});
+ await page.waitForTimeout(120);
+ await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-motion-1.png')});
+ await page.evaluate(()=>window.__orcbandsReview.setFireTime(2.3));
+ await page.waitForTimeout(120);
+ await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-motion-2.png')});
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(null));
  const resumeTime=(await metrics()).campfire.time;
  await page.waitForFunction(start=>window.__orcbandsReview.metrics().campfire.time>start+.05,resumeTime);

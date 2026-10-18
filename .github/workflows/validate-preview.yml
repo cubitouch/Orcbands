@@ -26,6 +26,9 @@ jobs:
           node --check preview/torches.js
           node --check preview/camp-visibility.js
           node --check tools/validate-camp-visibility.mjs
+          node --check preview/fire-motion.js
+          node --check preview/fire-atmosphere.js
+          node --check tools/validate-fire-atmosphere.mjs
           node --check preview/campfire.js
           node --check tools/validate-campfire.mjs
           node --check preview/environment.js
@@ -53,6 +56,7 @@ jobs:
           node tools/validate-hut.mjs
           node tools/validate-campfire.mjs
           node tools/validate-camp-visibility.mjs
+          node tools/validate-fire-atmosphere.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
       - name: Attach browser screenshots
         if: always()
