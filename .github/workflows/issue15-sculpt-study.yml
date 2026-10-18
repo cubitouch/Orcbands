@@ -1,15 +1,7 @@
-name: Worker Orc 15 sculpt study actual-GLB review
+name: Legacy #15 sculpt comparison (manual)
+# Historical #18 versus current comparison can still be run on demand.
+# Current candidates get GLB renders + Chromium WebGL in grip-visual-qa.yml.
 on:
-  pull_request:
-    paths:
-      - "art/worker_orc_sculpt_study.py"
-      - "art/worker_orc_head.py"
-      - "art/worker_orc_hands.py"
-      - "art/render_issue15_glb.py"
-      - ".github/workflows/issue15-sculpt-study.yml"
-      - "tools/smoke-preview.mjs"
-      - "preview/app.js"
-      - "preview/index.html"
   workflow_dispatch:
 
 permissions:

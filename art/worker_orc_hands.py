@@ -1,142 +1,146 @@
-"""ART-02: relaxed worker hands; fine skin union, sculpted joints and nail plates."""
-def worker_hand(s,side):
-    start=len(objects)
-    palm=loft(side+' ART02 / wrist metacarpals and palm',[
-      ((s*1.12,-.172,1.245),.145,.135),
-      ((s*1.125,-.182,1.18),.15,.124),
-      ((s*1.13,-.196,1.105),.177,.116),
-      ((s*1.14,-.210,1.035),.19,.113),
-      ((s*1.145,-.218,.982),.176,.100),
-      ((s*1.145,-.222,.952),.145,.073)],skin,40)
-    finger_specs=[(.995,.735,.049),(1.095,.698,.052),(1.198,.724,.049),(1.29,.786,.041)]
-    tips=[]
-    for k,(x,tip,r) in enumerate(finger_specs):
-        root=.998-(.012 if k==3 else 0)
-        span=root-tip
-        spread=(k-1.3)*.013
-        pts=[((s*x,-.224,root+.045),r*.94,r*1.02),
-             ((s*(x+spread*.25),-.233,root),r,r*1.06),
-             ((s*(x+spread*.60),-.246,root-span*.35),r*.91,r*.96),
-             ((s*(x+spread),-.273,root-span*.55),r*.94,r*.95),
-             ((s*(x+spread),-.297,root-span*.79),r*.79,r*.83),
-             ((s*(x+spread*.90),-.304,tip+.021),r*.75,r*.78),
-             ((s*(x+spread*.90),-.301,tip+.008),r*.57,r*.60),
-             ((s*(x+spread*.90),-.297,tip),r*.12,r*.14)]
-        finger=limb(side+f' ART02 / finger {k+1} phalanges',pts,skin,24)
-        sub=finger.modifiers.new('Round relaxed finger transitions','SUBSURF');sub.levels=1
-        bpy.context.view_layer.objects.active=finger;bpy.ops.object.modifier_apply(modifier=sub.name)
-        if side=='R':
-            # Curl the gripping fingertips back around the shaft instead of
-            # presenting four straight dangling digits beneath it.
-            for vertex in finger.data.vertices:
-                z=vertex.co.z
-                tuck=clamp((1.010-z)/.25)
-                vertex.co.y+=.082*tuck
-                vertex.co.z+=.068*tuck
-            finger.data.update()
-        tips.append((s*(x+spread*.90),tip,r))
-    # Thenar pad and opposed thumb: the web remains open below the first joint.
-    limb(side+' ART02 / thenar pad',[
-      ((s*1.01,-.230,1.13),.087,.085),
-      ((s*.966,-.264,1.063),.083,.079),
-      ((s*.955,-.282,1.013),.060,.061)],skin,28)
-    thumb=limb(side+' ART02 / opposed thumb',[
-      ((s*.971,-.263,1.09),.063,.069),
-      ((s*.921,-.289,1.045),.066,.066),
-      ((s*.881,-.321,.995),.058,.058),
-      ((s*.873,-.349,.953),.055,.052),
-      ((s*.889,-.367,.919),.045,.044),
-      ((s*.903,-.370,.903),.027,.029),
-      ((s*.911,-.369,.897),.009,.011)],skin,28)
-    sub=thumb.modifiers.new('Thumb joints','SUBSURF');sub.levels=1
-    bpy.context.view_layer.objects.active=thumb;bpy.ops.object.modifier_apply(modifier=sub.name)
-    if side=='R':
-        # Only the thumb mesh gets the opposing curl. Applying this test
-        # after the hand voxel-union also caught the adjacent index finger,
-        # making the grip fingers cross unnaturally.
-        for vertex in thumb.data.vertices:
-            x,y,z=vertex.co
-            curl=clamp((1.11-z)/.22)
-            vertex.co.x+=.090*curl
-            vertex.co.y-=.022*curl
-        thumb.data.update()
-    pieces=objects[start:]
+"""Worker hands: inward-facing relaxed right palm and a left power grip.
+
+Character faces -Y in Blender. Anatomical LEFT is +X (viewer-right in front).
+Legacy L/R mesh labels used screen sides; new hand/prop metadata is anatomical.
+The left fingers are authored around the same haft axis used by the equipment.
+"""
+HATCHET_AXIS = Vector((1.13, -.27, 1.00))
+
+def finish_hand(palm, pieces, side):
+    objects[:] = [ob for ob in objects if ob not in pieces]
     bpy.ops.object.select_all(action='DESELECT')
-    for ob in pieces:ob.select_set(True)
-    bpy.context.view_layer.objects.active=palm;bpy.ops.object.join()
-    objects[start:]=[palm]
-    palm.name=side+' ART02 / continuous hand and separated digits'
+    for ob in pieces: ob.select_set(True)
+    bpy.context.view_layer.objects.active=palm
+    bpy.ops.object.join()
+    objects.append(palm)
     bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.normals_make_consistent(inside=False);bpy.ops.object.mode_set(mode='OBJECT')
     palm.data.remesh_voxel_size=.0065;bpy.ops.object.voxel_remesh()
-    sm=palm.modifiers.new('Soft skin transitions','SMOOTH');sm.factor=.65;sm.iterations=3
+    sm=palm.modifiers.new('Soft palm and knuckle transitions','SMOOTH');sm.factor=.45;sm.iterations=3
     bpy.ops.object.modifier_apply(modifier=sm.name)
-    # Shallow joint folds sculpted into skin; no dark floating crease strips.
-    for vert in palm.data.vertices:
-        x,y,z=vert.co
-        if y<-.25:
-            for k,(fx,tip,r) in enumerate(finger_specs):
-                joint=.998-(.998-tip)*.55
-                mask=exp(-((abs(x)-fx)/(r*.75))**4)
-                vert.co.y+=.0045*exp(-((z-joint)/.006)**2)*mask
-            # Fanned dorsal tendons fade into wrist and knuckle pads.
-            if z>1.015:
-                for fx in (1.02,1.12,1.22):
-                    vert.co.y-=.004*gauss(abs(x),z,fx,1.075,.016,.07)
     for p in palm.data.polygons:p.use_smooth=True
     bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.smart_project(island_margin=.015);bpy.ops.object.mode_set(mode='OBJECT')
-    # Low-contrast broad nails fitted to the distal phalanges, not claws.
-    nailmat=skin.copy();nailmat.name=side+' ART02 worn olive nails'
-    bs=nailmat.node_tree.nodes.get('Principled BSDF')
-    for link in list(nailmat.node_tree.links):
-        if link.to_socket==bs.inputs['Base Color']:nailmat.node_tree.links.remove(link)
-    bs.inputs['Base Color'].default_value=(.12,.145,.065,1);bs.inputs['Roughness'].default_value=.63
+    palm['ART02_hand']=True;palm['anatomical_side']=side
+    palm['palm_direction']='inward toward ipsilateral thigh'
+    return palm
+
+def nail_material(side):
+    m=skin.copy();m.name=side+' worn olive nails'
+    bs=m.node_tree.nodes.get('Principled BSDF')
+    for link in list(m.node_tree.links):
+        if link.to_socket==bs.inputs['Base Color']:m.node_tree.links.remove(link)
+    bs.inputs['Base Color'].default_value=(.12,.145,.065,1)
+    bs.inputs['Roughness'].default_value=.63
+    return m
+
+def worker_hand(s,legacy_side):
+    if s==1:
+        left_grip()
+    else:
+        right_relaxed()
+
+def right_relaxed():
+    start=len(objects)
+    palm=loft('R / inward relaxed palm',[
+      ((-1.12,-.172,1.245),.145,.135),((-1.125,-.182,1.18),.15,.124),
+      ((-1.13,-.196,1.105),.177,.116),((-1.14,-.210,1.035),.19,.113),
+      ((-1.145,-.218,.982),.176,.100),((-1.145,-.222,.952),.145,.073)],skin,40)
+    tips=[]
+    for k,(x,tip,r) in enumerate([(.995,.735,.049),(1.095,.698,.052),(1.198,.724,.049),(1.29,.786,.041)]):
+        root=.998-(.012 if k==3 else 0);span=root-tip;spread=(k-1.3)*.013
+        pts=[((-x,-.224,root+.045),r*.94,r*1.02),
+             ((-(x+spread*.25),-.233,root),r,r*1.06),
+             ((-(x+spread*.60),-.230,root-span*.35),r*.91,r*.96),
+             ((-(x+spread),-.210,root-span*.55),r*.94,r*.95),
+             ((-(x+spread),-.185,root-span*.79),r*.79,r*.83),
+             ((-(x+spread*.90),-.170,tip+.021),r*.75,r*.78),
+             ((-(x+spread*.90),-.168,tip+.008),r*.57,r*.60),
+             ((-(x+spread*.90),-.167,tip),r*.12,r*.14)]
+        finger=limb('R / relaxed finger '+str(k+1),pts,skin,24)
+        sub=finger.modifiers.new('Rounded finger joints','SUBSURF');sub.levels=1
+        bpy.context.view_layer.objects.active=finger;bpy.ops.object.modifier_apply(modifier=sub.name)
+        tips.append((-(x+spread*.90),tip,r))
+    limb('R / thenar pad',[
+      ((-1.01,-.230,1.13),.087,.085),((-.966,-.264,1.063),.083,.079),
+      ((-.955,-.282,1.013),.060,.061)],skin,28)
+    thumb=limb('R / relaxed opposed thumb',[
+      ((-.971,-.263,1.09),.063,.069),((-.921,-.289,1.045),.066,.066),
+      ((-.881,-.321,.995),.058,.058),((-.873,-.349,.953),.055,.052),
+      ((-.889,-.367,.919),.045,.044),((-.903,-.370,.903),.027,.029),
+      ((-.911,-.369,.897),.009,.011)],skin,28)
+    sub=thumb.modifiers.new('Thumb joints','SUBSURF');sub.levels=1
+    bpy.context.view_layer.objects.active=thumb;bpy.ops.object.modifier_apply(modifier=sub.name)
+    pieces=objects[start:];finish_hand(palm,pieces,'R')
+    nails=[];mat=nail_material('R')
     for k,(x,tip,r) in enumerate(tips):
-        vv=[];ff=[]
+        # Low convex plates embedded in the dorsal distal surface.
+        nail=orb('R / nail '+str(k+1),(x,-.170-r*.74,tip+.043),
+                 (r*.46,.006,.026),mat,24,12)
+        nails.append(nail)
+    nails.append(orb('R / thumb nail',(-.888,-.402,.940),(.023,.006,.027),mat,24,12))
+    # Rotate complete hand and nail assembly around its own wrist. Palm +Y
+    # becomes +X (toward the right leg); the thumb moves to the front (-Y).
+    for ob in [palm]+nails:
+        for v in ob.data.vertices:
+            x,y,z=v.co;dx=x+1.12;dy=y+.172
+            # Rotate as a unit: the nearly round wrist stays centered under
+            # the cuff without twisting the broad thenar web into a fin.
+            angle=-pi*.5
+            v.co.x=-1.12+dx*cos(angle)-dy*sin(angle)
+            v.co.y=-.172+dx*sin(angle)+dy*cos(angle)
+        ob['ART02_hand']=True;ob['anatomical_side']='R';ob.data.update()
+
+def left_grip():
+    start=len(objects)
+    # Palm plane is YZ; dorsal side is +X, inner palm faces left thigh (-X).
+    palm=loft('L / inward power-grip palm',[
+      ((1.12,-.172,1.245),.145,.135),((1.16,-.154,1.18),.115,.125),
+      ((1.190,-.155,1.10),.077,.116),((1.195,-.155,1.00),.073,.108),
+      ((1.187,-.157,.91),.066,.100),((1.174,-.174,.838),.055,.073),
+      ((1.165,-.183,.811),.033,.041)],skin,40)
+    specs=[(1.105,.044),(1.010,.046),(.916,.043),(.832,.036)]
+    for k,(z,r) in enumerate(specs):
+        verts=[];faces=[];steps=36;segments=20
+        for j in range(steps+1):
+            u=j/steps;theta=math.radians(48-231*u)
+            # Gentle distal taper, with a rounded closed fingertip.
+            taper=1.0 if u<.88 else max(.07,sqrt(max(0,1-((u-.88)/.12)**2)))
+            radial=.104
+            cx=HATCHET_AXIS.x+radial*cos(theta);cy=HATCHET_AXIS.y+radial*sin(theta)
+            for h in range(segments):
+                a=2*pi*h/segments
+                verts.append((cx+r*taper*cos(a)*cos(theta),
+                              cy+r*taper*cos(a)*sin(theta),z+r*taper*sin(a)))
+        for j in range(steps):
+            for h in range(segments):
+                a=j*segments+h;b=j*segments+(h+1)%segments
+                faces.append((a,b,b+segments,a+segments))
+        faces.extend([tuple(reversed(range(segments))),tuple(steps*segments+h for h in range(segments))])
+        mesh('L / curled grip finger '+str(k+1),verts,faces,skin)
+    # Thumb passes over the front of the index/middle grip, opposing fingers.
+    thumb=limb('L / opposed gripping thumb',[
+      ((1.15,-.245,1.177),.067,.069),((1.13,-.302,1.153),.065,.062),
+      ((1.104,-.355,1.117),.059,.057),((1.070,-.385,1.077),.052,.050),
+      ((1.028,-.383,1.046),.045,.041),((1.005,-.369,1.036),.030,.029),
+      ((.997,-.361,1.035),.007,.009)],skin,28)
+    sub=thumb.modifiers.new('Rounded opposing thumb','SUBSURF');sub.levels=1
+    bpy.context.view_layer.objects.active=thumb;bpy.ops.object.modifier_apply(modifier=sub.name)
+    finish_hand(palm,objects[start:],'L')
+    mat=nail_material('L')
+    for k,(z,r) in enumerate(specs):
+        verts=[];faces=[]
         for row in range(7):
-            u=row/6
-            z=tip+.018+u*.068
-            width=r*.52*sin(pi*(.12+.76*u))
+            u=.70+.14*row/6;theta=math.radians(48-231*u)
+            taper=1.0
             for col in range(9):
-                t=col/8*2-1
-                vv.append((x+t*width,-.304-r*.76-.006*(1-t*t)*sin(pi*u),z))
+                v=col/8*2-1;offset=v*r*.48
+                radius=.104+r*taper*sqrt(max(0,1-(offset/(r*taper))**2))-.002
+                verts.append((HATCHET_AXIS.x+radius*cos(theta),HATCHET_AXIS.y+radius*sin(theta),z+offset))
         for row in range(6):
             for col in range(8):
-                a=row*9+col;ff.append((a,a+1,a+10,a+9))
-        nail=mesh(side+f' ART02 / nail {k+1}',vv,ff,nailmat)
-        if side=='R':
-            # Nails MUST follow the same fingertip curl, or detach visually.
-            for vertex in nail.data.vertices:
-                z=vertex.co.z
-                tuck=clamp((1.010-z)/.25)
-                vertex.co.y+=.082*tuck
-                vertex.co.z+=.068*tuck
-            nail.data.update()
-        solid=nail.modifiers.new('Nail plate thickness','SOLIDIFY');solid.thickness=.004
-    thumb_nail=orb(side+' ART02 / thumb nail',(s*.888,-.411,.940),(.026,.007,.032),nailmat,28,16)
-    for ob in objects[start:]:
-        ob['ART02_hand']=True
-        ob['anatomical_side']=side
-        # ART-03: preserve the wrist root on its OWN same-side forearm.
-        # The previous arbitrary inward offset made the two silhouettes
-        # harder to read and placed the right fingers away from the axe.
-        for vert in ob.data.vertices:
-            x,y,z=vert.co
-            if side=='L':
-                vert.co.x-=.028   # give the empty left hand room beside the hip
-                continue
-            # Right-hand *static* grip. Keep the root at the wrist bone's
-            # x=1.12 / z=1.245; bend the distal palm and digits toward the
-            # weapon at x=1.30, y=-.39. No changes to the left arm.
-            bend=clamp((1.245-z)/.29)
-            vert.co.x+=.082*bend
-            vert.co.y-=.071*bend
-            vert.co.z+=.080*bend
-            # Match the thumb nail to the separate, pre-union thumb curl.
-            # The ordinary index finger must NOT inherit the thumb motion.
-            if 'thumb nail' in ob.name:
-                thumb_bend=clamp((1.11-z)/.22)
-                vert.co.x+=.090*thumb_bend
-                vert.co.y-=.022*thumb_bend
-        ob.data.update()
+                a=row*9+col;faces.append((a,a+1,a+10,a+9))
+        ob=mesh('L / fitted grip nail '+str(k+1),verts,faces,mat)
+        ob['ART02_hand']=True;ob['anatomical_side']='L'
+    ob=orb('L / fitted thumb nail',(1.033,-.421,1.057),(.021,.005,.023),mat,24,12)
+    ob['ART02_hand']=True;ob['anatomical_side']='L'

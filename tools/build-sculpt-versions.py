@@ -34,7 +34,7 @@ STAGES = [
     },
     {
         "id": "sculpt",
-        "name": "Hands sculpt — #18",
+        "name": "Inward palms and left hatchet — #22",
         "commit": None,
         "files": ["worker_orc_sculpt_study.py", "worker_orc_head.py", "worker_orc_hands.py"],
         "filename": "worker-orc-sculpt-study.glb",

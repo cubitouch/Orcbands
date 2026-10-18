@@ -39,7 +39,7 @@ jobs:
           blender -b -t 2 --python-exit-code 1 --python art/rig_worker_orc.py -- --input /tmp/orcbands-export/worker-orc-vnext.blend --output /tmp/orcbands-export --export-only
           cp /tmp/orcbands-export/worker-orc-skinned-experiment.glb preview/assets/worker-orc-skinned-experiment.glb
           test -s preview/assets/worker-orc-skinned-experiment.glb
-      - name: Export pinned #16, #17 and final #18 sculpt stages
+      - name: Export historical #16/#17 and current sculpt stage
         run: |
           python3 tools/build-sculpt-versions.py --output preview/assets
           python3 - <<'PY'

@@ -578,21 +578,50 @@ for i in range(4):
         (1.72+i*.027,-.472,z),(1.75+i*.027,-.468,z+.038)
     ],.006,steel,7)
 
-# ART-03: original axe's grip axis was too far lateral to be grasped.
-# Align the full assembled tool with the now-cupped right hand, rather than
-# adjusting only the main shaft and leaving metal/grain floating in space.
+# Anatomical left is +X because the character faces -Y. The complete axe
+# assembly shares the finger grip axis; the blade remains outboard of the body.
 for axe_component in objects[axe_start:]:
     if axe_component.type=='MESH':
         for vertex in axe_component.data.vertices:
-            vertex.co.x-=.175
+            vertex.co.x += HATCHET_AXIS.x-1.398
+            vertex.co.y = HATCHET_AXIS.y-(vertex.co.y+.39)
+            # Head-down carry: rigid half-turn about X, shorter vertical haft.
+            # Keeps blade and top of shaft clear of the wrist/forearm.
+            vertex.co.z = 1.55-.80*vertex.co.z
         axe_component.data.update()
-    axe_component['held_by']='R'
+    axe_component['held_by']='L'
     axe_component['character_prop']='hatchet'
-# Make the relationship explicit and auditable across source/model exports.
-# Both left and right hands retain their own side labels and root positions.
 assert any(o.get('anatomical_side')=='L' for o in objects)
 assert any(o.get('anatomical_side')=='R' for o in objects)
 assert len(objects[axe_start:])>=5, 'Axe assembly unexpectedly incomplete'
+
+# Integrate the approved ART03 silhouette/cuff refinement into editable source.
+for ob in objects:
+    if ob.type!='MESH': continue
+    if 'helix concha' in ob.name:
+        for v in ob.data.vertices:
+            x,y,z=v.co;w=clamp((abs(x)-.44)/.16)*clamp((z-2.68)/.23)
+            v.co.x += (1 if x>0 else -1)*.22*w
+            v.co.z += .13*w;v.co.y += .025*w
+    elif 'leather wrist cuff' in ob.name:
+        for v in ob.data.vertices:
+            w=clamp((.25+v.co.y)/.306)
+            v.co.y += .205*w*w
+    ob.data.update()
+# Soften only the upper arms, leaving wrist attachment and torso UVs intact.
+bpy.context.view_layer.objects.active=fused
+vg=fused.vertex_groups.new(name='ART03 shoulder transition')
+for v in fused.data.vertices:
+    x,y,z=v.co;w=clamp((abs(x)-.58)/.2)*clamp((z-1.45)/.2)
+    vg.add([v.index],w,'REPLACE')
+sm=fused.modifiers.new('ART03 softer shoulder surface','SMOOTH')
+sm.vertex_group=vg.name;sm.factor=.42;sm.iterations=32
+bpy.ops.object.modifier_apply(modifier=sm.name)
+for v in fused.data.vertices:
+    x,y,z=v.co;w=exp(-((z-2.04)/.31)**2)*clamp((abs(x)-.65)/.3)
+    v.co.x-=(1 if x>0 else -1)*.045*w
+    v.co.z-=.055*exp(-((abs(v.co.x)-.88)/.25)**2-((z-2.18)/.21)**2)
+fused.data.update()
 # Scene origin + metadata; export selection omits cameras/render staging.
 for ob in objects:
     ob["Orcbands"] = "Original Worker Orc #15 static sculpt study"
@@ -604,10 +633,10 @@ bpy.context.view_layer.objects.active=objects[0]
 # Save real editable Blender source BEFORE the export; image albedos are packed.
 bpy.ops.wm.save_as_mainfile(filepath=str(out/"worker-orc-sculpt-study.blend"))
 bpy.ops.export_scene.gltf(filepath=str(out/"worker-orc-sculpt-study.glb"),
-    export_format="GLB",use_selection=True,export_apply=True)
+    export_format="GLB",use_selection=True,export_apply=True,export_extras=True)
 glb=out/"worker-orc-sculpt-study.glb"
 info={
-  "art_stage":"ART-02 hand candidate on ART-01 head; pending artistic review, not rigged",
+  "art_stage":"Inward palms and anatomical-left hatchet grip; static, not rigged",
   "provenance":"Original authored topology; owner-provided AI-generated 2D reference; no third-party mesh",
   "geometry_mesh_objects":len(objects),
   "source_mesh_polygons":sum(len(ob.data.polygons) for ob in objects if ob.type=="MESH"),
