@@ -1,63 +1,63 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111b19">
-<meta name="orcbands-build" content="__ORCBANDS_REVISION__">
-<title>Orcbands • 3D Asset Lab</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111b18"><meta name="orcbands-build" content="__ORCBANDS_REVISION__">
+<title>Orcbands • Low-poly Pine Asset Lab</title>
 <style>
-:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
-*{box-sizing:border-box}body{margin:0;color:#e9eee9;background:#111b19}
-header{display:flex;align-items:center;justify-content:space-between;padding:16px clamp(16px,4vw,44px);gap:16px}
-.logo{font-size:22px;font-weight:850;letter-spacing:-.8px;color:#dce9ce}.logo span{color:#95d189}
-.tag{font-size:12px;border:1px solid #405045;padding:7px 10px;border-radius:99px;color:#b9d1bd}
-main{max-width:1340px;margin:auto;padding:0 clamp(12px,3vw,36px) 28px}
-.viewer{position:relative;height:min(68vh,720px);min-height:360px;overflow:hidden;border:1px solid #3d4b40;border-radius:18px;background:radial-gradient(circle at 50% 35%,#34483f 0%,#1e2b28 65%,#182320 100%)}
-canvas{display:block;width:100%;height:100%;touch-action:none}
-.mini{position:absolute;top:16px;left:16px;background:#101a18b9;padding:10px 13px;border:1px solid #5366528a;border-radius:10px;font-size:12px;line-height:1.5;pointer-events:none}
-.mini strong{display:block;font-size:15px;color:#c4e1b6}
-.tip{position:absolute;bottom:16px;left:16px;right:16px;text-align:center;color:#c9d4c8;font-size:12px;pointer-events:none;text-shadow:0 1px 4px #111}
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:16px 2px}
-.buttons{display:flex;flex-wrap:wrap;gap:8px}
-button{background:#26352d;color:#e9eee9;border:1px solid #50614c;border-radius:9px;padding:12px 18px;font-size:14px;font-weight:650;cursor:pointer;min-height:44px}
-button[aria-pressed=true]{background:#a0c57e;color:#17231b;border-color:#a0c57e}
-button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible{outline:3px solid #c8e9a7;outline-offset:2px}
-.status{color:#afc0b5;font-size:12px}
-section{max-width:840px;color:#b9cbbf;line-height:1.65}
-h1{color:#f0f5eb;font-size:22px;margin:18px 0 6px}p{margin:7px 0}
-a{color:#b0dc9f}code{background:#25342c;border-radius:4px;padding:2px 5px}
-#loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#dbf1d1;background:#17251ee0;font-size:16px;z-index:2;padding:22px}
-#loading[hidden]{display:none}
-@media(max-width:650px){header{padding:13px 16px}.tag{font-size:10px}.viewer{min-height:440px;height:63vh}.toolbar{justify-content:center}.buttons{justify-content:center}.tip{font-size:11px}}
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}
+body{background:#111b18;color:#e8f0e5;margin:0}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px clamp(16px,4vw,42px)}
+.logo{font-size:23px;letter-spacing:-.9px;font-weight:850}.logo span{color:#a1d28b}
+.tag{font-size:12px;color:#b8cdb5;border:1px solid #506650;border-radius:30px;padding:7px 10px}
+main{max-width:1260px;margin:0 auto;padding:0 clamp(12px,3vw,35px) 34px}
+.viewer{position:relative;height:min(69vh,690px);min-height:385px;border:1px solid #46594a;border-radius:17px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3b5041,#1c2a22 78%)}
+canvas{width:100%;height:100%;display:block;touch-action:none}
+.panel{position:absolute;top:15px;left:15px;background:#14231bd9;padding:10px 14px;border:1px solid #51694e;border-radius:9px;color:#c4d4c1;font-size:12px;line-height:1.65;pointer-events:none}
+.panel strong{display:block;color:#ecf6df;font-size:16px}.tip{position:absolute;bottom:14px;left:10px;right:10px;font-size:12px;color:#d6dfd2;text-align:center;text-shadow:0 1px 3px #222;pointer-events:none}
+#loading{position:absolute;inset:0;background:#15251fdd;color:#e8f2e2;display:grid;place-items:center;z-index:2;text-align:center;padding:30px}#loading[hidden]{display:none}
+.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0}.controls{display:flex;flex-wrap:wrap;gap:8px}
+button{background:#263a2c;color:#eaf1e6;border:1px solid #536e51;border-radius:8px;padding:11px 17px;font-weight:650;font-size:14px;min-height:44px;cursor:pointer}
+button[aria-pressed=true]{background:#a7d18a;border-color:#a7d18a;color:#132115}
+button:focus-visible,a:focus-visible{outline:3px solid #b9dc9b;outline-offset:2px}
+.meta{font-size:12px;color:#b5c8b2}.info{max-width:850px;color:#c5d6c1;line-height:1.7}
+h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
+.files{display:flex;gap:22px;flex-wrap:wrap;padding:5px 0 8px}
+@media(max-width:650px){.viewer{height:62vh;min-height:415px}.tag{font-size:10px}.toolbar,.controls{justify-content:center}.tip{font-size:11px}}
 </style>
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}
-</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script>
 </head>
-<body>
-<header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · EARLY 3D ART</div></header>
+<body><header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · STATIC ENVIRONMENT</div></header>
 <main>
 <div class="viewer" id="viewer">
-<canvas id="viewport" aria-label="Interactive 3D view of an orc worker"></canvas>
-<div class="mini"><strong>Worker Orc 001</strong>Experimental model<br><span id="scene-label">Loading latest model</span></div>
-<div id="loading" role="status">Loading 3D character…</div>
-<div class="tip">Drag to rotate · pinch or scroll to zoom · two fingers to pan</div>
+<canvas id="viewport" aria-label="Interactive 3D model of an Orcbands low-poly pine tree"></canvas>
+<div class="panel"><strong>Low-poly Pine · 01</strong>Original static game mesh<br><span id="scene-label">Loading model…</span></div>
+<div id="loading" role="status">Loading original 3D tree mesh…</div>
+<div class="tip">Drag to rotate · scroll or pinch to zoom · two fingers to pan</div>
 </div>
 <div class="toolbar">
-<div class="buttons" role="group" aria-label="Model version"><button class="version" data-version="prototype" aria-pressed="false">Original placeholder</button><button class="version" data-version="blender" aria-pressed="false">Blender vNext</button><button class="version" data-version="sculpt-v1" aria-pressed="false">Sculpt #16 · Original</button><button class="version" data-version="sculpt-v2" aria-pressed="false">Sculpt #17 · Face</button><button class="version" data-version="sculpt" aria-pressed="true">Sculpt #22 · Inward grip</button><button class="version" data-version="rigged" aria-pressed="false">Rigged beta</button></div>
-<div class="buttons" role="group" aria-label="Preview scene"><button class="scene" data-scene="character" aria-pressed="true">Character studio</button><button class="scene" data-scene="camp" aria-pressed="false">Crash site</button></div>
-<div class="buttons" role="group" aria-label="Preview animation"><button class="pose" data-pose="idle" aria-pressed="true">Idle</button><button class="pose" data-pose="walk" aria-pressed="false">Walk</button><button class="pose" data-pose="chop" aria-pressed="false">Chop wood</button><button class="pose" data-pose="carry" aria-pressed="false" disabled>Carry</button></div>
-<div class="buttons"><button id="spin" aria-pressed="false">Auto rotate</button><button id="reset">Reset view</button></div>
+<div class="controls" role="group" aria-label="Preview scene">
+<button class="scene" data-scene="studio" aria-pressed="true">Single tree</button>
+<button class="scene" data-scene="grove" aria-pressed="false">Small grove</button>
 </div>
-<div class="status" id="status" role="status">Loading geometry and materials…</div>
-<div class="status" id="build-status">Built from __ORCBANDS_REVISION__ · Early procedural character art, not final quality.</div>
-<section>
-<h1>Meet our first orc</h1>
-<p>Use <strong>Crash site</strong> to inspect the character in a procedurally generated starting valley, beside our first zeppelin wreck and tiny orc shelter. This is an exploratory browser diorama, not the Unity game.<p></p>Use <strong>Original placeholder</strong>, <strong>Blender vNext</strong>, <strong>Sculpt #16</strong>, <strong>Sculpt #17</strong> and <strong>Sculpt #22</strong> to inspect distinct real 3D models; the latter is an original UV-textured static candidate for issue #15, not finished production art. The three sculpt stages are distinct real GLBs, and all three are <strong>static, unrigged studies</strong>. Select a model to get its shareable URL (for example <a href="?model=sculpt-v2">Sculpt #17 face</a>); the current choice appears in the browser address bar. The Blender vNext model is a static art study; the experimental Rigged beta has actual deforming bones and early animation clips. Its movements and attachments still need refinement, and its skeleton is not Unity Humanoid-validated.<p></p>This is <strong>actual polygon geometry</strong> loaded from the original <a href="./assets/orc-worker.obj">OBJ mesh</a> and <a href="./assets/orc-worker.mtl">materials</a>—not AI concept art or a prerecorded video.</p>
-<p>The preview animates rigid body sections (arms and legs) for testing proportions and readability. It is <strong>not a skinned or verified Unity Humanoid</strong> yet. Clothing, face, topology, proper rigging, and walk/chop cycles all need further refinement.</p>
-<p>Built for the proposed isometric survival RTS <strong>Orcbands</strong>.</p>
+<div class="controls">
+<button id="wireframe" aria-pressed="false">Wireframe</button>
+<button id="spin" aria-pressed="false">Auto rotate</button>
+<button id="reset">Reset camera</button>
+</div>
+</div>
+<p class="meta" id="status" role="status">Loading materials and geometry…</p>
+<section class="info">
+<h1>A reusable tree, not a concept illustration</h1>
+<p>Our first environment asset is an original low-poly evergreen: nine-sided tapered trunk, four staggered faceted foliage tiers, and seven deliberately restrained material colors. Switch to <strong>Small grove</strong> to judge its readability at a typical elevated RTS angle. The grove uses seven instances of this same real mesh, not seven hand-authored variants.</p>
+<p>The static OBJ is about 4.58 units high and 2.72 units wide (assuming 1 unit = 1 meter). No wind animation, Unity prefab, LODs, or colliders yet. Both geometry and materials are generated deterministically.</p>
+<div class="files">
+<a href="./assets/low-poly-pine-01.obj" download>Download tree OBJ</a>
+<a href="./assets/low-poly-pine-01.mtl" download>Download MTL colors</a>
+<a href="https://github.com/cubitouch/Orcbands/blob/main/tools/generate-tree.mjs">View mesh generator</a>
+</div>
+<p>For Unity, put the OBJ and MTL in the same folder. Unity can import the mesh natively; verify scale and normals and reconnect materials if needed. This browser Asset Lab is not a Unity build.</p>
+<p>The earlier procedural orc model experiments have been retired in favor of using proper licensed characters later. No third-party characters are bundled here.</p>
+<p class="meta">Source revision: __ORCBANDS_REVISION__</p>
 </section>
-</main>
-<script type="module" src="./app.js?v=__ORCBANDS_REVISION__"></script>
+</main><script type="module" src="./app.js?v=__ORCBANDS_REVISION__"></script>
 </body></html>

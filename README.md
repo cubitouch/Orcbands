@@ -1,56 +1,31 @@
 # Orcbands 🌲
 
-A small-scale, open-ended fantasy survival RTS about three orcs who survive a
-zeppelin crash and try to build a sustainable home.
+A small-scale fantasy survival RTS, planned for Unity 6 with direct unit control and an elevated three-quarter camera. **There is no playable Unity build yet.**
 
-The project is starting with **real 3D asset experiments** and browser-first
-previews; there is no playable Unity game yet.
+## [View the original low-poly Pine 01](https://cubitouch.github.io/Orcbands/)
 
-## [Explore the 3D Asset Lab](https://cubitouch.github.io/Orcbands/)
+The browser Asset Lab shows a **real static conifer mesh**, not AI concept art. Inspect the model from all angles, view a small grove of seven instances, or toggle wireframe.
 
-Our first asset is an **original, low-poly worker orc** generated as actual
-polygon geometry. In the [Asset Lab](preview/index.html), inspect the model from
-every angle, preview simple idle/walk/chop motion and place it in an original
-procedural **crash-site diorama** with a zeppelin wreck and shelter.
+- [Original OBJ geometry](preview/assets/low-poly-pine-01.obj) and [MTL material palette](preview/assets/low-poly-pine-01.mtl)
+- [Reproducible geometry generator](tools/generate-tree.mjs) (Node.js 22+)
+- No purchased asset-pack models are bundled.
 
-> The current character is segmented for demonstration, **not** a skinned
-> Unity Humanoid rig. The browser's rigid-part animation previews are not
-> production-ready animation clips.
+Our earlier experimental procedural worker orc was retired because the quality wasn't suitable; characters will be evaluated separately from licensed packs. Git history retains the old experiment.
 
-If Pages isn't live yet, visit **Settings → Pages → Source: GitHub Actions**
-after the first deployment; see [setup guidance](docs/asset-lab.md).
+## Run locally
 
-### Develop the model locally without Unity
-
-Requires Node.js 22+ to regenerate and validate the models.
-
-```bash
-node tools/generate-orc.mjs
-node tools/validate-orc.mjs
+```sh
+node tools/generate-tree.mjs
 python3 -m http.server 8000 --directory preview
 ```
 
-Visit http://localhost:8000/ . The viewer uses Three.js loaded from a CDN.
+Visit http://localhost:8000/ . The page uses Three.js from a CDN.
 
-## Game direction
+## Intended game
 
-- Direct Warcraft-style RTS control of three orcs, later potentially five.
-- Fixed three-quarter / isometric camera.
-- Build shelter, grow food, replant trees, gather wood, stone, iron and crystals.
-- Explore paths and forests, defend against occasional enemies.
-- Pause and accelerate time; no pay-to-wait timers.
-- Sustain the tribe without hunting; if every orc dies, the run ends.
-- Single-player initially; cooperative multiplayer may come later.
+- Direct Warcraft-style RTS unit control, initially single-player.
+- Start with shelter, wood, food and stone gathering.
+- Low-poly trees and simple static environments made in-house.
+- Licensed third-party character art, evaluated before purchase.
 
-### Roadmap
-
-1. ✅ First original 3D orc model and browser viewer (prototype, not Humanoid).
-2. ☐ Proper skinned rig and humanoid animations.
-3. ☐ Unity 6 project and headless WebGL CI build.
-4. ☐ RTS camera, unit selection, movement and resource gathering.
-5. ☐ Survival loop, growing settlement, exploration and combat.
-
-Asset Lab details: [docs/asset-lab.md](docs/asset-lab.md).
-
-**All current 3D prototypes are original procedural geometry.** No purchased
-Asset Store models are included.
+See [Asset Lab documentation](docs/asset-lab.md).
