@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {createLayout, seededRandom, groundHeight, wornGround} from './environment-layout.js';
+import {createLayout, seededRandom, groundHeight, wornGround} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 
-import {noise,groundVariation} from './ground-surface.js';
+import {noise,groundVariation} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 
 const earth = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
 const leaves = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
@@ -122,8 +122,8 @@ function instances(parent,g,material,placements,baseOffset=0) {
   });
   mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
 }
-function instanceTrees(parent,source,placements) {
-  // Consolidate the OBJ's numerous material runs into seven shared geometry batches.
+export function instanceAsset(parent,source,placements,baseOffset=0) {
+  // Consolidate an OBJ's material runs into one shared instanced batch per material.
   // No vertex positions, palette entries or normals are changed.
   const buckets=new Map();
   source.traverse(object=>{
@@ -140,13 +140,13 @@ function instanceTrees(parent,source,placements) {
     }
   });
   for(const [material,parts] of buckets) {
-    const g=mergeGeometries(parts);instances(parent,g,material,placements,-.035);
+    const g=mergeGeometries(parts);instances(parent,g,material,placements,baseOffset);
     parts.forEach(p=>p.dispose());
   }
 }
 export function buildEnvironment(parent,sourceTree) {
   const layout=createLayout();
-  buildTerrain(parent);instanceTrees(parent,sourceTree,layout.trees);
+  buildTerrain(parent);instanceAsset(parent,sourceTree,layout.trees,-.035);
   const patches=[];
   layout.trees.forEach((p,i)=>patches.push(patch(p.x,p.z,1.3*p.scale,1.1*p.scale,0x5e6b46,i+12)));
   layout.rocks.filter(p=>p.type>0).forEach((p,i)=>patches.push(patch(p.x,p.z,p.radius*1.2,p.radius*.9,0x737351,i+120)));

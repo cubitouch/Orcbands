@@ -51,15 +51,32 @@ try{
  await page.getByRole('button',{name:'Wireframe'}).click();
  if(await page.getByRole('button',{name:'Wireframe'}).getAttribute('aria-pressed')!=='true')throw Error('Wireframe control broken');
  await page.getByRole('button',{name:'Wireframe'}).click();
+ await page.getByRole('button',{name:'Timber hut',exact:true}).click();
+ await page.waitForFunction(()=>window.__orcbandsHutLoaded&&window.__orcbandsMode==='hut');
+ await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-three-quarter.png')});
+ check(await page.getByRole('link',{name:'Download hut OBJ'}).count(),'Hut OBJ download missing');
+ for(const view of ['front','rear','roof','detail']){
+  await page.locator('[data-hut-view="'+view+'"]').click();
+  await page.waitForTimeout(250);
+  await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-'+view+'.png')});
+ }
+ const hutMetrics=await metrics();
+ check(hutMetrics.calls<=24&&hutMetrics.triangles<4000,'Hut batching/geometry budget exceeded');
+ await page.getByRole('button',{name:'Auto rotate'}).click();
+ await page.waitForFunction(()=>window.__orcbandsReview.metrics().rotation>.01);
+ await page.getByRole('button',{name:'Reset camera'}).click();
+ await page.getByRole('button',{name:'Wireframe'}).click();
+ await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-wireframe.png')});
+ await page.getByRole('button',{name:'Wireframe'}).click();
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
- for(const view of ['overall','path','low','wide']) {
+ for(const view of ['overall','path','low','wide','hut']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
  }
  const desktopMetrics=await metrics();
- check(desktopMetrics.calls<=24,'Grove draw-call budget exceeded');
+ check(desktopMetrics.calls<=40,'Grove draw-call budget exceeded');
  check(desktopMetrics.triangles<100000,'Grove triangle budget exceeded');
  const signature=await page.evaluate(()=>JSON.stringify(window.__orcbandsLayout));
  // Exercise actual pointer orbit and wheel zoom, rather than only camera presets.
@@ -117,8 +134,12 @@ try{
  const mobileReset=await mobile.evaluate(()=>window.__orcbandsReview.metrics());
  check(!moved(mobileReset.camera,mobileMetrics.camera),'Mobile reset failed');
  await mobile.screenshot({path:path.join(repo,'smoke-artifacts/grove-mobile-reset.png')});
- await writeFile(path.join(repo,'smoke-artifacts/metrics.json'),JSON.stringify({desktop:desktopMetrics,mobile:mobileMetrics},null,2)+'\n');
+ await writeFile(path.join(repo,'smoke-artifacts/metrics.json'),JSON.stringify({desktop:desktopMetrics,mobile:mobileMetrics,hut:hutMetrics},null,2)+'\n');
+ await mobile.getByRole('button',{name:'Timber hut',exact:true}).click();
+ await mobile.waitForFunction(()=>window.__orcbandsMode==='hut');
+ await mobile.screenshot({path:path.join(repo,'smoke-artifacts/hut-mobile.png')});
+ await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsHutLoaded&&window.__orcbandsMode==='hut');
  await mobile.close();
  if(errors.length)throw Error('Browser errors: '+errors.join('\n'));
- console.log('PASS: Pine 01 + four grove angles; seeded reload; desktop orbit/zoom/pan/reset; mobile touch orbit/pinch/pan/reset; no browser errors.',desktopMetrics);
+ console.log('PASS: Pine 01, hut studio + views/wireframe/rotation/deep link, grove + hut; seeded reload; desktop orbit/zoom/pan/reset; mobile touch orbit/pinch/pan/reset; no browser errors.',desktopMetrics);
 }finally{await browser?.close();server.closeAllConnections();server.close()}

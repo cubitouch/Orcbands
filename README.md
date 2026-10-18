@@ -4,9 +4,10 @@ A small-scale fantasy survival RTS, planned for Unity 6 with direct unit control
 
 ## [View the original low-poly Pine 01](https://cubitouch.github.io/Orcbands/)
 
-The browser Asset Lab shows a **real static conifer mesh**, not AI concept art. Inspect the model from all angles, explore a 36-tree forest clearing with a winding path, three grass forms and three rock silhouettes, or toggle wireframe.
+The browser Asset Lab shows **real original static meshes**, not AI concept art. Inspect the model from all angles, explore a 36-tree forest clearing with a winding path, three grass forms and three rock silhouettes, inspect the red-roofed Timber Hut 01, or toggle wireframe.
 
 - [Original OBJ geometry](preview/assets/low-poly-pine-01.obj) and [MTL material palette](preview/assets/low-poly-pine-01.mtl)
+- [Original hut OBJ](preview/assets/timber-hut-01.obj), [hut MTL](preview/assets/timber-hut-01.mtl) and [Timber Hut 01 review](docs/timber-hut-01.md)
 - [Reproducible geometry generator](tools/generate-tree.mjs) (Node.js 22+)
 - No purchased asset-pack models are bundled.
 
@@ -16,6 +17,7 @@ Our earlier experimental procedural worker orc was retired because the quality w
 
 ```sh
 node tools/generate-tree.mjs
+node tools/generate-hut.mjs
 python3 -m http.server 8000 --directory preview
 ```
 

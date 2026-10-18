@@ -20,6 +20,8 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check tools/generate-tree.mjs
+          node --check tools/generate-hut.mjs
+          node --check tools/validate-hut.mjs
           node --check preview/app.js
           node --check preview/environment.js
           node --check preview/environment-layout.js
@@ -33,11 +35,17 @@ jobs:
           cmp preview/assets/low-poly-pine-01.obj /tmp/orcbands-tree/low-poly-pine-01.obj
           cmp preview/assets/low-poly-pine-01.mtl /tmp/orcbands-tree/low-poly-pine-01.mtl
           node -e "const fs=require('fs');const s=fs.readFileSync('preview/assets/low-poly-pine-01.obj','utf8');if((s.match(/^v /gm)||[]).length!==109||(s.match(/^f /gm)||[]).length!==144)throw Error('Unexpected mesh geometry')"
+      - name: Verify deterministic hut export
+        run: |
+          node tools/generate-hut.mjs /tmp/orcbands-hut
+          cmp preview/assets/timber-hut-01.obj /tmp/orcbands-hut/timber-hut-01.obj
+          cmp preview/assets/timber-hut-01.mtl /tmp/orcbands-hut/timber-hut-01.mtl
       - name: Run real WebGL browser smoke test
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1 three@0.166.1
           npx playwright install --with-deps chromium
           node tools/validate-environment.mjs
+          node tools/validate-hut.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
       - name: Attach browser screenshots
         if: always()

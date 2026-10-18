@@ -29,14 +29,15 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <body><header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · STATIC ENVIRONMENT</div></header>
 <main>
 <div class="viewer" id="viewer">
-<canvas id="viewport" aria-label="Interactive 3D Pine 01 and forest grove"></canvas>
+<canvas id="viewport" aria-label="Interactive 3D Pine 01, Timber Hut 01 and forest grove"></canvas>
 <div class="panel"><strong>Orcbands · Asset Lab</strong>Original static geometry<br><span id="scene-label">Loading model…</span></div>
-<div id="loading" role="status">Loading original 3D tree mesh…</div>
+<div id="loading" role="status">Loading original 3D meshes…</div>
 <div class="tip">Drag to rotate · scroll or pinch to zoom · two fingers to pan</div>
 </div>
 <div class="toolbar">
 <div class="controls" role="group" aria-label="Preview scene">
 <button class="scene" data-scene="studio" aria-pressed="true">Single tree</button>
+<button class="scene" data-scene="hut" aria-pressed="false">Timber hut</button>
 <button class="scene" data-scene="grove" aria-pressed="false">Forest grove</button>
 </div>
 <div class="controls">
@@ -45,14 +46,18 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <button id="reset">Reset camera</button>
 </div>
 </div>
+<div id="hut-views" hidden><div class="controls" role="group" aria-label="Hut camera views">
+<button data-hut-view="front">Front</button><button data-hut-view="rear">Rear</button>
+<button data-hut-view="roof">Roof</button><button data-hut-view="detail">Entrance detail</button>
+</div></div>
 <div id="grove-views" hidden>
 <div class="controls" role="group" aria-label="Grove camera views">
 <button data-view="overall">RTS view</button><button data-view="path">Path &amp; clearing</button>
-<button data-view="low">Ground level</button><button data-view="wide">Wide view</button>
+<button data-view="low">Ground level</button><button data-view="wide">Wide view</button><button data-view="hut">Hut in grove</button>
 </div></div>
 <p class="meta" id="status" role="status">Loading materials and geometry…</p>
 <section class="info">
-<h1>Pine 01 &amp; the forest grove</h1>
+<h1>Pine 01, Timber Hut 01 &amp; the forest grove</h1>
 <p>Our first environment asset is an original low-poly evergreen: nine-sided tapered trunk, four staggered faceted foliage tiers, and seven deliberately restrained material colors. Switch to <strong>Forest grove</strong> to judge its readability at a typical elevated RTS angle. The grove combines 36 instances of this preserved mesh with a winding dirt path, three grass forms and three authored rock silhouettes.</p>
 <p>The static OBJ is about 4.58 units high and 2.72 units wide (assuming 1 unit = 1 meter). No wind animation, Unity prefab, LODs, or colliders yet. Both geometry and materials are generated deterministically.</p>
 <div class="files">
@@ -60,6 +65,8 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <a href="./assets/low-poly-pine-01.mtl" download>Download MTL colors</a>
 <a href="https://github.com/cubitouch/Orcbands/blob/main/tools/generate-tree.mjs">View mesh generator</a>
 </div>
+<p><strong>Timber Hut 01</strong> is our first original building: bowed red panel roof, heavy timber framing, stone pads, a recessed open doorway and a tribe pennant. Inspect it with <strong>Timber hut</strong> or see it in the grove clearing.</p>
+<div class="files"><a href="./assets/timber-hut-01.obj" download>Download hut OBJ</a><a href="./assets/timber-hut-01.mtl" download>Download hut MTL</a></div>
 <p>For Unity, put the OBJ and MTL in the same folder. Unity can import the mesh natively; verify scale and normals and reconnect materials if needed. This browser Asset Lab is not a Unity build.</p>
 <p>The earlier procedural orc model experiments have been retired in favor of using proper licensed characters later. No third-party characters are bundled here.</p>
 <p class="meta">Source revision: __ORCBANDS_REVISION__</p>

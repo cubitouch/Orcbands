@@ -1,6 +1,8 @@
-import {noise} from './ground-surface.js';
+import {noise} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 // Metres, +Y up. This module is independent of Three.js so placement can be audited.
 export const GROVE_SEED = 2302;
+export const HUT_PLACEMENT = {x:-3,z:-3.8,scale:1,angle:0};
+export function inHutFootprint(x,z,margin=0){return Math.abs(x-HUT_PLACEMENT.x)<2.9+margin && Math.abs(z-HUT_PLACEMENT.z)<2.6+margin;}
 export function seededRandom(seed) {
   return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
     let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
@@ -24,9 +26,12 @@ export const pathSamples = Array.from({length:601}, (_, i) => pathPoint(-1+i/200
 export const clearingTrail = Array.from({length:49},(_,i)=>{
  const t=i/48;return {x:2.8-8.2*t,z:2.1+1.0*Math.sin(t*3.4)-1.1*t,halfWidth:.62+.20*Math.sin(t*Math.PI)};
 });
+export const hutApproach=Array.from({length:33},(_,i)=>{
+ const t=i/32;return {x:-2.4-.6*t+.12*Math.sin(t*Math.PI),z:1.9-3.55*t,halfWidth:.67+.08*Math.sin(t*4)};
+});
 export function pathDistance(x, z) {
  let d=Infinity;
- for(const samples of [pathSamples,clearingTrail])for(const p of samples)d=Math.min(d,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
+ for(const samples of [pathSamples,clearingTrail,hutApproach])for(const p of samples)d=Math.min(d,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
  return d;
 }
 export function wornGround(x,z){
@@ -36,7 +41,7 @@ export function wornGround(x,z){
  for(let j=Math.max(0,index-10);j<=Math.min(pathSamples.length-1,index+10);j++){
   const p=pathSamples[j];distance=Math.min(distance,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
  }
- for(const p of clearingTrail)distance=Math.min(distance,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
+ for(const p of [...clearingTrail,...hutApproach])distance=Math.min(distance,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
  const edge=(noise(x*1.6+8,z*1.6)-.5)*.58+(noise(x*.55,z*.55+20)-.5)*.9;
  const track=Math.max(0,Math.min(1,(.65-distance+edge)/1.15));
  // An irregular trampled apron at the trail junction, fading into the open clearing.
@@ -63,14 +68,14 @@ export function createLayout(seed = GROVE_SEED) {
       const x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r,type=i===0?2:i<3?1:0;
       const scale=i===0 ? 1.0+random()*.25 : .55+random()*.5;
       const radius=[.45,.95,1.65][type]*scale;
-      if(pathDistance(x,z)>radius+.45 && trees.every(t=>Math.hypot(t.x-x,t.z-z)>radius+.5))
+      if(!inHutFootprint(x,z,radius) && pathDistance(x,z)>radius+.45 && trees.every(t=>Math.hypot(t.x-x,t.z-z)>radius+.5))
         rocks.push({x,z,type,scale,radius,angle:random()*6.28});
     }
   }
   const plants=[];
   function plant(x,z,type,scale) {
     const radius=[.30,.36,.55][type]*scale;
-    if(pathDistance(x,z)<radius+.22 || rocks.some(r=>Math.hypot(x-r.x,z-r.z)<r.radius+radius*.5))return;
+    if(inHutFootprint(x,z,radius) || pathDistance(x,z)<radius+.22 || rocks.some(r=>Math.hypot(x-r.x,z-r.z)<r.radius+radius*.5))return;
     plants.push({x,z,type,scale,angle:random()*6.28,color:random()});
   }
   for (const tree of trees) {
@@ -90,7 +95,7 @@ export function createLayout(seed = GROVE_SEED) {
   for(let i=0;i<24;i++) {
     const p=pathPoint(.1+random()*.8),side=i%2?1:-1;
     const x=p.x+side*(p.halfWidth+1.0+random()*.9),z=p.z;
-    if(pathDistance(x,z)>.7 && trees.every(t=>Math.hypot(t.x-x,t.z-z)>1) && rocks.every(r=>Math.hypot(r.x-x,r.z-z)>r.radius+.5))
+    if(!inHutFootprint(x,z,.4) && pathDistance(x,z)>.7 && trees.every(t=>Math.hypot(t.x-x,t.z-z)>1) && rocks.every(r=>Math.hypot(r.x-x,r.z-z)>r.radius+.5))
       rocks.push({x,z,type:0,scale:.35+random()*.4,radius:.4,angle:random()*6.28});
   }
   return {seed,trees,rocks,plants};
