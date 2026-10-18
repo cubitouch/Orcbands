@@ -38,6 +38,7 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <div class="controls" role="group" aria-label="Preview scene">
 <button class="scene" data-scene="studio" aria-pressed="true">Single tree</button>
 <button class="scene" data-scene="hut" aria-pressed="false">Timber hut</button>
+<button class="scene" data-scene="resources" aria-pressed="false">Resources</button>
 <button class="scene" data-scene="grove" aria-pressed="false">Forest grove</button>
 </div>
 <div class="controls">
@@ -46,6 +47,12 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <button id="reset">Reset camera</button>
 </div>
 </div>
+<div id="resource-controls" hidden>
+<div class="controls" role="group" aria-label="Berry states">
+<button data-resource="bush/full" aria-pressed="true">Full berries</button><button data-resource="bush/picked" aria-pressed="false">Partly picked</button><button data-resource="bush/empty" aria-pressed="false">Empty bush</button>
+</div><div class="controls" role="group" aria-label="Tree resource states" style="margin-top:8px">
+<button data-resource="wood/standing" aria-pressed="false">Standing pine</button><button data-resource="wood/stump" aria-pressed="false">Stump</button><button data-resource="wood/trunk" aria-pressed="false">Felled trunk</button><button data-resource="wood/logs" aria-pressed="false">Cut logs</button><button data-resource="wood/chips" aria-pressed="false">Wood chips</button><button id="download-resource">Download resource OBJ</button>
+</div></div>
 <div id="hut-views" hidden><div class="controls" role="group" aria-label="Hut camera views">
 <button data-hut-view="front">Front</button><button data-hut-view="rear">Rear</button>
 <button data-hut-view="roof">Roof</button><button data-hut-view="detail">Entrance detail</button>
@@ -54,12 +61,13 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <div class="controls" role="group" aria-label="Grove camera views">
 <button id="fog" aria-pressed="true">Fog of war</button>
 <button data-view="overall">RTS view</button><button data-view="path">Path &amp; clearing</button>
-<button data-view="low">Ground level</button><button data-view="wide">Wide view</button><button data-view="hut">Hut in grove</button><button data-view="campfire">Camp view</button><button data-view="fire">Campfire</button>
+<button data-view="low">Ground level</button><button data-view="wide">Wide view</button><button data-view="hut">Hut in grove</button><button data-view="campfire">Camp view</button><button data-view="fire">Campfire</button><button data-view="berries">Berry patch</button><button data-view="woodcut">Woodcutting</button>
 </div></div>
 <p class="meta" id="status" role="status">Loading materials and geometry…</p>
 <section class="info">
 <h1>Pine 01, Timber Hut 01 &amp; the forest grove</h1>
-<p>Our first environment asset is an original low-poly evergreen: nine-sided tapered trunk, four staggered faceted foliage tiers, and seven deliberately restrained material colors. Switch to <strong>Forest grove</strong> to judge its readability at a typical elevated RTS angle. The forest camp combines 244 instances of this preserved mesh with a winding dirt path, varied ground cover, Timber Hut 01 a lively campfire and four trail torches, with gently shifting firelight, drifting smoke and occasional sparks. Fog of war softly conceals woodland beyond the hut and firelight; toggle it off to inspect the full forest.</p>
+<p>Our first environment asset is an original low-poly evergreen: nine-sided tapered trunk, four staggered faceted foliage tiers, and seven deliberately restrained material colors. Switch to <strong>Forest grove</strong> to judge its readability at a typical elevated RTS angle. The forest camp combines 244 instances of this preserved mesh with a winding dirt path, varied ground cover, Timber Hut 01 berry patches, a small woodcutting site, a lively campfire and four trail torches, with gently shifting firelight, drifting smoke and occasional sparks. Fog of war softly conceals woodland beyond the hut and firelight; toggle it off to inspect the full forest.</p>
+<p>Inspect <strong>Resources</strong> for full, partly picked and empty berry bushes, plus the preserved standing pine, stump, felled trunk, cut logs and wood chips. Each resource state can be downloaded as an OBJ with embedded vertex colors. These are static art states for future harvesting.</p>
 <p>The static OBJ is about 4.58 units high and 2.72 units wide (assuming 1 unit = 1 meter). No wind animation, Unity prefab, LODs, or colliders yet. Both geometry and materials are generated deterministically.</p>
 <div class="files">
 <a href="./assets/low-poly-pine-01.obj" download>Download tree OBJ</a>

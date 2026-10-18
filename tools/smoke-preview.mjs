@@ -71,7 +71,7 @@ try{
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(0));
- for(const view of ['overall','path','low','wide','hut','campfire','fire']) {
+ for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
@@ -113,7 +113,31 @@ try{
  const resumeTime=(await metrics()).campfire.time;
  await page.waitForFunction(start=>window.__orcbandsReview.metrics().campfire.time>start+.05,resumeTime);
  check(desktopMetrics.calls<=66,'Grove draw-call budget exceeded');
- check(desktopMetrics.triangles<182000,'Grove triangle budget exceeded');
+ check(desktopMetrics.triangles<190000,'Grove triangle budget exceeded');
+ await page.getByRole('button',{name:'Resources',exact:true}).click();
+ for(const key of ['bush/full','bush/picked','bush/empty','wood/standing','wood/stump','wood/trunk','wood/logs','wood/chips']){
+  await page.locator('[data-resource="'+key+'"]').click();await page.waitForTimeout(160);
+  const resource=await page.evaluate(()=>window.__orcbandsResourceReview.metrics());
+  check(resource.key===key,'Resource selection must switch geometry');
+  if(key.startsWith('bush/'))check(resource.berries===({'bush/full':30,'bush/picked':10,'bush/empty':0})[key],'Berry state count mismatch');
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-'+key.replace('/','-')+'.png')});
+ }
+ await page.locator('[data-resource="bush/full"]').click();
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download resource OBJ',exact:true}).click();
+ const download=await downloadPromise;await download.saveAs(path.join(repo,'smoke-artifacts/berry-full.obj'));
+ check(download.suggestedFilename()==='orcbands-bush-full.obj','Resource OBJ download failed');
+ const exported=await readFile(path.join(repo,'smoke-artifacts/berry-full.obj'),'utf8');
+ check(exported.split('\n').find(line=>line.startsWith('v ')).trim().split(/\s+/).length===7,'Downloaded OBJ must carry RGB vertex colors');
+ await page.getByRole('button',{name:'Wireframe',exact:true}).click();
+ await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-wireframe.png')});
+ await page.getByRole('button',{name:'Wireframe',exact:true}).click();
+ await page.getByRole('button',{name:'Auto rotate',exact:true}).click();
+ await page.waitForFunction(()=>window.__orcbandsReview.metrics().rotation>.01);
+ await page.getByRole('button',{name:'Reset camera',exact:true}).click();
+ await page.reload();await page.waitForFunction(()=>window.__orcbandsMode==='resources'&&window.__orcbandsResourceReview.metrics().key==='bush/full');
+ check(!(await metrics()).visibility.enabled,'Resource studio must not receive grove fog');
+ await page.getByRole('button',{name:'Forest grove'}).click();
  const signature=await page.evaluate(()=>JSON.stringify(window.__orcbandsLayout));
  // Exercise actual pointer orbit and wheel zoom, rather than only camera presets.
  await page.getByRole('button',{name:'Reset camera'}).click();
@@ -176,7 +200,12 @@ try{
  await mobile.waitForFunction(()=>window.__orcbandsMode==='hut');
  await mobile.screenshot({path:path.join(repo,'smoke-artifacts/hut-mobile.png')});
  await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsHutLoaded&&window.__orcbandsMode==='hut');
+ await mobile.getByRole('button',{name:'Resources',exact:true}).click();
+ await mobile.locator('[data-resource="bush/picked"]').click();
+ await mobile.evaluate(()=>window.scrollTo(0,0));
+ await mobile.screenshot({path:path.join(repo,'smoke-artifacts/resource-mobile.png')});
+ await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsMode==='resources'&&window.__orcbandsResourceReview.metrics().key==='bush/picked');
  await mobile.close();
  if(errors.length)throw Error('Browser errors: '+errors.join('\n'));
- console.log('PASS: Pine 01, hut studio + views/wireframe/rotation/deep link, grove + hut; seeded reload; desktop orbit/zoom/pan/reset; mobile touch orbit/pinch/pan/reset; no browser errors.',desktopMetrics);
+ console.log('PASS: Pine 01, hut studio + views/wireframe/rotation/deep link, grove + hut + tree/berry resources and colored OBJ download; seeded reload; desktop orbit/zoom/pan/reset; mobile touch orbit/pinch/pan/reset; no browser errors.',desktopMetrics);
 }finally{await browser?.close();server.closeAllConnections();server.close()}
