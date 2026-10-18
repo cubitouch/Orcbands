@@ -62,12 +62,42 @@ function woodStockpile(state){
  }
  const g=join(parts);g.userData.contents=count;return g;
 }
+function stockStone(index,x,y,z,sx,sy,sz){
+ // Unequal chipped forms, with broad sloping faces rather than miniature quarry columns.
+ const g=new THREE.IcosahedronGeometry(1,0),pos=g.attributes.position;
+ for(let i=0;i<pos.count;i++){
+  const px=pos.getX(i),py=pos.getY(i),pz=pos.getZ(i);
+  const variation=1+.15*Math.sin(px*12.3+py*7.1+pz*5.7+index*2.4);
+  pos.setXYZ(i,px*variation,py*variation,pz*variation);
+ }
+ g.scale(sx,sy,sz);g.rotateX(Math.sin(index*2.1)*.24);g.rotateZ(Math.cos(index*1.4)*.21);g.rotateY(index*2.399);
+ g.computeBoundingBox();
+ // Small broken resting faces keep the base stones planted instead of balancing on tips.
+ const floor=g.boundingBox.min.y+(g.boundingBox.max.y-g.boundingBox.min.y)*.16;
+ for(let i=0;i<pos.count;i++)pos.setY(i,Math.max(floor,pos.getY(i)));
+ g.translate(x,y-floor,z);g.computeVertexNormals();
+ return paint(g,[0x899194,0x777f83,0x939895,0x828a91,0x8b8880][index%5],720+index);
+}
 function stoneStockpile(state){
- const parts=[box(0,0,-.70,2.0,.12,.10,0x71573a),box(0,0,.70,2.0,.12,.10,0x71573a,2),box(-.95,0,0,.1,.12,1.4,0x71573a,3),box(.95,0,0,.1,.12,1.4,0x71573a,4)];
- const positions=[[-.58,0,-.38],[-.02,0,-.39],[.53,0,-.36],[-.60,0,.06],[0,0,.04],[.56,0,.10],[-.46,0,.42],[.10,0,.40],[.58,0,.43],[-.30,.27,-.16],[.28,.28,-.08],[-.02,.29,.28]];
- const count=state==='full'?12:state==='partial'?4:0;
- for(let i=0;i<count;i++){const [x,y,z]=positions[i],s=.30+(i%3)*.025;chunk(parts,i%3,x,y,z,s*1.08,s*.94,s*.88,i*.7)}
- const g=join(parts);g.userData.contents=count;return g;
+ // A low, open-front storage bay: split timber stops, pegged corners, no planter rim.
+ const parts=[box(0,0,-.63,1.86,.10,.13,0x67503a,11),box(-.91,0,-.14,.13,.085,1.05,0x71573f,12),box(.91,0,-.14,.13,.085,1.05,0x634b35,13)];
+ for(const x of [-.92,.92]){
+  parts.push(box(x,0,-.64,.15,.28,.15,0x795d40,14));
+  parts.push(box(x,.28,-.64,.16,.025,.16,0xa28358,15));
+ }
+ // A loose, overlapping mound with mixed slab/round shapes; higher tiers nest into lower ones.
+ const positions=[
+  [-.52,0,-.31,.34,.23,.28],[.03,0,-.35,.37,.25,.28],[.52,0,-.30,.30,.22,.29],
+  [-.56,0,.14,.31,.20,.29],[-.07,0,.10,.37,.29,.32],[.51,0,.12,.34,.24,.28],
+  [-.37,0,.43,.34,.18,.24],[.19,0,.43,.32,.20,.24],
+  [-.39,.26,-.24,.30,.23,.28],[.18,.29,-.25,.35,.23,.27],
+  [-.34,.27,.18,.30,.24,.27],[.24,.30,.20,.32,.22,.27],
+  [-.12,.56,-.05,.34,.26,.29],[.35,.02,.60,.18,.11,.14],[-.66,.01,.48,.16,.10,.14]
+ ];
+ const partial=[positions[0],positions[1],positions[3],positions[4],[-.32,.24,-.08,.27,.18,.24],positions[14]];
+ const stones=state==='full'?positions:state==='partial'?partial:[];
+ stones.forEach(([x,y,z,sx,sy,sz],i)=>parts.push(stockStone(i,x,y,z,sx,sy,sz)));
+ const g=join(parts);g.userData.contents=stones.length;return g;
 }
 function basket(){
  const parts=[],n=10,pts=[];
