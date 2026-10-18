@@ -3,6 +3,8 @@ import {readFile,mkdir,writeFile,rm} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
+import {RESOURCE_STATES} from '../preview/resources.js';
+import {RESOURCE_FAMILIES} from '../preview/resource-viewer.js';
 
 const repo=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const root=path.join(repo,'preview');
@@ -71,7 +73,7 @@ try{
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(0));
- for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut']) {
+ for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut','quarry','stockyard','foodstore']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
@@ -113,9 +115,10 @@ try{
  const resumeTime=(await metrics()).campfire.time;
  await page.waitForFunction(start=>window.__orcbandsReview.metrics().campfire.time>start+.05,resumeTime);
  check(desktopMetrics.calls<=66,'Grove draw-call budget exceeded');
- check(desktopMetrics.triangles<190000,'Grove triangle budget exceeded');
+ check(desktopMetrics.triangles<195000,'Grove triangle budget exceeded');
  await page.getByRole('button',{name:'Resources',exact:true}).click();
- for(const key of ['bush/full','bush/picked','bush/empty','wood/standing','wood/stump','wood/trunk','wood/logs','wood/chips']){
+ for(const key of Object.entries(RESOURCE_STATES).flatMap(([kind,states])=>states.map(state=>kind+'/'+state))){
+  await page.locator('[data-resource-family="'+key.split('/')[0]+'"]').click();
   await page.locator('[data-resource="'+key+'"]').click();await page.waitForTimeout(160);
   const resource=await page.evaluate(()=>window.__orcbandsResourceReview.metrics());
   check(resource.key===key,'Resource selection must switch geometry');
@@ -123,6 +126,7 @@ try{
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-'+key.replace('/','-')+'.png')});
  }
+ await page.locator('[data-resource-family="bush"]').click();
  await page.locator('[data-resource="bush/full"]').click();
  const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download resource OBJ',exact:true}).click();
  const download=await downloadPromise;await download.saveAs(path.join(repo,'smoke-artifacts/berry-full.obj'));
@@ -201,10 +205,11 @@ try{
  await mobile.screenshot({path:path.join(repo,'smoke-artifacts/hut-mobile.png')});
  await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsHutLoaded&&window.__orcbandsMode==='hut');
  await mobile.getByRole('button',{name:'Resources',exact:true}).click();
- await mobile.locator('[data-resource="bush/picked"]').click();
+ await mobile.locator('[data-resource-family="food"]').click();
+ await mobile.locator('[data-resource="food/partial"]').click();
  await mobile.evaluate(()=>window.scrollTo(0,0));
  await mobile.screenshot({path:path.join(repo,'smoke-artifacts/resource-mobile.png')});
- await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsMode==='resources'&&window.__orcbandsResourceReview.metrics().key==='bush/picked');
+ await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsMode==='resources'&&window.__orcbandsResourceReview.metrics().key==='food/partial');
  await mobile.close();
  if(errors.length)throw Error('Browser errors: '+errors.join('\n'));
  console.log('PASS: Pine 01, hut studio + views/wireframe/rotation/deep link, grove + hut + tree/berry resources and colored OBJ download; seeded reload; desktop orbit/zoom/pan/reset; mobile touch orbit/pinch/pan/reset; no browser errors.',desktopMetrics);

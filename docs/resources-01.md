@@ -1,5 +1,7 @@
 # Resource art 01: pine harvesting forms and berry bushes
 
+For subsequent stone/stockpile assets and the family-based inspector, see [Resource art 02](resources-02.md). The images below document the first batch.
+
 First batch from the [non-character asset inventory, issue #30](https://github.com/cubitouch/Orcbands/issues/30). This adds original static resource forms and an inspector for their states. Harvesting, regrowth, resource amounts and worker interactions are future gameplay work.
 
 ## Actual WebGL views

@@ -11,8 +11,12 @@ export const RESOURCE_PLACEMENTS=[
  {kind:'bush',state:'picked',x:-6.5,z:-7.8,scale:.90,angle:1.2,radius:.90},
  {kind:'wood',state:'stump',x:-4.6,z:6.7,angle:.2,radius:.5},
  {kind:'wood',state:'trunk',x:-4.3,z:8.4,angle:-.25,radius:1.5},
- {kind:'wood',state:'logs',x:-2.6,z:7.1,angle:1.35,radius:.9},
- {kind:'wood',state:'chips',x:-4.6,z:6.7,angle:.2,radius:.86}
+ {kind:'woodpile',state:'full',x:-2.6,z:7.1,angle:1.35,radius:1.33},
+ {kind:'wood',state:'chips',x:-4.6,z:6.7,angle:.2,radius:.86},
+ {kind:'stone',state:'full',x:-10,z:-3.5,angle:.2,radius:1.75},
+ {kind:'stone',state:'depleted',x:8.6,z:-4.1,angle:-.3,radius:1.4},
+ {kind:'stonepile',state:'partial',x:-1.2,z:5.1,angle:.12,radius:1.25},
+ {kind:'food',state:'full',x:-8,z:1.6,angle:-.3,radius:1.15}
 ];
 export function nearResource(x,z,margin=0){return RESOURCE_PLACEMENTS.some(p=>Math.hypot(x-p.x,z-p.z)<p.radius+margin)}
 export const GROVE_SEED = 2302;
@@ -66,7 +70,9 @@ export function wornGround(x,z){
  const apron=Math.max(0,Math.min(1,(1-clearing+(noise(x*1.1,z*1.1)-.5)*.45)*1.8));
  const fireApron=Math.max(0,1-Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)/1.7);
  const workApron=Math.max(0,1-Math.hypot((x+4.2)/2.5,(z-7.5)/2.0));
- return Math.max(track,apron*.82,fireApron*.95,workApron*.85);
+ const stockApron=Math.max(0,1-Math.hypot((x+1.2)/1.8,(z-5.1)/1.3));
+ const miningApron=Math.max(0,1-Math.hypot((x+10)/2.0,(z+3.5)/1.5));
+ return Math.max(track,apron*.82,fireApron*.95,workApron*.85,stockApron*.85,miningApron*.8);
 }
 // Deliberately authored pockets. The southern opening reveals the clearing from the reset camera.
 const treePositions = [

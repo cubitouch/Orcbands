@@ -120,7 +120,7 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  sourceTree=tree;sourceHut=hut;
  for(const object of [tree,hut])object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.geometry.computeVertexNormals()}});
  studio.add(tree);
- resourceViewer=buildResourceViewer(resourceStudio,tree);
+ resourceViewer=buildResourceViewer(resourceStudio,tree,()=>setMode('resources'));
  const requestedAsset=new URLSearchParams(location.search).get('asset');
  if(Object.hasOwn(RESOURCE_LABELS,requestedAsset))resourceViewer.select(requestedAsset);
  const layout=buildEnvironment(grove,tree);buildGroveResources(grove,layout.resources);
@@ -135,10 +135,12 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  setMode(['grove','hut','resources'].includes(requested)?requested:'studio');
 }).catch(error=>{document.getElementById('loading').textContent='Asset failed to load';status.textContent=String(error)});
 function selectResource(key){resourceViewer.select(key);setMode('resources')}
-document.querySelectorAll('[data-resource]').forEach(b=>b.addEventListener('click',()=>selectResource(b.dataset.resource)));
 document.getElementById('download-resource').addEventListener('click',()=>resourceViewer.download());
 window.__orcbandsResourceReview={select:selectResource,metrics:()=>resourceViewer?.metrics()};
 const reviewViews={
+ quarry:{position:[-4.5,6.5,3.7],target:[-10,.65,-3.5]},
+ stockyard:{position:[0,8,11.5],target:[-2.3,.4,5.8]},
+ foodstore:{position:[-3,4.2,3.8],target:[-8,.35,1.6]},
  berries:{position:[3.5,4.2,5.4],target:[6.5,.4,-.4]},
  woodcut:{position:[-1,4.3,4.5],target:[-4.2,.25,7.4]},
  overall:{position:[20,22,26],target:[0,0,-1]},
