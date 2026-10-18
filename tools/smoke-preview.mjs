@@ -60,7 +60,7 @@ try{
  }
  const desktopMetrics=await metrics();
  check(desktopMetrics.calls<=24,'Grove draw-call budget exceeded');
- check(desktopMetrics.triangles<80000,'Grove triangle budget exceeded');
+ check(desktopMetrics.triangles<100000,'Grove triangle budget exceeded');
  const signature=await page.evaluate(()=>JSON.stringify(window.__orcbandsLayout));
  // Exercise actual pointer orbit and wheel zoom, rather than only camera presets.
  await page.getByRole('button',{name:'Reset camera'}).click();
@@ -78,7 +78,8 @@ try{
  check(moved(reset.target,(await metrics()).target),'Desktop pan did not move target');
  await page.getByRole('button',{name:'Reset camera'}).click();await page.waitForTimeout(500);
  check(!moved(reset.camera,(await metrics()).camera),'Reset camera does not restore framing');
- await page.getByRole('button',{name:'Auto rotate'}).click();await page.waitForTimeout(300);
+ await page.getByRole('button',{name:'Auto rotate'}).click();
+ await page.waitForFunction(()=>Math.abs(window.__orcbandsReview.metrics().rotation)>.01);
  check(Math.abs((await metrics()).rotation)>.01,'Auto rotate did not rotate grove');
  await page.getByRole('button',{name:'Auto rotate'}).click();
  await page.getByRole('button',{name:'Single tree',exact:true}).click();

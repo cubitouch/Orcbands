@@ -1,5 +1,7 @@
 # ENV-02 — Forest grove
 
+This records the initial ENV-02 composition. See [Path naturalism](path-naturalism.md) for the subsequent terrain-integrated path treatment and current measurements.
+
 ## Art direction and scope
 
 This is a modest original low-poly woodland assembled in the Three.js Asset Lab. It is actual interactive WebGL geometry, with no rendered background illustration, textures, purchased assets, characters or gameplay. Pine 01's generator, OBJ and MTL remain unchanged and independently downloadable.
@@ -75,4 +77,4 @@ The recorded desktop wide view and portrait reset each report **16 draw calls an
 
 ## Remaining limitations
 
-This remains one small grove surrounded by simple meadow, with one tree species and six static prop shapes. The terrain is intentionally almost flat; it has no detailed sculpting, wind, LODs, colliders, navigation or gameplay. Very wide views expose the limited extent of the planted woodland. Bare patches are simple planar surface treatments; extreme ground-level inspection may reveal minor intersections. Real mobile GPU frame rate and Unity import/performance still need device/editor validation. The public Pages URL continues to show `main` until the owner reviews and merges this PR.
+This remains one small grove surrounded by simple meadow, with one tree species and six static prop shapes. The terrain is intentionally almost flat; it has no detailed sculpting, wind, LODs, colliders, navigation or gameplay. Very wide views expose the limited extent of the planted woodland. Bare patches are simple planar surface treatments; extreme ground-level inspection may reveal minor intersections. Real mobile GPU frame rate and Unity import/performance still need device/editor validation. These are the original ENV-02 review captures; later path revisions are documented separately.

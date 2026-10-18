@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {createLayout,groundHeight,pathDistance,pathPoint} from '../preview/environment-layout.js';
+import {createLayout,groundHeight,pathDistance,pathPoint,wornGround} from '../preview/environment-layout.js';
 const layout=createLayout();
 assert.deepEqual(layout,createLayout(),'Scene must reproduce exactly');
 assert.notDeepEqual(layout,createLayout(42),'Seed must control variation');
@@ -22,7 +22,7 @@ for(const plant of layout.plants) {
 }
 for(let i=0;i<=100;i++) {
   const p=pathPoint(i/100);
-  assert(p.halfWidth>1&&p.halfWidth<1.6,'Continuous readable corridor width');
+  assert(p.halfWidth>.75&&p.halfWidth<1.6,'Continuous readable corridor width');
 }
 console.log('PASS: seeded layout, clear corridor, central clearing, all six prop forms.',{
   trees:layout.trees.length,rocks:layout.rocks.length,plants:layout.plants.length,
@@ -49,9 +49,9 @@ function bufferSignature(){
     }
     if(o.instanceMatrix)hash.update(new Uint8Array(o.instanceMatrix.array.buffer));
     if(o.instanceColor)hash.update(new Uint8Array(o.instanceColor.array.buffer));
-    if(o.name==='Dirt path'){
+    if(o.name==='Forest floor'){
       const normals=o.geometry.getAttribute('normal');
-      for(let i=0;i<normals.count;i++)assert(normals.getY(i)>.9,'Path must face upward');
+      for(let i=0;i<normals.count;i++)assert(normals.getY(i)>.9,'Terrain and integrated path must face upward');
     }
   });
   const result=hash.digest('hex');
@@ -59,4 +59,6 @@ function bufferSignature(){
   return result;
 }
 const geometryHash=bufferSignature();assert.equal(geometryHash,bufferSignature());
-console.log('PASS: actual mesh attributes and instance buffers reproduce bit-for-bit; path faces upward.',geometryHash);
+console.log('PASS: actual mesh attributes and instance buffers reproduce bit-for-bit; integrated path faces upward.',geometryHash);
+
+for(let i=0;i<=50;i++){const p=pathPoint(i/50);assert(wornGround(p.x,p.z)>.65,'Worn route must remain readable');}

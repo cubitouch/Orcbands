@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {createLayout, seededRandom, groundHeight, pathPoint} from './environment-layout.js';
+import {createLayout, seededRandom, groundHeight, wornGround} from './environment-layout.js';
+
+import {noise,groundVariation} from './ground-surface.js';
 
 const earth = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
 const leaves = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
@@ -19,40 +21,44 @@ function surface(parent,g,material=earth) {
 }
 function buildTerrain(parent) {
   const vertices=[],colors=[];
-  // Broad continuous land extends beyond the woods rather than a round display plinth.
-  const step=2,half=100;
-  const point=(x,z)=>[x,groundHeight(x,z),z];
-  for(let z=-half;z<half;z+=step)for(let x=-half;x<half;x+=step) {
-    const meadow=Math.exp(-(x*x/95+z*z/80));
-    const color=new THREE.Color(0x64764d).lerp(new THREE.Color(0x84915c),meadow*.65);
-    color.multiplyScalar(1+.009*Math.sin(x*.31+z*.27)+.006*Math.cos(x*.51-z*.34));
-    const a=point(x,z),b=point(x,z+step),c=point(x+step,z),d=point(x+step,z+step);
-    triangle(vertices,colors,a,b,c,color);triangle(vertices,colors,b,d,c,color);
+  // One continuous mesh: dense vertices in the walkable woodland, coarse in distant meadow.
+  const xs=[],zs=[];
+  for(let n=-100;n < -26;n+=2)xs.push(n);
+  for(let n=-26;n < -10;n+=1)xs.push(n);
+  for(let i=0;i<50;i++)xs.push(-10+i*.4);
+  for(let n=10;n < 26;n+=1)xs.push(n);
+  for(let n=26;n <=100;n+=2)xs.push(n);
+  for(let n=-100;n < -34;n+=2)zs.push(n);
+  for(let i=0;i<114;i++)zs.push(-34+i*68/114);
+  for(let n=34;n <=100;n+=2)zs.push(n);
+  const grassDark=new THREE.Color(0x637648),grassLight=new THREE.Color(0x85935b);
+  const soilDark=new THREE.Color(0x857152),soilLight=new THREE.Color(0xa28b65);
+  const points=[];
+  for(const z of zs)for(const x of xs)points.push([x,groundHeight(x,z),z]);
+  const shade=(x,z)=>{
+    const variation=groundVariation(x,z);
+    const grass=grassDark.clone().lerp(grassLight,.54+(variation-.5)*.24);
+    const soil=soilDark.clone().lerp(soilLight,.22+noise(x*.9+18,z*.9)*.65);
+    const worn=wornGround(x,z);
+    // Discrete earth/turf flecks give broken polygon edges instead of an airbrushed stripe.
+    const coverage=worn>.73?1:worn>.43?.72:worn>.23?.32:0;
+    return grass.lerp(soil,coverage).multiplyScalar(.98+variation*.04);
+  };
+  const face=(a,b,c)=>{
+    vertices.push(...points[a],...points[b],...points[c]);
+    const x=(points[a][0]+points[b][0]+points[c][0])/3,z=(points[a][2]+points[b][2]+points[c][2])/3;
+    const color=shade(x,z),flat=wornGround(x,z)>.12;
+    for(const i of [a,b,c]){
+      const c=flat?color:shade(points[i][0],points[i][2]);
+      colors.push(c.r,c.g,c.b);
+    }
+  };
+  for(let z=0;z<zs.length-1;z++)for(let x=0;x<xs.length-1;x++){
+    const a=z*xs.length+x,b=a+xs.length,c=a+1,d=b+1;
+    // Alternating diagonals avoid a dominant directional pattern at path edges.
+    if((x+z)%2){face(a,b,d);face(a,d,c)}else{face(a,b,c);face(b,d,c)}
   }
   surface(parent,geometry(vertices,colors)).name='Forest floor';
-}
-function buildPath(parent) {
-  const vertices=[],colors=[];
-  // Five cross sections give a worn middle, dusty shoulders and ragged grass-side fringe.
-  const row=i=>{
-    const t=(i-180)/180,p=pathPoint(t),p0=pathPoint(t-.001),p1=pathPoint(t+.001);
-    const dx=p1.x-p0.x,dz=p1.z-p0.z,l=Math.hypot(dx,dz),nx=-dz/l,nz=dx/l;
-    return [-1.14,-1,-.70,.70,1,1.14].map((v,j)=>{
-      const fringe=(j===0?-1:j===5?1:0)*(.04*Math.sin(i*.77+j)+.025*Math.cos(i*.41+j));
-      const offset=v*p.halfWidth+fringe,x=p.x+nx*offset,z=p.z+nz*offset;
-      return [x,groundHeight(x,z)+.022,z];
-    });
-  };
-  const palette=[0x727a50,0x857756,0x948264,0x857756,0x727a50];
-  for(let i=0;i<540;i++) {
-    const a=row(i),b=row(i+1);
-    for(let j=0;j<5;j++) {
-      const color=new THREE.Color(palette[j]).multiplyScalar(1+.018*Math.sin(i*.42));
-      triangle(vertices,colors,a[j],a[j+1],b[j],color);
-      triangle(vertices,colors,a[j+1],b[j+1],b[j],color);
-    }
-  }
-  surface(parent,geometry(vertices,colors)).name='Dirt path';
 }
 function patch(x,z,rx,rz,color,seed) {
   const random=seededRandom(seed),vertices=[],colors=[],n=11;
@@ -140,7 +146,7 @@ function instanceTrees(parent,source,placements) {
 }
 export function buildEnvironment(parent,sourceTree) {
   const layout=createLayout();
-  buildTerrain(parent);buildPath(parent);instanceTrees(parent,sourceTree,layout.trees);
+  buildTerrain(parent);instanceTrees(parent,sourceTree,layout.trees);
   const patches=[];
   layout.trees.forEach((p,i)=>patches.push(patch(p.x,p.z,1.3*p.scale,1.1*p.scale,0x5e6b46,i+12)));
   layout.rocks.filter(p=>p.type>0).forEach((p,i)=>patches.push(patch(p.x,p.z,p.radius*1.2,p.radius*.9,0x737351,i+120)));
