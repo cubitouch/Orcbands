@@ -1,13 +1,8 @@
-name: "Worker Orc #15 — exported GLB visual evidence"
+name: "Legacy #15 GLB baseline review (manual)"
 
+# Historical baseline comparison; not a required check for every new sculpt.
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "art/**"
-      - "docs/issue-15-worker-orc-art-brief.md"
-      - "tools/check-issue15-references.py"
-      - ".github/workflows/issue15-glb-review.yml"
 
 permissions:
   contents: read

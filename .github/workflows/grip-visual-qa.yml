@@ -1,4 +1,4 @@
-name: Worker Orc quick grip visual QA
+name: Worker Orc current sculpt visual QA
 on:
   pull_request:
     paths:
@@ -6,6 +6,9 @@ on:
       - "art/worker_orc_head.py"
       - "art/worker_orc_hands.py"
       - "art/render_worker_grip.py"
+      - "preview/app.js"
+      - "preview/index.html"
+      - "tools/smoke-preview.mjs"
       - ".github/workflows/grip-visual-qa.yml"
 permissions:
   contents: read
@@ -30,9 +33,20 @@ jobs:
           test -s grip-qa/images/front-grip.png
           test -s grip-qa/images/inside-palm.png
           test -s grip-qa/images/three-quarter-grip.png
+          test -s grip-qa/images/right-empty-hand.png
+          test -s grip-qa/images/front-full.png
+          test -s grip-qa/images/back-full.png
+      - name: Verify exported sculpt in actual Chromium WebGL
+        run: |
+          cp grip-qa/model/worker-orc-sculpt-study.glb preview/assets/worker-orc-sculpt-study.glb
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+          ORCBANDS_TEST_SCULPT=1 node tools/smoke-preview.mjs
+          mkdir -p grip-qa/browser
+          cp smoke-artifacts/real-sculpt-browser.png grip-qa/browser/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: worker-orc-grip-four-views
+          name: worker-orc-current-sculpt-review
           path: grip-qa/
           if-no-files-found: warn

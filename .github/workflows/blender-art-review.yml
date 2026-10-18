@@ -3,7 +3,8 @@ name: Blender Worker Orc Art Review
 on:
   pull_request:
     paths:
-      - "art/**"
+      - "art/worker_orc_vnext.py"
+      - "tools/validate-painted-glb.py"
       - ".github/workflows/blender-art-review.yml"
   workflow_dispatch:
 
