@@ -6,10 +6,12 @@ import {groundHeight,pathDistance,createLayout,nearTorch} from '../preview/envir
 
 assert.equal(TORCH_PLACEMENTS.length,4);
 for(const p of REVEAL_SOURCES)assert.equal(visibilityAt(p.x,p.z),1,'Reveal source must be clear');
-for(const [x,z] of [[40,40],[-40,-40],[0,35]])assert.equal(visibilityAt(x,z),0,'Distant forest must be concealed');
+for(const [x,z] of [[40,40],[-40,-40],[0,35]])assert.equal(visibilityAt(x,z),0,'Distant forest must receive full mist treatment');
 // Continuous transition and monotonic falloff away from the southernmost source.
 let previous=1;
-for(let z=10;z<22;z+=.05){const v=visibilityAt(-1,z);assert(v<=previous+1e-6);assert(previous-v<.04);previous=v;}
+for(let z=10;z<27;z+=.05){const v=visibilityAt(-1,z);assert(v<=previous+1e-6);assert(previous-v<.04);previous=v;}
+assert(visibilityAt(-1,16)>.5,'Nearby forest beyond torch radius must remain partly visible');
+assert(visibilityAt(-1,19)>0,'Soft reveal transition must extend into surrounding woodland');
 const layout=createLayout();
 for(const p of TORCH_PLACEMENTS){
  assert(pathDistance(p.x,p.z)>.6,'Stakes must remain beside the path');

@@ -16,13 +16,13 @@ Four original timber-and-iron torches mark the camp's foot trails. Each has a bu
 
 ![Full forest with fog disabled](reviews/torches-fog/grove-fog-off.png)
 
-These are actual Chromium WebGL captures. The first overview left too much empty darkness; the final default/RTS camera moves closer to the inhabited clearing.
+These are actual Chromium WebGL captures. Owner review found the first fog pass too strong. The updated pass widens the feathered edge, preserves dim woodland detail outside the reveal sources and uses a softer green-grey horizon. The closer default/RTS camera keeps the inhabited clearing readable.
 
 ## Visibility
 
-`preview/camp-visibility.js` defines a union of six reveal sources: the hut (10.5 metre radius), campfire (5 metres), and four torches (6.2 metres each). Radius includes a 3 metre soft transition inward from the outer boundary. Overlaps remain clear, rather than stacking darkness. A small spatial ripple breaks up mathematically perfect boundary circles. The reveal area stays fixed as the flames flicker so the fog does not pulse distractingly.
+`preview/camp-visibility.js` defines a union of six reveal sources: the hut (10.5 metre radius), campfire (5 metres), and four torches (6.2 metres each). The soft transition now spans 8 metres: 3 metres inside each radius and another 5 metres into the surrounding woods. Overlaps remain clear, rather than stacking darkness. A small spatial ripple breaks up mathematically perfect boundary circles. The reveal area stays fixed as the flames flicker so the fog does not pulse distractingly.
 
-A small material shader extension darkens the actual geometry by its horizontal distance to these sources. It works with instanced trees and the terrain, without a screen overlay or extra rendering pass. It follows the grove during auto rotation. Distant woodland becomes dark silhouettes; the camp remains in the existing daylight palette. This is stylized visibility, not physical nighttime illumination.
+A small material shader extension darkens the actual geometry by its horizontal distance to these sources. It works with instanced trees and the terrain, without a screen overlay or extra rendering pass. It follows the grove during auto rotation. Distant woodland keeps muted, desaturated detail under a cool green mist; the camp remains in the existing daylight palette. The mask dims the underlying lighting and blends in a restrained mist tint instead of replacing it with near-black. A matching green-grey horizon avoids a hard black backdrop. This is stylized visibility, not physical nighttime illumination.
 
 **Fog of war** starts enabled in the grove. Its button reveals the whole forest when disabled. Single Tree and Timber Hut studio modes disable the mask and preserve their existing lighting and controls.
 

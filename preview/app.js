@@ -58,8 +58,8 @@ function resetCamera(){
 }
 function setMode(next){
  mode=next;
- scene.background=next==='grove'?new THREE.Color(fogEnabled?0x19282f:0x9da98c):null;
- scene.fog=next==='grove'?new THREE.Fog(fogEnabled?0x19282f:0x9da98c,85,135):null;
+ scene.background=next==='grove'?new THREE.Color(fogEnabled?0x40534f:0x9da98c):null;
+ scene.fog=next==='grove'?new THREE.Fog(fogEnabled?0x40534f:0x9da98c,85,135):null;
  sun.position.set(...(next==='grove'?[-22,36,18]:[-5,11,7]));
  const extent=next==='grove'?51:13;
  Object.assign(sun.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent,far:100});
@@ -82,7 +82,7 @@ document.querySelectorAll('.scene').forEach(b=>b.addEventListener('click',()=>se
 document.getElementById('fog').addEventListener('click',e=>{
  fogEnabled=!fogEnabled;e.currentTarget.setAttribute('aria-pressed',String(fogEnabled));
  campVisibility?.setEnabled(mode==='grove'&&fogEnabled);
- if(mode==='grove'){scene.background.set(fogEnabled?0x19282f:0x9da98c);scene.fog.color.copy(scene.background)}
+ if(mode==='grove'){scene.background.set(fogEnabled?0x40534f:0x9da98c);scene.fog.color.copy(scene.background)}
 });
 document.getElementById('reset').addEventListener('click',resetCamera);
 document.getElementById('spin').addEventListener('click',e=>{

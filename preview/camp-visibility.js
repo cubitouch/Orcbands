@@ -7,10 +7,11 @@ export const REVEAL_SOURCES=[
  {...HUT_PLACEMENT,radius:10.5}, {...CAMPFIRE_PLACEMENT,radius:5},
  ...TORCH_PLACEMENTS.map(p=>({...p,radius:6.2}))
 ];
-const feather=3;
+// Keep the clear inner camp; soften through another five metres of woodland.
+const inner=3,outer=5;
 export function visibilityAt(x,z){
  const distance=Math.max(...REVEAL_SOURCES.map(p=>p.radius-Math.hypot(x-p.x,z-p.z)));
- const t=THREE.MathUtils.clamp(distance/feather,0,1);return t*t*(3-2*t);
+ const t=THREE.MathUtils.clamp((distance+outer)/(inner+outer),0,1);return t*t*(3-2*t);
 }
 // A world-space visibility mask on the actual geometry, including instanced trees.
 // No screen overlay, transparent terrain layers, render targets or shadow passes.
@@ -44,11 +45,15 @@ export function buildCampVisibility(root){
     // Tiny boundary undulation keeps the transition from reading as perfect circles.
     float ripple=sin(campFogPosition.x*1.7+sin(campFogPosition.y*.9))*.16
                 +sin(campFogPosition.y*2.1+campFogPosition.x*.6)*.10;
-    float obscured=(1.0-smoothstep(0.0,${feather.toFixed(1)},revealDistance+ripple))*campFogEnabled;
-    outgoingLight=mix(outgoingLight,vec3(.008,.014,.019),obscured);
+    float obscured=(1.0-smoothstep(-${outer.toFixed(1)},${inner.toFixed(1)},revealDistance+ripple))*campFogEnabled;
+    // Retain subdued terrain and tree detail instead of replacing it with black.
+    float luminance=dot(outgoingLight,vec3(.2126,.7152,.0722));
+    vec3 distantLight=mix(vec3(luminance),outgoingLight,.38)*.24;
+    distantLight=mix(distantLight,vec3(.035,.052,.057),.38);
+    outgoingLight=mix(outgoingLight,distantLight,obscured);
     #include <opaque_fragment>`);
   };
-  material.customProgramCacheKey=()=> 'camp-visibility-v1';material.needsUpdate=true;
+  material.customProgramCacheKey=()=> 'camp-visibility-v2';material.needsUpdate=true;
  }
  function update(){root.updateWorldMatrix(true,false);inverse.value.copy(root.matrixWorld).invert()}
  update();
