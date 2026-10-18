@@ -17,10 +17,10 @@ Place both files in the same Assets folder. Unity can import the OBJ; reconnect 
 
 ## Viewer
 
-`Single tree` offers close inspection. `Small grove` uses seven clones with varying scale and rotation, not seven unique meshes. `Wireframe`, `Auto rotate`, `Reset camera` and `?scene=grove` support review.
+`Single tree` offers close inspection. `Forest grove` uses 36 uniformly scaled and rotated instances of the preserved pine, a continuous dirt ribbon, three grass forms and three rock silhouettes. It opens onto a broad forest floor with a central clearing. See [ENV-02](environment-env-02.md) for assembly and actual WebGL screenshots. `Wireframe`, `Auto rotate`, `Reset camera` and `?scene=grove` support review. The grove also offers RTS, path, ground-level and wide camera presets; portrait screens receive wider camera framing. Reset clears orbit damping and rotation for a repeatable starting view.
 
 ## CI and deployment
 
-GitHub Actions checks that the OBJ and MTL regenerate bit-for-bit, checks JavaScript syntax and runs a headless Chromium/WebGL visual smoke test. Pushes to main publish the static preview via GitHub Pages.
+GitHub Actions checks that the OBJ and MTL regenerate bit-for-bit, checks JavaScript syntax and runs a headless Chromium/WebGL visual smoke test on desktop and portrait viewports. The test exercises pointer orbit, wheel zoom, pan, auto rotation, reset and actual CDP touch gestures. Layout validation checks path clearance, clearing space, finite buffers, upward-facing path triangles and bit-for-bit geometry reproduction. CI captures the unchanged Single Tree plus four grove angles and mobile framing in the `orcbands-forest-webgl-smoke` artifact. Pushes to main publish the static preview via GitHub Pages.
 
 The earlier bespoke orc modelling assets and workflows have been retired. Their history remains accessible through old commits/PRs.

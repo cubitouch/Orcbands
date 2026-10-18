@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
+import {buildEnvironment} from './environment.js';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 
 const host=document.getElementById('viewer'),canvas=document.getElementById('viewport');
@@ -11,7 +12,7 @@ renderer.toneMappingExposure=1.05;
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.1,120);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.1,240);
 const controls=new OrbitControls(camera,canvas);
 controls.enableDamping=true;controls.dampingFactor=.075;
 controls.minDistance=2.5;controls.maxDistance=26;
@@ -29,7 +30,7 @@ function ground(parent,r,color){
  mesh.rotation.x=-Math.PI/2;mesh.position.y=-.035;mesh.receiveShadow=true;
  parent.add(mesh);
 }
-ground(studio,3,0x677e61);ground(grove,9,0x718461);
+ground(studio,3,0x677e61);
 const grid=new THREE.GridHelper(6,12,0xd7e6ce,0x49604b);
 grid.position.y=.006;
 for(const m of (Array.isArray(grid.material)?grid.material:[grid.material])){m.transparent=true;m.opacity=.16}
@@ -38,28 +39,28 @@ let sourceTree=null,mode='studio',spin=false,wireframe=false;
 const assetRevision=document.querySelector('meta[name="orcbands-build"]')?.content||'dev';
 function assetUrl(name){return './assets/'+name+'?v='+encodeURIComponent(assetRevision)}
 function resetCamera(){
- if(mode==='grove'){camera.position.set(12.5,10.3,13.8);controls.target.set(0,1.75,0)}
+ controls.enableDamping=false;controls.update();controls.enableDamping=true;
+ spin=false;document.getElementById('spin').setAttribute('aria-pressed','false');
+ grove.rotation.y=0;studio.rotation.y=0;
+ controls.minDistance=mode==='grove'?6:2.5;controls.maxDistance=mode==='grove'?90:26;
+ if(mode==='grove'){camera.position.set(27,27,32);controls.target.set(0,0,0)}
  else{camera.position.set(5.8,4.9,7.2);controls.target.set(0,2.2,0)}
  controls.update();
 }
-function addDetails(){
- const stone=new THREE.MeshStandardMaterial({color:0x92968c,flatShading:true,roughness:1});
- const grass=new THREE.MeshStandardMaterial({color:0x506d4b,flatShading:true,roughness:1});
- for(let i=0;i<21;i++){
-  const a=i*2.39996,r=2.1+i*.29;
-  const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.16+i%4*.045,0),stone);
-  b.position.set(Math.cos(a)*r,.085,Math.sin(a)*r);b.scale.set(1.3,.6,.95);b.castShadow=true;grove.add(b);
- }
- for(let i=0;i<54;i++){
-  const a=i*2.39996,r=1.7+Math.sqrt(i/54)*6.9;
-  const t=new THREE.Mesh(new THREE.ConeGeometry(.055,.17+i%3*.045,3),grass);
-  t.position.set(Math.cos(a)*r,.075,Math.sin(a)*r);grove.add(t);
- }
-}
 function setMode(next){
- mode=next;studio.visible=next==='studio';grove.visible=next==='grove';
+ mode=next;
+ scene.background=next==='grove'?new THREE.Color(0x9da98c):null;
+ scene.fog=next==='grove'?new THREE.Fog(0x9da98c,65,110):null;
+ sun.position.set(...(next==='grove'?[-22,36,18]:[-5,11,7]));
+ const extent=next==='grove'?28:13;
+ Object.assign(sun.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent,far:100});
+ sun.shadow.camera.updateProjectionMatrix();
+ studio.visible=next==='studio';grove.visible=next==='grove';
  document.querySelectorAll('.scene').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===mode)));
- document.getElementById('scene-label').textContent=mode==='studio'?'Single tree · inspect geometry':'Grove · 7 instances';
+ document.getElementById('grove-views').hidden=next!=='grove';
+ document.getElementById('status').textContent=next==='grove'?'36 preserved pines · winding dirt path · 3 grass forms · 3 rock silhouettes':'Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
+ resize();
+ document.getElementById('scene-label').textContent=mode==='studio'?'Single tree · inspect geometry':'Forest grove · 36 pines';
  const url=new URL(location.href);
  if(next==='grove')url.searchParams.set('scene','grove');else url.searchParams.delete('scene');
  history.replaceState(null,'',url.pathname+url.search+url.hash);
@@ -73,12 +74,15 @@ document.getElementById('spin').addEventListener('click',e=>{
 });
 document.getElementById('wireframe').addEventListener('click',e=>{
  wireframe=!wireframe;e.currentTarget.setAttribute('aria-pressed',String(wireframe));
- if(sourceTree)sourceTree.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
+ for(const root of [sourceTree,grove])root?.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
 });
 function resize(){
  const w=host.clientWidth,h=host.clientHeight;
  if(!w||!h)return;
- renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+ renderer.setSize(w,h,false);camera.aspect=w/h;
+ // Keep woodland width readable on a portrait screen without pushing the camera into fog.
+ camera.fov=mode==='grove'?THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(38)/2)*Math.max(1,1.45/camera.aspect))):38;
+ camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(host);resize();
 const status=document.getElementById('status');
@@ -88,23 +92,39 @@ new MTLLoader().setPath('./assets/').load('low-poly-pine-01.mtl',materials=>{
   sourceTree=object;
   object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.geometry.computeVertexNormals()}});
   studio.add(object);
-  const layout=[[-4.9,-3.2,1.05,.1],[-1.9,-3.75,.77,1.1],[2,-4.2,1.17,.3],
-   [5.05,-1.1,.88,2],[-5.4,2.2,.9,2.1],[.4,2.4,1,1.5],[4.5,3.9,.76,.8]];
-  for(const [x,z,scale,angle] of layout){
-   const tree=object.clone(true);tree.position.set(x,0,z);tree.scale.setScalar(scale);tree.rotation.y=angle;grove.add(tree);
-  }
-  addDetails();
+  const layout=buildEnvironment(grove,object);
+  window.__orcbandsLayout=layout;
   status.textContent='Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
   document.getElementById('loading').hidden=true;
   window.__orcbandsTreeLoaded=true;
   setMode(new URLSearchParams(location.search).get('scene')==='grove'?'grove':'studio');
  },undefined,e=>{document.getElementById('loading').textContent='Tree OBJ failed to load';status.textContent=String(e)});
 },undefined,e=>{document.getElementById('loading').textContent='Tree materials failed to load';status.textContent=String(e)});
+const reviewViews={
+ overall:{position:[27,27,32],target:[0,0,0]},
+ path:{position:[12,12,17],target:[0,0,1]},
+ low:{position:[3,4.6,13],target:[-3,1,0]},
+ wide:{position:[-36,35,44],target:[0,0,0]}
+};
+function reviewView(name){
+ const view=reviewViews[name];if(!view)throw Error('Unknown view');
+ resetCamera();camera.position.set(...view.position);controls.target.set(...view.target);controls.update();
+}
+document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>reviewView(button.dataset.view)));
+window.__orcbandsReview={
+ view(name){if(mode!=='grove')setMode('grove');reviewView(name)},
+ metrics(){return {calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:grove.rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
+};
 const clock=new THREE.Clock();
 function frame(){
  requestAnimationFrame(frame);
  const dt=Math.min(clock.getDelta(),.06);
  if(spin)(mode==='studio'?studio:grove).rotation.y+=dt*.25;
+ if(mode==='grove'){
+  const previous=controls.target.clone();controls.target.x=THREE.MathUtils.clamp(controls.target.x,-19,19);
+  controls.target.z=THREE.MathUtils.clamp(controls.target.z,-19,19);controls.target.y=THREE.MathUtils.clamp(controls.target.y,0,6);
+  camera.position.add(controls.target.clone().sub(previous));
+ }
  controls.update();renderer.render(scene,camera);
 }
 frame();

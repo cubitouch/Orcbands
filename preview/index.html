@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111b18"><meta name="orcbands-build" content="__ORCBANDS_REVISION__">
-<title>Orcbands • Low-poly Pine Asset Lab</title>
+<title>Orcbands • Forest Asset Lab</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}
 body{background:#111b18;color:#e8f0e5;margin:0}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px clamp(16px,4vw,42px)}
@@ -29,15 +29,15 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <body><header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · STATIC ENVIRONMENT</div></header>
 <main>
 <div class="viewer" id="viewer">
-<canvas id="viewport" aria-label="Interactive 3D model of an Orcbands low-poly pine tree"></canvas>
-<div class="panel"><strong>Low-poly Pine · 01</strong>Original static game mesh<br><span id="scene-label">Loading model…</span></div>
+<canvas id="viewport" aria-label="Interactive 3D Pine 01 and forest grove"></canvas>
+<div class="panel"><strong>Orcbands · Asset Lab</strong>Original static geometry<br><span id="scene-label">Loading model…</span></div>
 <div id="loading" role="status">Loading original 3D tree mesh…</div>
 <div class="tip">Drag to rotate · scroll or pinch to zoom · two fingers to pan</div>
 </div>
 <div class="toolbar">
 <div class="controls" role="group" aria-label="Preview scene">
 <button class="scene" data-scene="studio" aria-pressed="true">Single tree</button>
-<button class="scene" data-scene="grove" aria-pressed="false">Small grove</button>
+<button class="scene" data-scene="grove" aria-pressed="false">Forest grove</button>
 </div>
 <div class="controls">
 <button id="wireframe" aria-pressed="false">Wireframe</button>
@@ -45,10 +45,15 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <button id="reset">Reset camera</button>
 </div>
 </div>
+<div id="grove-views" hidden>
+<div class="controls" role="group" aria-label="Grove camera views">
+<button data-view="overall">RTS view</button><button data-view="path">Path &amp; clearing</button>
+<button data-view="low">Ground level</button><button data-view="wide">Wide view</button>
+</div></div>
 <p class="meta" id="status" role="status">Loading materials and geometry…</p>
 <section class="info">
-<h1>A reusable tree, not a concept illustration</h1>
-<p>Our first environment asset is an original low-poly evergreen: nine-sided tapered trunk, four staggered faceted foliage tiers, and seven deliberately restrained material colors. Switch to <strong>Small grove</strong> to judge its readability at a typical elevated RTS angle. The grove uses seven instances of this same real mesh, not seven hand-authored variants.</p>
+<h1>Pine 01 &amp; the forest grove</h1>
+<p>Our first environment asset is an original low-poly evergreen: nine-sided tapered trunk, four staggered faceted foliage tiers, and seven deliberately restrained material colors. Switch to <strong>Forest grove</strong> to judge its readability at a typical elevated RTS angle. The grove combines 36 instances of this preserved mesh with a winding dirt path, three grass forms and three authored rock silhouettes.</p>
 <p>The static OBJ is about 4.58 units high and 2.72 units wide (assuming 1 unit = 1 meter). No wind animation, Unity prefab, LODs, or colliders yet. Both geometry and materials are generated deterministically.</p>
 <div class="files">
 <a href="./assets/low-poly-pine-01.obj" download>Download tree OBJ</a>
