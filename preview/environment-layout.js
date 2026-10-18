@@ -2,6 +2,19 @@ import {noise} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 // Metres, +Y up. This module is independent of Three.js so placement can be audited.
 export const TORCH_PLACEMENTS=[{x:-7,z:0},{x:5,z:5},{x:4,z:-11},{x:-1,z:9}];
 export function nearTorch(x,z,margin=0){return TORCH_PLACEMENTS.some(p=>Math.hypot(x-p.x,z-p.z)<.38+margin)}
+export const RESOURCE_PLACEMENTS=[
+ {kind:'bush',state:'full',x:7.2,z:0,scale:1,angle:.4,radius:1.0},
+ {kind:'bush',state:'picked',x:6.2,z:-2.2,scale:.85,angle:1.7,radius:.85},
+ {kind:'bush',state:'full',x:6.6,z:2,scale:.82,angle:2.8,radius:.82},
+ {kind:'bush',state:'full',x:-7.4,z:-4.4,scale:.95,angle:2.2,radius:.95},
+ {kind:'bush',state:'empty',x:-7,z:-6.5,scale:.85,angle:.7,radius:.85},
+ {kind:'bush',state:'picked',x:-6.5,z:-7.8,scale:.90,angle:1.2,radius:.90},
+ {kind:'wood',state:'stump',x:-4.6,z:6.7,angle:.2,radius:.5},
+ {kind:'wood',state:'trunk',x:-4.3,z:8.4,angle:-.25,radius:1.5},
+ {kind:'wood',state:'logs',x:-2.6,z:7.1,angle:1.35,radius:.9},
+ {kind:'wood',state:'chips',x:-4.6,z:6.7,angle:.2,radius:.86}
+];
+export function nearResource(x,z,margin=0){return RESOURCE_PLACEMENTS.some(p=>Math.hypot(x-p.x,z-p.z)<p.radius+margin)}
 export const GROVE_SEED = 2302;
 export const CAMPFIRE_PLACEMENT={x:.1,z:.15};
 export function nearCampfire(x,z,margin=0){return Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)<1.15+margin;}
@@ -52,7 +65,8 @@ export function wornGround(x,z){
  const clearing=Math.hypot((x+.2)/3.7,(z-1.8)/2.25);
  const apron=Math.max(0,Math.min(1,(1-clearing+(noise(x*1.1,z*1.1)-.5)*.45)*1.8));
  const fireApron=Math.max(0,1-Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)/1.7);
- return Math.max(track,apron*.82,fireApron*.95);
+ const workApron=Math.max(0,1-Math.hypot((x+4.2)/2.5,(z-7.5)/2.0));
+ return Math.max(track,apron*.82,fireApron*.95,workApron*.85);
 }
 // Deliberately authored pockets. The southern opening reveals the clearing from the reset camera.
 const treePositions = [
@@ -138,6 +152,6 @@ export function createLayout(seed = GROVE_SEED) {
    const radius=[.30,.36,.55][type]*scale;
    if(pathDistance(x,z)>radius+.25)plants.push({x,z,type,scale,angle:forestRandom()*6.28,color:forestRandom()});
   }
-  return {seed,trees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)),
-   plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearTorch(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT}};
+  return {seed,trees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
+   plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearTorch(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearResource(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT},resources:RESOURCE_PLACEMENTS.map(p=>({...p}))};
 }

@@ -5,6 +5,8 @@ import {buildEnvironment,instanceAsset} from './environment.js?v=__ORCBANDS_REVI
 import {buildTorches} from './torches.js?v=__ORCBANDS_REVISION__';
 import {buildCampVisibility} from './camp-visibility.js?v=__ORCBANDS_REVISION__';
 import {buildFireAtmosphere} from './fire-atmosphere.js?v=__ORCBANDS_REVISION__';
+import {buildGroveResources} from './resources.js?v=__ORCBANDS_REVISION__';
+import {buildResourceViewer,RESOURCE_LABELS} from './resource-viewer.js?v=__ORCBANDS_REVISION__';
 import {buildCampfire} from './campfire.js?v=__ORCBANDS_REVISION__';
 import {HUT_PLACEMENT,TORCH_PLACEMENTS} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
@@ -30,29 +32,32 @@ sun.position.set(-5,11,7);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13});
 sun.shadow.bias=-.0004;scene.add(sun);
-const studio=new THREE.Group(),grove=new THREE.Group(),hutStudio=new THREE.Group();
-scene.add(studio,grove,hutStudio);
+const studio=new THREE.Group(),grove=new THREE.Group(),hutStudio=new THREE.Group(),resourceStudio=new THREE.Group();
+scene.add(studio,grove,hutStudio,resourceStudio);
 function ground(parent,r,color){
  const mesh=new THREE.Mesh(new THREE.CircleGeometry(r,64),new THREE.MeshStandardMaterial({color,roughness:1}));
  mesh.rotation.x=-Math.PI/2;mesh.position.y=-.035;mesh.receiveShadow=true;
  parent.add(mesh);
 }
-ground(studio,3,0x677e61);ground(hutStudio,4.6,0x677e61);
+ground(resourceStudio,3.5,0x677e61);ground(studio,3,0x677e61);ground(hutStudio,4.6,0x677e61);
 const grid=new THREE.GridHelper(6,12,0xd7e6ce,0x49604b);
 grid.position.y=.006;
 for(const m of (Array.isArray(grid.material)?grid.material:[grid.material])){m.transparent=true;m.opacity=.16}
 studio.add(grid);
+let resourceViewer=null;
 let atmosphere=null,torches=null,campVisibility=null,fogEnabled=true;
 let campfire=null,fireTimeOverride=null,treeCount=36;
 let sourceTree=null,sourceHut=null,mode='studio',spin=false,wireframe=false;
 const assetRevision=document.querySelector('meta[name="orcbands-build"]')?.content||'dev';
 function assetUrl(name){return './assets/'+name+'?v='+encodeURIComponent(assetRevision)}
+function activeRoot(){return {studio,grove,hut:hutStudio,resources:resourceStudio}[mode]}
 function resetCamera(){
  controls.enableDamping=false;controls.update();controls.enableDamping=true;
  spin=false;document.getElementById('spin').setAttribute('aria-pressed','false');
- grove.rotation.y=0;studio.rotation.y=0;hutStudio.rotation.y=0;renderer.shadowMap.needsUpdate=true;
- controls.minDistance=mode==='grove'?6:2.5;controls.maxDistance=mode==='grove'?115:26;
+ grove.rotation.y=0;studio.rotation.y=0;hutStudio.rotation.y=0;resourceStudio.rotation.y=0;renderer.shadowMap.needsUpdate=true;
+ controls.minDistance=mode==='grove'?6:mode==='resources'?.7:2.5;controls.maxDistance=mode==='grove'?115:26;
  if(mode==='grove'){camera.position.set(...(fogEnabled?[20,22,26]:[27,27,32]));controls.target.set(0,0,-1)}
+ else if(mode==='resources'){const view=resourceViewer.framing();camera.position.set(...view.position);controls.target.set(...view.target)}
  else if(mode==='hut'){camera.position.set(7.3,5.0,9);controls.target.set(.3,1.8,0)}
  else{camera.position.set(5.8,4.9,7.2);controls.target.set(0,2.2,0)}
  controls.update();
@@ -66,15 +71,17 @@ function setMode(next){
  Object.assign(sun.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent,far:100});
  sun.shadow.camera.updateProjectionMatrix();renderer.shadowMap.needsUpdate=true;
  campVisibility?.setEnabled(next==='grove'&&fogEnabled);
- studio.visible=next==='studio';grove.visible=next==='grove';hutStudio.visible=next==='hut';
+ studio.visible=next==='studio';grove.visible=next==='grove';hutStudio.visible=next==='hut';resourceStudio.visible=next==='resources';
+ document.getElementById('resource-controls').hidden=next!=='resources';
  document.querySelectorAll('.scene').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===mode)));
  document.getElementById('grove-views').hidden=next!=='grove';
  document.getElementById('hut-views').hidden=next!=='hut';
- document.getElementById('status').textContent=next==='grove'?`Forest camp · ${treeCount} pines · Timber Hut 01 · campfire · 4 torches`:next==='hut'?'Timber Hut 01 · original static OBJ/MTL · timber frame, red roof and open entrance':'Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
+ document.getElementById('status').textContent=next==='resources'?resourceViewer.metrics().label+' · original reusable resource geometry':next==='grove'?`Forest camp · ${treeCount} pines · Timber Hut 01 · campfire · 4 torches`:next==='hut'?'Timber Hut 01 · original static OBJ/MTL · timber frame, red roof and open entrance':'Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
  resize();
- document.getElementById('scene-label').textContent=mode==='studio'?'Single tree · inspect geometry':mode==='hut'?'Timber Hut · 01':`Forest camp · ${treeCount} pines + hut`;
+ document.getElementById('scene-label').textContent=mode==='resources'?resourceViewer.metrics().label:mode==='studio'?'Single tree · inspect geometry':mode==='hut'?'Timber Hut · 01':`Forest camp · ${treeCount} pines + hut`;
  const url=new URL(location.href);
  if(next!=='studio')url.searchParams.set('scene',next);else url.searchParams.delete('scene');
+ if(next==='resources')url.searchParams.set('asset',resourceViewer.metrics().key);else url.searchParams.delete('asset');
  history.replaceState(null,'',url.pathname+url.search+url.hash);
  window.__orcbandsMode=next;
  resetCamera();
@@ -92,7 +99,7 @@ document.getElementById('spin').addEventListener('click',e=>{
 document.getElementById('wireframe').addEventListener('click',e=>{
  renderer.shadowMap.needsUpdate=true;
  wireframe=!wireframe;e.currentTarget.setAttribute('aria-pressed',String(wireframe));
- for(const root of [sourceTree,sourceHut,grove,hutStudio])root?.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
+ for(const root of [sourceTree,sourceHut,grove,hutStudio,resourceStudio])root?.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
 });
 function resize(){
  const w=host.clientWidth,h=host.clientHeight;
@@ -113,7 +120,10 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  sourceTree=tree;sourceHut=hut;
  for(const object of [tree,hut])object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.geometry.computeVertexNormals()}});
  studio.add(tree);
- const layout=buildEnvironment(grove,tree);
+ resourceViewer=buildResourceViewer(resourceStudio,tree);
+ const requestedAsset=new URLSearchParams(location.search).get('asset');
+ if(Object.hasOwn(RESOURCE_LABELS,requestedAsset))resourceViewer.select(requestedAsset);
+ const layout=buildEnvironment(grove,tree);buildGroveResources(grove,layout.resources);
  instanceAsset(hutStudio,hut,[{x:0,z:0,scale:1,angle:0}]);
  instanceAsset(grove,hut,[HUT_PLACEMENT]);
  campfire=buildCampfire(grove,layout.campfire);treeCount=layout.trees.length;
@@ -122,9 +132,15 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  document.getElementById('loading').hidden=true;
  window.__orcbandsTreeLoaded=true;window.__orcbandsHutLoaded=true;
  const requested=new URLSearchParams(location.search).get('scene');
- setMode(['grove','hut'].includes(requested)?requested:'studio');
+ setMode(['grove','hut','resources'].includes(requested)?requested:'studio');
 }).catch(error=>{document.getElementById('loading').textContent='Asset failed to load';status.textContent=String(error)});
+function selectResource(key){resourceViewer.select(key);setMode('resources')}
+document.querySelectorAll('[data-resource]').forEach(b=>b.addEventListener('click',()=>selectResource(b.dataset.resource)));
+document.getElementById('download-resource').addEventListener('click',()=>resourceViewer.download());
+window.__orcbandsResourceReview={select:selectResource,metrics:()=>resourceViewer?.metrics()};
 const reviewViews={
+ berries:{position:[3.5,4.2,5.4],target:[6.5,.4,-.4]},
+ woodcut:{position:[-1,4.3,4.5],target:[-4.2,.25,7.4]},
  overall:{position:[20,22,26],target:[0,0,-1]},
  path:{position:[12,12,17],target:[0,0,1]},
  low:{position:[3,4.6,13],target:[-3,1,0]},
@@ -146,7 +162,7 @@ document.querySelectorAll('[data-hut-view]').forEach(button=>button.addEventList
 window.__orcbandsReview={
  setFireTime(value){fireTimeOverride=Number.isFinite(value)?value:null;campfire?.update(fireTimeOverride??clock.elapsedTime);torches?.update(fireTimeOverride??clock.elapsedTime);atmosphere?.update(fireTimeOverride??clock.elapsedTime)},
  view(name){if(mode!=='grove')setMode('grove');reviewView(name)},
- metrics(){return {atmosphere:atmosphere?.metrics(),torches:torches?.metrics(),visibility:campVisibility?.metrics(),campfire:campfire?.metrics(),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
+ metrics(){return {atmosphere:atmosphere?.metrics(),torches:torches?.metrics(),visibility:campVisibility?.metrics(),campfire:campfire?.metrics(),calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,rotation:activeRoot().rotation.y,fov:camera.fov,camera:camera.position.toArray(),target:controls.target.toArray()}},
 };
 const clock=new THREE.Clock();
 function frame(){
@@ -154,7 +170,7 @@ function frame(){
  const dt=Math.min(clock.getDelta(),.06);
  campfire?.update(fireTimeOverride??clock.elapsedTime);
  torches?.update(fireTimeOverride??clock.elapsedTime);atmosphere?.update(fireTimeOverride??clock.elapsedTime);
- if(spin){(mode==='studio'?studio:mode==='hut'?hutStudio:grove).rotation.y+=dt*.25;renderer.shadowMap.needsUpdate=true}
+ if(spin){activeRoot().rotation.y+=dt*.25;renderer.shadowMap.needsUpdate=true}
  campVisibility?.update();
  if(mode==='grove'){
   const previous=controls.target.clone();controls.target.x=THREE.MathUtils.clamp(controls.target.x,-19,19);
