@@ -1,5 +1,7 @@
 # Trail torches and fog of war
 
+For the subsequent flame, light and smoke refinement, see [Fire motion, light and smoke](fire-animation.md).
+
 Four original timber-and-iron torches mark the camp's foot trails. Each has a buried stone footing, tapered stake, bindings, open flared basket and three faceted, animated flame meshes. Static parts are merged by material; flame geometry reuses the campfire's authored construction. Each torch has a bounded, flickering point light without dynamic shadows.
 
 ## Actual WebGL review
