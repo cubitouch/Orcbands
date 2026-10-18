@@ -1,6 +1,8 @@
 import {noise} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 // Metres, +Y up. This module is independent of Three.js so placement can be audited.
 export const GROVE_SEED = 2302;
+export const CAMPFIRE_PLACEMENT={x:.1,z:.15};
+export function nearCampfire(x,z,margin=0){return Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)<1.15+margin;}
 export const HUT_PLACEMENT = {x:-3,z:-3.8,scale:1,angle:0};
 export function inHutFootprint(x,z,margin=0){return Math.abs(x-HUT_PLACEMENT.x)<2.9+margin && Math.abs(z-HUT_PLACEMENT.z)<2.6+margin;}
 export function seededRandom(seed) {
@@ -47,7 +49,8 @@ export function wornGround(x,z){
  // An irregular trampled apron at the trail junction, fading into the open clearing.
  const clearing=Math.hypot((x+.2)/3.7,(z-1.8)/2.25);
  const apron=Math.max(0,Math.min(1,(1-clearing+(noise(x*1.1,z*1.1)-.5)*.45)*1.8));
- return Math.max(track,apron*.82);
+ const fireApron=Math.max(0,1-Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)/1.7);
+ return Math.max(track,apron*.82,fireApron*.95);
 }
 // Deliberately authored pockets. The southern opening reveals the clearing from the reset camera.
 const treePositions = [
@@ -57,6 +60,33 @@ const treePositions = [
   [-16,5],[-13,6],[-10,7],[-15,10],[-11,12],[-8,11],
   [10,10],[14,11],[17,13],[7,14],[-3,-9],[8,4]
 ];
+// Irregular woodland pockets surround the existing inner composition, with a second northern layer.
+function outerForest(seed,existing){
+ const random=seededRandom(seed+6200),trees=[];
+ const clusters=[[-27,-23,7],[-17,-25,6],[-5,-27,6],[8,-27,6],[21,-25,7],
+  [30,-17,8],[29,-5,7],[31,9,7],[25,22,7],[13,27,6],[-1,28,6],[-16,26,7],
+  [-27,17,8],[-29,4,8],[-30,-9,8],[-30,-38,6],[-15,-39,6],[1,-42,7],[18,-40,7],[34,-31,6]];
+ for(const [cx,cz,count] of clusters){
+  let placed=0;
+  for(let attempt=0;placed<count&&attempt<240;attempt++){
+   const angle=random()*Math.PI*2,r=Math.sqrt(random());
+   const x=cx+Math.cos(angle)*r*6.5,z=cz+Math.sin(angle)*r*4.8;
+   const scale=.83+random()*.34;
+   if(pathDistance(x,z)<1.36*scale+.38)continue;
+   if([...existing,...trees].some(t=>Math.hypot(t.x-x,t.z-z)<2.12))continue;
+   trees.push({x,z,scale,angle:random()*Math.PI*2});placed++;
+  }
+ }
+ // Connect the pockets into woodland rather than leaving separate islands on a lawn.
+ let connected=0;
+ for(let attempt=0;connected<72&&attempt<4000;attempt++){
+  const x=-34+random()*68,z=-38+random()*69,scale=.83+random()*.34;
+  if(Math.hypot(x/20,z/18)<1.04 || pathDistance(x,z)<1.36*scale+.38)continue;
+  if([...existing,...trees].some(t=>Math.hypot(t.x-x,t.z-z)<2.12))continue;
+  trees.push({x,z,scale,angle:random()*Math.PI*2});connected++;
+ }
+ return trees;
+}
 export function createLayout(seed = GROVE_SEED) {
   const random = seededRandom(seed);
   const trees = treePositions.map(([x,z]) => ({x, z, scale:.83 + random() * .34, angle:random() * Math.PI * 2}));
@@ -98,5 +128,14 @@ export function createLayout(seed = GROVE_SEED) {
     if(!inHutFootprint(x,z,.4) && pathDistance(x,z)>.7 && trees.every(t=>Math.hypot(t.x-x,t.z-z)>1) && rocks.every(r=>Math.hypot(r.x-x,r.z-z)>r.radius+.5))
       rocks.push({x,z,type:0,scale:.35+random()*.4,radius:.4,angle:random()*6.28});
   }
-  return {seed,trees,rocks,plants};
+  const added=outerForest(seed,trees),forestRandom=seededRandom(seed+6300);
+  trees.push(...added);
+  for(const tree of added)for(let i=0;i<5;i++){
+   const angle=forestRandom()*Math.PI*2,r=.5+Math.sqrt(forestRandom())*2.0;
+   const x=tree.x+Math.cos(angle)*r,z=tree.z+Math.sin(angle)*r,type=i%3,scale=.65+forestRandom()*.55;
+   const radius=[.30,.36,.55][type]*scale;
+   if(pathDistance(x,z)>radius+.25)plants.push({x,z,type,scale,angle:forestRandom()*6.28,color:forestRandom()});
+  }
+  return {seed,trees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)),
+   plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT}};
 }

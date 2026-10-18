@@ -4,7 +4,7 @@ import {createLayout,groundHeight,pathDistance,pathPoint,wornGround} from '../pr
 const layout=createLayout();
 assert.deepEqual(layout,createLayout(),'Scene must reproduce exactly');
 assert.notDeepEqual(layout,createLayout(42),'Seed must control variation');
-assert.equal(layout.trees.length,36);
+assert(layout.trees.length>=235&&layout.trees.length<=250,'Deep surrounding woodland');
 assert.deepEqual([...new Set(layout.plants.map(p=>p.type))].sort(),[0,1,2]);
 assert.deepEqual([...new Set(layout.rocks.map(p=>p.type))].sort(),[0,1,2]);
 for(const tree of layout.trees) {

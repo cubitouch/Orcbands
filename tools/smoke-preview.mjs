@@ -70,14 +70,20 @@ try{
  await page.getByRole('button',{name:'Wireframe'}).click();
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
- for(const view of ['overall','path','low','wide','hut']) {
+ await page.evaluate(()=>window.__orcbandsReview.setFireTime(0));
+ for(const view of ['overall','path','low','wide','hut','campfire','fire']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
  }
  const desktopMetrics=await metrics();
- check(desktopMetrics.calls<=40,'Grove draw-call budget exceeded');
- check(desktopMetrics.triangles<100000,'Grove triangle budget exceeded');
+ await page.evaluate(()=>window.__orcbandsReview.setFireTime(1.1));
+ check(JSON.stringify((await metrics()).campfire.scales)!==JSON.stringify(desktopMetrics.campfire.scales),'Campfire pose must animate');
+ await page.evaluate(()=>window.__orcbandsReview.setFireTime(null));
+ const resumeTime=(await metrics()).campfire.time;
+ await page.waitForFunction(start=>window.__orcbandsReview.metrics().campfire.time>start+.05,resumeTime);
+ check(desktopMetrics.calls<=50,'Grove draw-call budget exceeded');
+ check(desktopMetrics.triangles<180000,'Grove triangle budget exceeded');
  const signature=await page.evaluate(()=>JSON.stringify(window.__orcbandsLayout));
  // Exercise actual pointer orbit and wheel zoom, rather than only camera presets.
  await page.getByRole('button',{name:'Reset camera'}).click();
