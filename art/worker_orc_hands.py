@@ -104,7 +104,7 @@ def left_grip():
         for j in range(steps+1):
             u=j/steps;theta=math.radians(48-231*u)
             # Gentle distal taper, with a rounded closed fingertip.
-            taper=1.0 if u<.80 else max(.07,cos((u-.80)/.20*pi/2))
+            taper=1.0 if u<.88 else max(.07,sqrt(max(0,1-((u-.88)/.12)**2)))
             radial=.104
             cx=HATCHET_AXIS.x+radial*cos(theta);cy=HATCHET_AXIS.y+radial*sin(theta)
             for h in range(segments):
@@ -131,7 +131,7 @@ def left_grip():
         verts=[];faces=[]
         for row in range(7):
             u=.70+.14*row/6;theta=math.radians(48-231*u)
-            taper=1.0 if u<.80 else cos((u-.80)/.20*pi/2)
+            taper=1.0
             for col in range(9):
                 v=col/8*2-1;offset=v*r*.48
                 radius=.104+r*taper*sqrt(max(0,1-(offset/(r*taper))**2))-.002

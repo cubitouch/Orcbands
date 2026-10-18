@@ -584,7 +584,10 @@ for axe_component in objects[axe_start:]:
     if axe_component.type=='MESH':
         for vertex in axe_component.data.vertices:
             vertex.co.x += HATCHET_AXIS.x-1.398
-            vertex.co.y += HATCHET_AXIS.y+.39
+            vertex.co.y = HATCHET_AXIS.y-(vertex.co.y+.39)
+            # Head-down carry: rigid half-turn about X, shorter vertical haft.
+            # Keeps blade and top of shaft clear of the wrist/forearm.
+            vertex.co.z = 1.55-.80*vertex.co.z
         axe_component.data.update()
     axe_component['held_by']='L'
     axe_component['character_prop']='hatchet'
