@@ -47,12 +47,12 @@ try {
     await page.getByRole('button',{name:'Original placeholder'}).click();
   }
   if(process.env.ORCBANDS_TEST_SCULPT==='1') {
-    await page.getByRole('button',{name:'Sculpt #18 · Hands'}).click();
-    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Sculpt #18'),null,{timeout:60000});
+    await page.getByRole('button',{name:'Sculpt #22 · Inward grip'}).click();
+    await page.waitForFunction(()=>document.getElementById('scene-label')?.textContent.includes('Sculpt #22'),null,{timeout:60000});
     await page.waitForTimeout(750);
     if(await page.getByRole('button',{name:'Walk'}).isEnabled())
       throw new Error('Static sculpt must disable animation controls');
-    if(await page.getByRole('button',{name:'Sculpt #18 · Hands'}).getAttribute('aria-pressed')!=='true')
+    if(await page.getByRole('button',{name:'Sculpt #22 · Inward grip'}).getAttribute('aria-pressed')!=='true')
       throw new Error('Sculpt tab failed to activate');
     await page.screenshot({path:path.join(repo,'smoke-artifacts','real-sculpt-browser.png')});
     await page.getByRole('button',{name:'Original placeholder'}).click();
@@ -61,7 +61,7 @@ try {
     const stages=[
       ['sculpt-v1','Sculpt #16 · Original','Sculpt #16'],
       ['sculpt-v2','Sculpt #17 · Face','Sculpt #17'],
-      ['sculpt','Sculpt #18 · Hands','Sculpt #18']
+      ['sculpt','Sculpt #22 · Inward grip','Sculpt #22']
     ];
     const loadedBodies=new Map();
     for(const [id,buttonName,sceneLabel] of stages) {

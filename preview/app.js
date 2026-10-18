@@ -67,7 +67,7 @@ const sculptFiles={
 const sculptLabels={
   'sculpt-v1':'Sculpt #16 · Original',
   'sculpt-v2':'Sculpt #17 · Face',
-  sculpt:'Sculpt #18 · Hands'
+  sculpt:'Sculpt #22 · Inward grip'
 };
 const sculptModels=new Map();
 const sculptRequested=new Set();
