@@ -6,5 +6,5 @@
   "preview/environment-layout.js": "85562f4dd5bb9b1b6675729c5af89edaab19a897acb3e8f1e8fd20ad5ad0d1e6",
   "preview/app.js": "3172989bb3ba868066bc36df12cfc0a0eea2ed4e84d1cb970a8a9c31dafcc025",
   "tools/validate-settlement.mjs": "b4e62bbfb21cc9da0c18a7932bfb85fba8b6e149097b605eb74068e4e9db2f3c",
-  "tools/smoke-preview.mjs": "7bc34fff64f143f7de7e8c6c0f59e5caf04da1a1f1f09d10f197a37ab0cdca8a"
+  "tools/smoke-preview.mjs": "f17f241e97ce21ff90e92809b7c22aa7a679220ceb873dfd7e1f00013d3ea213"
 }
