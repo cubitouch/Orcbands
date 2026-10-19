@@ -138,6 +138,8 @@ function selectResource(key){resourceViewer.select(key);setMode('resources')}
 document.getElementById('download-resource').addEventListener('click',()=>resourceViewer.download());
 window.__orcbandsResourceReview={select:selectResource,metrics:()=>resourceViewer?.metrics()};
 const reviewViews={
+ shelter:{position:[9.2,4.8,-2],target:[5.5,1,-8]},
+ construction:{position:[1.0,6.5,14.0],target:[6,1,8.5]},
  quarry:{position:[-4.5,6.5,3.7],target:[-10,.65,-3.5]},
  stockyard:{position:[0,8,11.5],target:[-2.3,.4,5.8]},
  foodstore:{position:[-3,4.2,3.8],target:[-8,.35,1.6]},

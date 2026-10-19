@@ -73,7 +73,7 @@ try{
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(0));
- for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut','quarry','stockyard','foodstore']) {
+ for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut','quarry','stockyard','foodstore','shelter','construction']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
