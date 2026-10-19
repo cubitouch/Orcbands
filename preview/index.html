@@ -25,6 +25,7 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 .files{display:flex;gap:22px;flex-wrap:wrap;padding:5px 0 8px}
 @media(max-width:650px){.viewer{height:62vh;min-height:415px}.tag{font-size:10px}.toolbar,.controls{justify-content:center}.tip{font-size:11px}}
 </style>
+<link rel="stylesheet" href="./camp-ui.css?v=__ORCBANDS_REVISION__">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script>
 </head>
 <body><header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · STATIC ENVIRONMENT</div></header>
@@ -43,6 +44,7 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <button class="scene" data-scene="grove" aria-pressed="false">Forest grove</button>
 </div>
 <div class="controls">
+<button id="camp-ui-toggle">Camp interface</button>
 <button id="wireframe" aria-pressed="false">Wireframe</button>
 <button id="spin" aria-pressed="false">Auto rotate</button>
 <button id="reset">Reset camera</button>
@@ -78,7 +80,7 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 </div>
 <p><strong>Timber Hut 01</strong> is our first original building: bowed red panel roof, heavy timber framing, stone pads, a recessed open doorway and a tribe pennant. Inspect it with <strong>Timber hut</strong> or see it in the grove clearing.</p>
 <div class="files"><a href="./assets/timber-hut-01.obj" download>Download hut OBJ</a><a href="./assets/timber-hut-01.mtl" download>Download hut MTL</a></div>
-<p>For Unity, put the OBJ and MTL in the same folder. Unity can import the mesh natively; verify scale and normals and reconnect materials if needed. This browser Asset Lab is not a Unity build.</p>
+<p>For Unity, put the OBJ and MTL in the same folder. Unity can import the mesh natively; verify scale and normals and reconnect materials if needed. This browser Asset Lab is not a Unity build. Use <strong>Camp interface</strong> for a full-screen RTS UI preview, building selection, an interactive minimap and footprint previews. Resource totals and condition bars are illustrative.</p>
 <p>The earlier procedural orc model experiments have been retired in favor of using proper licensed characters later. No third-party characters are bundled here.</p>
 <p class="meta">Source revision: __ORCBANDS_REVISION__</p>
 </section>

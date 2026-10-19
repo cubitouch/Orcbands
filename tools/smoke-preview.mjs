@@ -15,7 +15,7 @@ const server=createServer(async(req,res)=>{
   const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
   if(!file.startsWith(root+path.sep))throw Error('Path traversal');
   const data=await readFile(file);
-  const type=file.endsWith('.html')?'text/html':file.endsWith('.js')?'text/javascript':'text/plain';
+  const type=file.endsWith('.html')?'text/html':file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/plain';
   res.writeHead(200,{'Content-Type':type});res.end(data);
  }catch{res.writeHead(404);res.end('Not found')}
 });

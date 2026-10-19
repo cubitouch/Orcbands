@@ -30,6 +30,10 @@ jobs:
           node --check preview/resources.js
           node --check preview/resource-viewer.js
           node --check tools/validate-resources.mjs
+          node --check preview/camp-ui.js
+          node --check preview/camp-ui-model.js
+          node --check tools/validate-camp-ui.mjs
+          node --check tools/smoke-camp-ui.mjs
           node --check preview/app.js
           node --check preview/torches.js
           node --check preview/camp-visibility.js
@@ -60,6 +64,7 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1 three@0.166.1
           npx playwright install --with-deps chromium
+          node tools/validate-camp-ui.mjs
           node tools/validate-settlement.mjs
           node tools/validate-stockpiles.mjs
           node tools/validate-resources.mjs
@@ -69,6 +74,7 @@ jobs:
           node tools/validate-camp-visibility.mjs
           node tools/validate-fire-atmosphere.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
+          ORCBANDS_LOCAL_THREE=1 node tools/smoke-camp-ui.mjs
       - name: Attach browser screenshots
         if: always()
         uses: actions/upload-artifact@v4

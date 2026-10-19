@@ -1,0 +1,10 @@
+{
+  "preview/camp-ui.js": "dfb239f8518741d30065d2076714b593a3ad57dabae29b739bcadbfa435c027d",
+  "preview/camp-ui-model.js": "f24a5f962bb7ae364d50d9852d54f1c43d96fe04351817287dec3d9b3efcf02c",
+  "preview/camp-ui.css": "f21646496aa6429a4032497972db14e94feb5a84c4c68bf447c8224d855f3474",
+  "preview/app.js": "10523ae4e5577ecfa4911779c05c11464b55aa42a01f1316e1e704ef8227a061",
+  "preview/index.html": "b1399519ea5049608af2731741df69856a5b471ca68662ee23d18a9ca604db50",
+  "tools/validate-camp-ui.mjs": "ec2d4ea13074f2c7603113ca3646e5ce15e4bffc74dea46dc10a21a8799df990",
+  "tools/smoke-camp-ui.mjs": "7c2d13086e0008031d6cf5d3ffb0fac496c99886dd324011f294798e56c9a9cb",
+  "tools/smoke-preview.mjs": "9e9810e4385fb1bbbedc0db622e5e04082274e2f4fe185f41524bfee6eae01f7"
+}

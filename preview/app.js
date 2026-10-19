@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {buildCampUI} from './camp-ui.js?v=__ORCBANDS_REVISION__';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 import {buildEnvironment,instanceAsset} from './environment.js?v=__ORCBANDS_REVISION__';
@@ -44,7 +45,7 @@ const grid=new THREE.GridHelper(6,12,0xd7e6ce,0x49604b);
 grid.position.y=.006;
 for(const m of (Array.isArray(grid.material)?grid.material:[grid.material])){m.transparent=true;m.opacity=.16}
 studio.add(grid);
-let resourceViewer=null;
+let resourceViewer=null,campUI=null;
 let atmosphere=null,torches=null,campVisibility=null,fogEnabled=true;
 let campfire=null,fireTimeOverride=null,treeCount=36;
 let sourceTree=null,sourceHut=null,mode='studio',spin=false,wireframe=false;
@@ -63,6 +64,7 @@ function resetCamera(){
  controls.update();
 }
 function setMode(next){
+ if(next!=='grove'&&campUI?.isActive())campUI.setActive(false,false);
  mode=next;
  scene.background=next==='grove'?new THREE.Color(fogEnabled?0x40534f:0x9da98c):null;
  scene.fog=next==='grove'?new THREE.Fog(fogEnabled?0x40534f:0x9da98c,85,135):null;
@@ -106,7 +108,7 @@ function resize(){
  if(!w||!h)return;
  renderer.setSize(w,h,false);camera.aspect=w/h;
  // Keep woodland width readable on a portrait screen without pushing the camera into fog.
- camera.fov=mode!=='studio'?THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(38)/2)*Math.max(1,(mode==='grove'?1.45:1.20)/camera.aspect))):38;
+ camera.fov=campUI?.isActive()?(camera.aspect<.85?50:38):mode!=='studio'?THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(38)/2)*Math.max(1,(mode==='grove'?1.45:1.20)/camera.aspect))):38;
  camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(host);resize();
@@ -133,6 +135,9 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  window.__orcbandsTreeLoaded=true;window.__orcbandsHutLoaded=true;
  const requested=new URLSearchParams(location.search).get('scene');
  setMode(['grove','hut','resources'].includes(requested)?requested:'studio');
+ campUI=buildCampUI({host,canvas,grove,layout,camera,setScene:()=>setMode('grove'),stopSpin:()=>{spin=false;document.getElementById('spin').setAttribute('aria-pressed','false')},focus:(x,z)=>{const next=new THREE.Vector3(THREE.MathUtils.clamp(x,-19,19),0,THREE.MathUtils.clamp(z,-19,19));camera.position.add(next.clone().sub(controls.target));controls.target.copy(next);controls.update();},onToggle:value=>{if(value&&host.clientWidth/host.clientHeight<.85){camera.position.set(15,27,20);controls.target.set(0,0,-1);controls.update();}requestAnimationFrame(resize)}});
+ window.__orcbandsCampUI={metrics:()=>campUI.metrics(),projectPoint:(x,z)=>campUI.projectPoint(x,z)};
+ if(new URLSearchParams(location.search).get('hud')==='1')campUI.setActive(true,false);
 }).catch(error=>{document.getElementById('loading').textContent='Asset failed to load';status.textContent=String(error)});
 function selectResource(key){resourceViewer.select(key);setMode('resources')}
 document.getElementById('download-resource').addEventListener('click',()=>resourceViewer.download());
@@ -181,6 +186,6 @@ function frame(){
   controls.target.z=THREE.MathUtils.clamp(controls.target.z,-19,19);controls.target.y=THREE.MathUtils.clamp(controls.target.y,0,6);
   camera.position.add(controls.target.clone().sub(previous));
  }
- controls.update();renderer.render(scene,camera);
+ controls.update();campUI?.update(clock.elapsedTime);renderer.render(scene,camera);
 }
 frame();

@@ -1,0 +1,108 @@
+{
+  "initial": {
+    "active": true,
+    "selected": "hut",
+    "buildOpen": false,
+    "placing": null,
+    "placement": null,
+    "supplies": {
+      "wood": 120,
+      "stone": 75,
+      "food": 48,
+      "population": "0 / 6"
+    },
+    "overlayVisible": true
+  },
+  "final": {
+    "active": true,
+    "selected": "construction",
+    "buildOpen": false,
+    "placing": null,
+    "placement": null,
+    "supplies": {
+      "wood": 120,
+      "stone": 75,
+      "food": 48,
+      "population": "0 / 6"
+    },
+    "overlayVisible": true
+  },
+  "scene": {
+    "atmosphere": {
+      "time": 0,
+      "puffs": 28,
+      "sparks": 18,
+      "smokeSample": [
+        0.09828194975852966,
+        1.1004670858383179,
+        0.15023531019687653
+      ],
+      "opacitySample": 0.00222388980910182
+    },
+    "torches": {
+      "count": 4,
+      "scales": [
+        1,
+        1.2077149762795072,
+        1.1356481228757296,
+        1.1241941436301954,
+        1.092058796303474,
+        0.8517163101822378,
+        0.7948385993862055,
+        0.8677049175938704,
+        0.9893291616226364,
+        0.9883503985865424,
+        1.0584195188557797,
+        1.1572850910642911
+      ],
+      "lightIntensities": [
+        4.5,
+        4.810888611092345,
+        3.76558799217542,
+        4.5937298338625405
+      ],
+      "lightColors": [
+        16765589,
+        16766101,
+        16764053,
+        16765845
+      ]
+    },
+    "visibility": {
+      "enabled": true,
+      "sources": 6
+    },
+    "campfire": {
+      "time": 0,
+      "scales": [
+        1,
+        1.1427343217776582,
+        0.9873215121621302,
+        0.8877502734105415,
+        1.0159659663141984
+      ],
+      "lightIntensity": 8.407620388102357,
+      "lightColor": 16764806,
+      "tip": [
+        -0.02378385327756405,
+        0.7599999904632568,
+        0.03355661407113075
+      ]
+    },
+    "calls": 64,
+    "triangles": 189093,
+    "rotation": 0,
+    "fov": 38,
+    "camera": [
+      19.999999999999996,
+      22,
+      26
+    ],
+    "target": [
+      0,
+      0,
+      -1
+    ]
+  },
+  "errors": []
+}
