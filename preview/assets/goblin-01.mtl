@@ -1,0 +1,137 @@
+newmtl skin
+Ka 0.05 0.05 0.05
+Kd 0.43 0.57 0.255
+Ks 0 0 0
+illum 1
+
+newmtl skin_light
+Ka 0.05 0.05 0.05
+Kd 0.54 0.65 0.32
+Ks 0 0 0
+illum 1
+
+newmtl skin_shadow
+Ka 0.05 0.05 0.05
+Kd 0.34 0.46 0.22
+Ks 0 0 0
+illum 1
+
+newmtl skin_dark
+Ka 0.05 0.05 0.05
+Kd 0.265 0.36 0.175
+Ks 0 0 0
+illum 1
+
+newmtl ear_inner
+Ka 0.05 0.05 0.05
+Kd 0.34 0.405 0.22
+Ks 0 0 0
+illum 1
+
+newmtl hair
+Ka 0.05 0.05 0.05
+Kd 0.235 0.225 0.28
+Ks 0 0 0
+illum 1
+
+newmtl hair_light
+Ka 0.05 0.05 0.05
+Kd 0.295 0.28 0.325
+Ks 0 0 0
+illum 1
+
+newmtl hair_shadow
+Ka 0.05 0.05 0.05
+Kd 0.17 0.17 0.215
+Ks 0 0 0
+illum 1
+
+newmtl socket
+Ka 0.05 0.05 0.05
+Kd 0.16 0.135 0.17
+Ks 0 0 0
+illum 1
+
+newmtl eye
+Ka 0.05 0.05 0.05
+Kd 0.45 0.16 0.19
+Ks 0 0 0
+illum 1
+
+newmtl eye_light
+Ka 0.05 0.05 0.05
+Kd 0.58 0.23 0.24
+Ks 0 0 0
+illum 1
+
+newmtl tooth
+Ka 0.05 0.05 0.05
+Kd 0.86 0.82 0.6
+Ks 0 0 0
+illum 1
+
+newmtl tooth_shadow
+Ka 0.05 0.05 0.05
+Kd 0.63 0.61 0.43
+Ks 0 0 0
+illum 1
+
+newmtl leather
+Ka 0.05 0.05 0.05
+Kd 0.3 0.17 0.18
+Ks 0 0 0
+illum 1
+
+newmtl leather_light
+Ka 0.05 0.05 0.05
+Kd 0.38 0.23 0.22
+Ks 0 0 0
+illum 1
+
+newmtl leather_dark
+Ka 0.05 0.05 0.05
+Kd 0.225 0.13 0.15
+Ks 0 0 0
+illum 1
+
+newmtl red
+Ka 0.05 0.05 0.05
+Kd 0.6 0.245 0.235
+Ks 0 0 0
+illum 1
+
+newmtl red_shadow
+Ka 0.05 0.05 0.05
+Kd 0.44 0.18 0.19
+Ks 0 0 0
+illum 1
+
+newmtl wrap
+Ka 0.05 0.05 0.05
+Kd 0.28 0.265 0.25
+Ks 0 0 0
+illum 1
+
+newmtl wrap_light
+Ka 0.05 0.05 0.05
+Kd 0.36 0.335 0.29
+Ks 0 0 0
+illum 1
+
+newmtl metal
+Ka 0.05 0.05 0.05
+Kd 0.55 0.55 0.43
+Ks 0 0 0
+illum 1
+
+newmtl metal_light
+Ka 0.05 0.05 0.05
+Kd 0.7 0.69 0.51
+Ks 0 0 0
+illum 1
+
+newmtl metal_dark
+Ka 0.05 0.05 0.05
+Kd 0.38 0.39 0.32
+Ks 0 0 0
+illum 1

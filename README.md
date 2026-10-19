@@ -11,13 +11,14 @@ The browser Asset Lab shows **real original static meshes**, not AI concept art.
 - [Reproducible geometry generator](tools/generate-tree.mjs) (Node.js 22+)
 - No purchased asset-pack models are bundled.
 
-Our earlier experimental procedural worker orc was retired because the quality wasn't suitable; characters will be evaluated separately from licensed packs. Git history retains the old experiment.
+Our earlier experimental procedural worker orc was retired because the quality wasn't suitable. Git history retains that experiment. [Goblin 01](docs/goblin-01.md) is a new static reference-inspired character study, available in the [Goblin viewer](https://cubitouch.github.io/Orcbands/?scene=goblin) with downloadable OBJ/MTL. It is not rigged or animated; licensed character packs remain an option.
 
 ## Run locally
 
 ```sh
 node tools/generate-tree.mjs
 node tools/generate-hut.mjs
+node tools/generate-goblin.mjs
 python3 -m http.server 8000 --directory preview
 ```
 

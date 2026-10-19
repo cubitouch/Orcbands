@@ -21,6 +21,9 @@ jobs:
         run: |
           node --check tools/generate-tree.mjs
           node --check tools/generate-hut.mjs
+          node --check tools/generate-goblin.mjs
+          node --check tools/validate-goblin.mjs
+          node --check tools/smoke-goblin.mjs
           node --check tools/validate-hut.mjs
           node --check preview/resource-geometry.js
           node --check preview/settlement-resources.js
@@ -60,6 +63,11 @@ jobs:
           node tools/generate-hut.mjs /tmp/orcbands-hut
           cmp preview/assets/timber-hut-01.obj /tmp/orcbands-hut/timber-hut-01.obj
           cmp preview/assets/timber-hut-01.mtl /tmp/orcbands-hut/timber-hut-01.mtl
+      - name: Verify deterministic goblin export
+        run: |
+          node tools/generate-goblin.mjs /tmp/orcbands-goblin
+          cmp preview/assets/goblin-01.obj /tmp/orcbands-goblin/goblin-01.obj
+          cmp preview/assets/goblin-01.mtl /tmp/orcbands-goblin/goblin-01.mtl
       - name: Run real WebGL browser smoke test
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1 three@0.166.1
@@ -70,11 +78,13 @@ jobs:
           node tools/validate-resources.mjs
           node tools/validate-environment.mjs
           node tools/validate-hut.mjs
+          node tools/validate-goblin.mjs
           node tools/validate-campfire.mjs
           node tools/validate-camp-visibility.mjs
           node tools/validate-fire-atmosphere.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-camp-ui.mjs
+          ORCBANDS_LOCAL_THREE=1 node tools/smoke-goblin.mjs
       - name: Attach browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
