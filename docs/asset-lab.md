@@ -31,4 +31,8 @@ The hut clearing now sits within 244 pines, with denser connecting woodland and 
 
 GitHub Actions checks that the OBJ and MTL regenerate bit-for-bit, checks JavaScript syntax and runs a headless Chromium/WebGL visual smoke test on desktop and portrait viewports. The test exercises pointer orbit, wheel zoom, pan, auto rotation, reset and actual CDP touch gestures. Layout validation checks path clearance, clearing space, finite buffers, upward-facing path triangles and bit-for-bit geometry reproduction. CI captures the unchanged Single Tree, hut studio and detail angles, grove views and mobile framing in the `orcbands-forest-webgl-smoke` artifact. Pushes to main publish the static preview via GitHub Pages.
 
-The earlier bespoke orc modelling assets and workflows have been retired. Their history remains accessible through old commits/PRs.
+## Goblin 01
+
+**Goblin** and `?scene=goblin` open a new static character study inspired by the rightmost goblin in the supplied visual reference. Five inspection views, wireframe, orbit, auto rotation and portrait framing are available, along with OBJ and MTL downloads. See [Goblin 01](goblin-01.md) for geometry, real WebGL captures, validation and animation-readiness limitations. This is an unrigged first study, not a replacement for a finished animated character pack.
+
+The earlier bespoke worker-orc modelling assets and workflows remain retired. Their history remains accessible through old commits/PRs.

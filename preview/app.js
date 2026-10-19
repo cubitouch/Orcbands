@@ -33,14 +33,15 @@ sun.position.set(-5,11,7);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13});
 sun.shadow.bias=-.0004;scene.add(sun);
-const studio=new THREE.Group(),grove=new THREE.Group(),hutStudio=new THREE.Group(),resourceStudio=new THREE.Group();
-scene.add(studio,grove,hutStudio,resourceStudio);
+const studio=new THREE.Group(),grove=new THREE.Group(),hutStudio=new THREE.Group(),resourceStudio=new THREE.Group(),goblinStudio=new THREE.Group();
+scene.add(studio,grove,hutStudio,resourceStudio,goblinStudio);
 function ground(parent,r,color){
  const mesh=new THREE.Mesh(new THREE.CircleGeometry(r,64),new THREE.MeshStandardMaterial({color,roughness:1}));
  mesh.rotation.x=-Math.PI/2;mesh.position.y=-.035;mesh.receiveShadow=true;
  parent.add(mesh);
 }
 ground(resourceStudio,3.5,0x677e61);ground(studio,3,0x677e61);ground(hutStudio,4.6,0x677e61);
+ground(goblinStudio,1.22,0x68716c);
 const grid=new THREE.GridHelper(6,12,0xd7e6ce,0x49604b);
 grid.position.y=.006;
 for(const m of (Array.isArray(grid.material)?grid.material:[grid.material])){m.transparent=true;m.opacity=.16}
@@ -51,15 +52,16 @@ let campfire=null,fireTimeOverride=null,treeCount=36;
 let sourceTree=null,sourceHut=null,mode='studio',spin=false,wireframe=false;
 const assetRevision=document.querySelector('meta[name="orcbands-build"]')?.content||'dev';
 function assetUrl(name){return './assets/'+name+'?v='+encodeURIComponent(assetRevision)}
-function activeRoot(){return {studio,grove,hut:hutStudio,resources:resourceStudio}[mode]}
+function activeRoot(){return {studio,grove,hut:hutStudio,resources:resourceStudio,goblin:goblinStudio}[mode]}
 function resetCamera(){
  controls.enableDamping=false;controls.update();controls.enableDamping=true;
  spin=false;document.getElementById('spin').setAttribute('aria-pressed','false');
- grove.rotation.y=0;studio.rotation.y=0;hutStudio.rotation.y=0;resourceStudio.rotation.y=0;renderer.shadowMap.needsUpdate=true;
- controls.minDistance=mode==='grove'?6:mode==='resources'?.7:2.5;controls.maxDistance=mode==='grove'?115:26;
+ grove.rotation.y=0;studio.rotation.y=0;hutStudio.rotation.y=0;resourceStudio.rotation.y=0;goblinStudio.rotation.y=0;renderer.shadowMap.needsUpdate=true;
+ controls.minDistance=mode==='grove'?6:mode==='goblin'?.45:mode==='resources'?.7:2.5;controls.maxDistance=mode==='grove'?115:26;
  if(mode==='grove'){camera.position.set(...(fogEnabled?[20,22,26]:[27,27,32]));controls.target.set(0,0,-1)}
  else if(mode==='resources'){const view=resourceViewer.framing();camera.position.set(...view.position);controls.target.set(...view.target)}
  else if(mode==='hut'){camera.position.set(7.3,5.0,9);controls.target.set(.3,1.8,0)}
+ else if(mode==='goblin'){camera.position.set(2.6,1.95,4.7);controls.target.set(0,1.12,0)}
  else{camera.position.set(5.8,4.9,7.2);controls.target.set(0,2.2,0)}
  controls.update();
 }
@@ -69,18 +71,21 @@ function setMode(next){
  scene.background=next==='grove'?new THREE.Color(fogEnabled?0x40534f:0x9da98c):null;
  scene.fog=next==='grove'?new THREE.Fog(fogEnabled?0x40534f:0x9da98c,85,135):null;
  sun.position.set(...(next==='grove'?[-22,36,18]:[-5,11,7]));
- const extent=next==='grove'?51:13;
+ const extent=next==='grove'?51:next==='goblin'?3:13;
  Object.assign(sun.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent,far:100});
  sun.shadow.camera.updateProjectionMatrix();renderer.shadowMap.needsUpdate=true;
  campVisibility?.setEnabled(next==='grove'&&fogEnabled);
- studio.visible=next==='studio';grove.visible=next==='grove';hutStudio.visible=next==='hut';resourceStudio.visible=next==='resources';
+ studio.visible=next==='studio';grove.visible=next==='grove';hutStudio.visible=next==='hut';resourceStudio.visible=next==='resources';goblinStudio.visible=next==='goblin';
  document.getElementById('resource-controls').hidden=next!=='resources';
  document.querySelectorAll('.scene').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===mode)));
  document.getElementById('grove-views').hidden=next!=='grove';
  document.getElementById('hut-views').hidden=next!=='hut';
+ document.getElementById('goblin-views').hidden=next!=='goblin';
  document.getElementById('status').textContent=next==='resources'?resourceViewer.metrics().label+' · original reusable resource geometry':next==='grove'?`Forest camp · ${treeCount} pines · Timber Hut 01 · campfire · 4 torches`:next==='hut'?'Timber Hut 01 · original static OBJ/MTL · timber frame, red roof and open entrance':'Loaded actual OBJ/MTL · 144 faces · 4 foliage tiers · 4.58 units tall';
+ if(next==='goblin')document.getElementById('status').textContent='Goblin 01 · static character study · 2,296 triangles · OBJ/MTL · not rigged';
  resize();
  document.getElementById('scene-label').textContent=mode==='resources'?resourceViewer.metrics().label:mode==='studio'?'Single tree · inspect geometry':mode==='hut'?'Timber Hut · 01':`Forest camp · ${treeCount} pines + hut`;
+ if(next==='goblin')document.getElementById('scene-label').textContent='Goblin · 01 / static study';
  const url=new URL(location.href);
  if(next!=='studio')url.searchParams.set('scene',next);else url.searchParams.delete('scene');
  if(next==='resources')url.searchParams.set('asset',resourceViewer.metrics().key);else url.searchParams.delete('asset');
@@ -101,14 +106,14 @@ document.getElementById('spin').addEventListener('click',e=>{
 document.getElementById('wireframe').addEventListener('click',e=>{
  renderer.shadowMap.needsUpdate=true;
  wireframe=!wireframe;e.currentTarget.setAttribute('aria-pressed',String(wireframe));
- for(const root of [sourceTree,sourceHut,grove,hutStudio,resourceStudio])root?.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
+ for(const root of [sourceTree,sourceHut,grove,hutStudio,resourceStudio,goblinStudio])root?.traverse(o=>{if(o.isMesh)for(const m of(Array.isArray(o.material)?o.material:[o.material]))m.wireframe=wireframe});
 });
 function resize(){
  const w=host.clientWidth,h=host.clientHeight;
  if(!w||!h)return;
  renderer.setSize(w,h,false);camera.aspect=w/h;
  // Keep woodland width readable on a portrait screen without pushing the camera into fog.
- camera.fov=campUI?.isActive()?(camera.aspect<.85?50:38):mode!=='studio'?THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(38)/2)*Math.max(1,(mode==='grove'?1.45:1.20)/camera.aspect))):38;
+ camera.fov=mode==='goblin'?38:campUI?.isActive()?(camera.aspect<.85?50:38):mode!=='studio'?THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(38)/2)*Math.max(1,(mode==='grove'?1.45:1.20)/camera.aspect))):38;
  camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(host);resize();
@@ -118,7 +123,7 @@ function loadAsset(stem){
   materials.preload();new OBJLoader().setMaterials(materials).load(assetUrl(stem+'.obj'),resolve,undefined,reject);
  },undefined,reject));
 }
-Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([tree,hut])=>{
+Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01'),loadAsset('goblin-01')]).then(([tree,hut,goblin])=>{
  sourceTree=tree;sourceHut=hut;
  for(const object of [tree,hut])object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.geometry.computeVertexNormals()}});
  studio.add(tree);
@@ -127,6 +132,8 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  if(Object.hasOwn(RESOURCE_LABELS,requestedAsset))resourceViewer.select(requestedAsset);
  const layout=buildEnvironment(grove,tree);buildGroveResources(grove,layout.resources);
  instanceAsset(hutStudio,hut,[{x:0,z:0,scale:1,angle:0}]);
+ instanceAsset(goblinStudio,goblin,[{x:0,z:0,scale:1,angle:0}]);
+ window.__orcbandsGoblinLoaded=true;
  instanceAsset(grove,hut,[HUT_PLACEMENT]);
  campfire=buildCampfire(grove,layout.campfire);treeCount=layout.trees.length;
  torches=buildTorches(grove);atmosphere=buildFireAtmosphere(grove,[layout.campfire,...TORCH_PLACEMENTS]);campVisibility=buildCampVisibility(grove);
@@ -134,7 +141,7 @@ Promise.all([loadAsset('low-poly-pine-01'),loadAsset('timber-hut-01')]).then(([t
  document.getElementById('loading').hidden=true;
  window.__orcbandsTreeLoaded=true;window.__orcbandsHutLoaded=true;
  const requested=new URLSearchParams(location.search).get('scene');
- setMode(['grove','hut','resources'].includes(requested)?requested:'studio');
+ setMode(['grove','hut','resources','goblin'].includes(requested)?requested:'studio');
  campUI=buildCampUI({host,canvas,grove,layout,camera,setScene:()=>setMode('grove'),stopSpin:()=>{spin=false;document.getElementById('spin').setAttribute('aria-pressed','false')},focus:(x,z)=>{const next=new THREE.Vector3(THREE.MathUtils.clamp(x,-19,19),0,THREE.MathUtils.clamp(z,-19,19));camera.position.add(next.clone().sub(controls.target));controls.target.copy(next);controls.update();},onToggle:value=>{if(value&&host.clientWidth/host.clientHeight<.85){camera.position.set(15,27,20);controls.target.set(0,0,-1);controls.update();}requestAnimationFrame(resize)}});
  window.__orcbandsCampUI={metrics:()=>campUI.metrics(),projectPoint:(x,z)=>campUI.projectPoint(x,z)};
  if(new URLSearchParams(location.search).get('hud')==='1')campUI.setActive(true,false);
@@ -168,6 +175,17 @@ window.__orcbandsHutReview={
  if(!views[name])throw Error('Unknown hut view');camera.position.set(...views[name][0]);controls.target.set(...views[name][1]);controls.update();}
 };
 document.querySelectorAll('[data-hut-view]').forEach(button=>button.addEventListener('click',()=>window.__orcbandsHutReview.view(button.dataset.hutView)));
+window.__orcbandsGoblinReview={
+ view(name){
+  setMode('goblin');
+  const views={front:[[0,1.52,5.4],[0,1.12,0]],rear:[[-2.5,1.85,-4.6],[0,1.12,0]],
+   profile:[[4.8,1.62,0],[0,1.12,0]],face:[[.65,1.85,2.05],[0,1.70,.06]],rts:[[2.8,4,4.6],[0,1.05,0]]};
+  if(!views[name])throw Error('Unknown goblin view');
+  camera.position.set(...views[name][0]);controls.target.set(...views[name][1]);controls.update();
+  if(name==='face'&&camera.aspect<1){camera.position.sub(controls.target).multiplyScalar(1/camera.aspect).add(controls.target);controls.update()}
+ }
+};
+document.querySelectorAll('[data-goblin-view]').forEach(button=>button.addEventListener('click',()=>window.__orcbandsGoblinReview.view(button.dataset.goblinView)));
 window.__orcbandsReview={
  setFireTime(value){fireTimeOverride=Number.isFinite(value)?value:null;campfire?.update(fireTimeOverride??clock.elapsedTime);torches?.update(fireTimeOverride??clock.elapsedTime);atmosphere?.update(fireTimeOverride??clock.elapsedTime)},
  view(name){if(mode!=='grove')setMode('grove');reviewView(name)},
