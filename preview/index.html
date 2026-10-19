@@ -28,10 +28,10 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <link rel="stylesheet" href="./camp-ui.css?v=__ORCBANDS_REVISION__">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"}}</script>
 </head>
-<body><header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · MODELS &amp; ENVIRONMENT</div></header>
+<body><header><div class="logo">ORC<span>BANDS</span></div><div class="tag">ASSET LAB · STATIC ENVIRONMENT</div></header>
 <main>
 <div class="viewer" id="viewer">
-<canvas id="viewport" aria-label="Interactive 3D assets: Pine 01, Timber Hut 01, Goblin 01 and forest grove"></canvas>
+<canvas id="viewport" aria-label="Interactive 3D Pine 01, Timber Hut 01 and forest grove"></canvas>
 <div class="panel"><strong>Orcbands · Asset Lab</strong>Original static geometry<br><span id="scene-label">Loading model…</span></div>
 <div id="loading" role="status">Loading original 3D meshes…</div>
 <div class="tip">Drag to rotate · scroll or pinch to zoom · two fingers to pan</div>
@@ -41,7 +41,6 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <button class="scene" data-scene="studio" aria-pressed="true">Single tree</button>
 <button class="scene" data-scene="hut" aria-pressed="false">Timber hut</button>
 <button class="scene" data-scene="resources" aria-pressed="false">Resources</button>
-<button class="scene" data-scene="goblin" aria-pressed="false">Goblin</button>
 <button class="scene" data-scene="grove" aria-pressed="false">Forest grove</button>
 </div>
 <div class="controls">
@@ -60,15 +59,6 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <button data-hut-view="front">Front</button><button data-hut-view="rear">Rear</button>
 <button data-hut-view="roof">Roof</button><button data-hut-view="detail">Entrance detail</button>
 </div></div>
-<div id="goblin-views" hidden>
-<div class="controls" role="group" aria-label="Goblin camera views">
-<button data-goblin-view="front">Front</button><button data-goblin-view="rear">Rear</button>
-<button data-goblin-view="profile">Profile</button><button data-goblin-view="face">Face detail</button>
-<button data-goblin-view="rts">RTS angle</button>
-</div>
-<p class="meta">Goblin 01 · static study · 2,296 triangles · no skeleton or animations yet</p>
-<div class="files"><a href="./assets/goblin-01.obj" download>Download goblin OBJ</a><a href="./assets/goblin-01.mtl" download>Download goblin MTL</a></div>
-</div>
 <div id="grove-views" hidden>
 <div class="controls" role="group" aria-label="Grove camera views">
 <button id="fog" aria-pressed="true">Fog of war</button>
@@ -91,7 +81,7 @@ h1{font-size:23px;color:#f2f7ec;margin-bottom:3px}a{color:#b2dfa5}
 <p><strong>Timber Hut 01</strong> is our first original building: bowed red panel roof, heavy timber framing, stone pads, a recessed open doorway and a tribe pennant. Inspect it with <strong>Timber hut</strong> or see it in the grove clearing.</p>
 <div class="files"><a href="./assets/timber-hut-01.obj" download>Download hut OBJ</a><a href="./assets/timber-hut-01.mtl" download>Download hut MTL</a></div>
 <p>For Unity, put the OBJ and MTL in the same folder. Unity can import the mesh natively; verify scale and normals and reconnect materials if needed. This browser Asset Lab is not a Unity build. Use <strong>Camp interface</strong> for a full-screen RTS UI preview, building selection, an interactive minimap and footprint previews. Resource totals and condition bars are illustrative.</p>
-<p><strong>Goblin 01</strong> is a new static character study inspired by the supplied low-poly goblin reference: an oversized angular head, pointed ears, red eyes, ivory tusks, dark crest and beard, leather skirt and wrapped shins. Inspect it from the front, rear, profile, face detail and RTS angle. This first version has no rig, skin weights or animations. Its mesh was authored here; no third-party model files are bundled. The earlier worker orc experiments remain retired.</p>
+<p>The earlier procedural orc model experiments have been retired in favor of using proper licensed characters later. No third-party characters are bundled here.</p>
 <p class="meta">Source revision: __ORCBANDS_REVISION__</p>
 </section>
 </main><script type="module" src="./app.js?v=__ORCBANDS_REVISION__"></script>
