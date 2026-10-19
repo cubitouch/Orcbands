@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {paint,triangles,join,beam,leaf,uprightTrunk,logGeometry} from './resource-geometry.js?v=__ORCBANDS_REVISION__';
+import {settlementResourceGeometry} from './settlement-resources.js?v=__ORCBANDS_REVISION__';
 import {storageResourceGeometry} from './storage-resources.js?v=__ORCBANDS_REVISION__';
 import {groundHeight,seededRandom} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 
@@ -60,10 +61,10 @@ function woodGeometry(state){
  }
  return join(parts);
 }
-export const RESOURCE_STATES={bush:['full','picked','empty'],wood:['standing','stump','trunk','logs','chips'],stone:['full','depleted','rubble'],woodpile:['empty','partial','full'],stonepile:['empty','partial','full'],food:['empty','partial','full']};
+export const RESOURCE_STATES={bush:['full','picked','empty'],wood:['standing','stump','trunk','logs','chips'],stone:['full','depleted','rubble'],woodpile:['empty','partial','full'],stonepile:['empty','partial','full'],food:['empty','partial','full'],shelter:['empty','stocked'],construction:['foundation','frame','roof']};
 export function resourceGeometry(kind,state){
  if(!RESOURCE_STATES[kind]?.includes(state)||state==='standing')throw Error('Unknown procedural resource: '+kind+'/'+state);
- const key=kind+'/'+state;if(!cache.has(key))cache.set(key,kind==='bush'?bushGeometry(state):kind==='wood'?woodGeometry(state):storageResourceGeometry(kind,state));return cache.get(key);
+ const key=kind+'/'+state;if(!cache.has(key))cache.set(key,kind==='bush'?bushGeometry(state):kind==='wood'?woodGeometry(state):['shelter','construction'].includes(kind)?settlementResourceGeometry(kind,state):storageResourceGeometry(kind,state));return cache.get(key);
 }
 export function createResource(kind,state){
  const root=new THREE.Group();root.name=kind+' '+state;

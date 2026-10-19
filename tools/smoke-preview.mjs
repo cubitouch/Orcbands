@@ -73,7 +73,7 @@ try{
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(0));
- for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut','quarry','stockyard','foodstore']) {
+ for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut','quarry','stockyard','foodstore','shelter','construction']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
@@ -147,10 +147,13 @@ try{
  await page.getByRole('button',{name:'Reset camera'}).click();
  await page.waitForTimeout(250);
  const reset=await metrics();
+ // Family/state controls can scroll the longer inspector; normalize the canvas before real pointer input.
+ await page.evaluate(()=>window.scrollTo(0,0));
+ await page.locator('canvas').scrollIntoViewIfNeeded();
  const box=await page.locator('canvas').boundingBox();
  await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);
  await page.mouse.down();await page.mouse.move(box.x+box.width*.6,box.y+box.height*.54,{steps:8});await page.mouse.up();
- await page.waitForTimeout(250);
+ await page.waitForFunction(start=>Math.hypot(...window.__orcbandsReview.metrics().camera.map((value,i)=>value-start[i]))>.05,reset.camera,{timeout:10000});
  check(moved(reset.camera,(await metrics()).camera),'Desktop orbit did not move camera');
  const beforeZoom=await metrics();await page.mouse.wheel(0,-240);await page.waitForTimeout(250);
  check(moved(beforeZoom.camera,(await metrics()).camera),'Wheel zoom did not work');

@@ -3,6 +3,8 @@ import {noise} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 export const TORCH_PLACEMENTS=[{x:-7,z:0},{x:5,z:5},{x:4,z:-11},{x:-1,z:9}];
 export function nearTorch(x,z,margin=0){return TORCH_PLACEMENTS.some(p=>Math.hypot(x-p.x,z-p.z)<.38+margin)}
 export const RESOURCE_PLACEMENTS=[
+ {kind:'shelter',state:'stocked',x:5.5,z:-8,angle:.05,radius:2.65},
+ {kind:'construction',state:'roof',x:6,z:8.5,angle:-.10,radius:3.05},
  {kind:'bush',state:'full',x:7.2,z:0,scale:1,angle:.4,radius:1.0},
  {kind:'bush',state:'picked',x:6.2,z:-2.2,scale:.85,angle:1.7,radius:.85},
  {kind:'bush',state:'full',x:6.6,z:2,scale:.82,angle:2.8,radius:.82},
@@ -72,7 +74,9 @@ export function wornGround(x,z){
  const workApron=Math.max(0,1-Math.hypot((x+4.2)/2.5,(z-7.5)/2.0));
  const stockApron=Math.max(0,1-Math.hypot((x+1.2)/1.8,(z-5.1)/1.3));
  const miningApron=Math.max(0,1-Math.hypot((x+10)/2.0,(z+3.5)/1.5));
- return Math.max(track,apron*.82,fireApron*.95,workApron*.85,stockApron*.85,miningApron*.8);
+ const shelterApron=Math.max(0,1-Math.hypot((x-5.5)/2.9,(z+7.6)/2.5));
+ const buildApron=Math.max(0,1-Math.hypot((x-6)/3.4,(z-8.5)/2.6));
+ return Math.max(track,apron*.82,fireApron*.95,workApron*.85,stockApron*.85,miningApron*.8,shelterApron*.88,buildApron*.82);
 }
 // Deliberately authored pockets. The southern opening reveals the clearing from the reset camera.
 const treePositions = [

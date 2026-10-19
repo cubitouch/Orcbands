@@ -23,6 +23,8 @@ jobs:
           node --check tools/generate-hut.mjs
           node --check tools/validate-hut.mjs
           node --check preview/resource-geometry.js
+          node --check preview/settlement-resources.js
+          node --check tools/validate-settlement.mjs
           node --check preview/storage-resources.js
           node --check tools/validate-stockpiles.mjs
           node --check preview/resources.js
@@ -58,6 +60,7 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1 three@0.166.1
           npx playwright install --with-deps chromium
+          node tools/validate-settlement.mjs
           node tools/validate-stockpiles.mjs
           node tools/validate-resources.mjs
           node tools/validate-environment.mjs
