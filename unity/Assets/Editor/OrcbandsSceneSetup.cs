@@ -40,30 +40,48 @@ namespace Orcbands.Editor
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shades.Clear();
-            RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(.30f, .35f, .29f);
+            // The original Asset Lab uses a strong sky/ground hemisphere,
+            // not the flat dim ambience from the first Unity import.
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(.76f, .85f, .76f);
+            RenderSettings.ambientEquatorColor = new Color(.51f, .57f, .48f);
+            RenderSettings.ambientGroundColor = new Color(.30f, .28f, .25f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = 46f;
-            RenderSettings.fogEndDistance = 108f;
+            RenderSettings.fogStartDistance = 85f;
+            RenderSettings.fogEndDistance = 135f;
             RenderSettings.fogColor = new Color(.24f, .31f, .28f);
             QualitySettings.shadows = ShadowQuality.All;
-            QualitySettings.shadowDistance = 45f;
+            QualitySettings.shadowDistance = 55f;
 
             Shader vertexShader = Shader.Find("Orcbands/VertexColorLit");
-            if (vertexShader == null) throw new InvalidOperationException("Missing VertexColorLit shader");
+            Shader worldShader = Shader.Find("Orcbands/WorldColorLit");
+            if (vertexShader == null || worldShader == null)
+                throw new InvalidOperationException("Missing camp visibility shaders");
             Material art = new Material(vertexShader);
-            art.SetColor("_Tint", new Color(.78f, .80f, .78f));
+            // Preserve the original vertex colors; the former .78 tint plus
+            // hard tree darkening made the whole forest muddy.
+            art.SetColor("_Tint", Color.white);
             art = SavedMaterial("ForestArt", art);
+            Material fireArt = new Material(vertexShader);
+            fireArt.SetColor("_Tint", Color.white);
+            fireArt.SetFloat("_Unlit", 1f);
+            fireArt = SavedMaterial("ApprovedFireGlow", fireArt);
             var ground = ColoredMesh("Ground", "terrain", art, true);
+            ColoredMesh("Tree roots and woodland ground patches", "forest-patches", art, false);
             ColoredMesh("Approved resources and storage", "resource-art", art, false);
             ColoredMesh("Approved rock geometry", "stone-props", art, false);
             ColoredMesh("Grass and woodland cover", "grass-props", art, false);
+            ColoredMesh("Approved hearth and cut firewood", "hearth-art", art, false);
+            ColoredMesh("Approved hearth flames and embers", "hearth-flames", fireArt, false);
+            ColoredMesh("Approved torch stakes and baskets", "torches-art", art, false);
+            ColoredMesh("Approved torch flames", "torches-flames", fireArt, false);
 
             var building = (GameObject)PrefabUtility.InstantiatePrefab(hut);
             building.name = "Timber Hut 01";
             building.transform.position = Surface(ground, layout.hut.x, layout.hut.z);
             building.transform.rotation = Quaternion.Euler(0f, layout.hut.angle * Mathf.Rad2Deg, 0f);
+            ApplyWorldMaterials(building, worldShader);
 
             var forest = new GameObject("Approved 244-pine forest");
             for (int i = 0; i < layout.trees.Length; i++)
@@ -75,40 +93,25 @@ namespace Orcbands.Editor
                 tree.transform.rotation = Quaternion.Euler(0f, pos.angle * Mathf.Rad2Deg, 0f);
                 tree.transform.localScale = Vector3.one * pos.scale;
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
-                int ring = distance < 18f ? 0 : distance < 29f ? 1 : 2;
+                ApplyWorldMaterials(tree, worldShader);
                 foreach (var renderer in tree.GetComponentsInChildren<MeshRenderer>())
                 {
                     renderer.shadowCastingMode = distance < 25f ? ShadowCastingMode.On : ShadowCastingMode.Off;
                     renderer.receiveShadows = distance < 25f;
-                    var materials = renderer.sharedMaterials;
-                    for (int m = 0; m < materials.Length; m++)
-                    {
-                        Material baseMat = materials[m];
-                        if (baseMat == null || !baseMat.HasProperty("_Color")) continue;
-                        string key = ring + "-" + baseMat.name.Replace('/', '_');
-                        if (!Shades.TryGetValue(key, out Material tinted))
-                        {
-                            tinted = new Material(baseMat);
-                            tinted.color *= ring == 0 ? .83f : ring == 1 ? .61f : .37f;
-                            tinted = SavedMaterial("PineShade-" + key, tinted);
-                            Shades.Add(key, tinted);
-                        }
-                        materials[m] = tinted;
-                    }
-                    renderer.sharedMaterials = materials;
                 }
             }
 
-            var hearth = new GameObject("Fire and stone hearth");
-            hearth.transform.position = Surface(ground, layout.campfire.x, layout.campfire.z);
-            Campfire(hearth.transform);
-            var torches = new GameObject("Camp torches");
-            foreach (P loc in layout.torches)
+            // The real art above is exported from buildCampfire/buildTorches in
+            // Three.js; only the lightweight animated point lights are Unity-native.
+            AddFlicker("Hearth firelight",
+                Surface(ground, layout.campfire.x, layout.campfire.z) + Vector3.up * .76f,
+                5f, 3.6f, .8f);
+            for (int i = 0; i < layout.torches.Length; i++)
             {
-                var torch = new GameObject("Torch");
-                torch.transform.parent = torches.transform;
-                torch.transform.position = Surface(ground, loc.x, loc.z);
-                Torch(torch.transform);
+                P loc = layout.torches[i];
+                AddFlicker("Torch firelight " + (i + 1),
+                    Surface(ground, loc.x, loc.z) + Vector3.up * 2f,
+                    5f, 2.8f, i * 2.3f);
             }
 
             GameObject worker = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -130,6 +133,7 @@ namespace Orcbands.Editor
             camera.fieldOfView = 38f;
             camera.nearClipPlane = .1f;
             camera.farClipPlane = 240f;
+            camera.allowHDR = true;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = RenderSettings.fogColor;
             cameraObject.transform.position = new Vector3(-20f, 22f, 26f);
@@ -139,13 +143,20 @@ namespace Orcbands.Editor
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.color = new Color(1f, .92f, .83f);
-            sun.intensity = 1.28f;
+            sun.intensity = 1.7f;
             sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = .80f;
+            sun.shadowStrength = .70f;
             sunObject.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
             RenderSettings.sun = sun;
 
             var controllerObject = new GameObject("Orcbands Controller");
+            var reveal = controllerObject.AddComponent<CampReveal>();
+            reveal.Sources = new Vector4[6];
+            reveal.Sources[0] = new Vector4(layout.hut.x, layout.hut.z, 10.5f, 0f);
+            reveal.Sources[1] = new Vector4(layout.campfire.x, layout.campfire.z, 5f, 0f);
+            for (int i = 0; i < layout.torches.Length; i++)
+                reveal.Sources[i + 2] = new Vector4(layout.torches[i].x,
+                    layout.torches[i].z, 6.2f, 0f);
             var controller = controllerObject.AddComponent<OrcbandsController>();
             controller.Worker = worker.transform;
             controller.SelectionRing = ringObject.transform;
@@ -235,47 +246,47 @@ namespace Orcbands.Editor
             return part;
         }
 
-        private static void Flame(Transform parent, float y, float height, float radius)
+        private static void ApplyWorldMaterials(GameObject obj, Shader shader)
         {
-            var lamp = new GameObject("Warm fluctuating fire light");
-            lamp.transform.SetParent(parent, false);
-            lamp.transform.localPosition = new Vector3(0f, y + .2f, 0f);
-            var light = lamp.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.color = new Color(1f, .51f, .18f);
-            light.range = radius;
-            light.shadows = LightShadows.None;
-            var flame = Part(parent, PrimitiveType.Capsule,
-                new Vector3(0f, y, 0f), new Vector3(.16f, height * .48f, .16f),
-                new Color(1f, .53f, .13f), true);
-            flame.name = "Animated flame";
-            flame.AddComponent<CampFlame>().Warmth = light;
-        }
-
-        private static void Torch(Transform root)
-        {
-            Part(root, PrimitiveType.Cylinder, new Vector3(0f, .82f, 0f),
-                new Vector3(.085f, .82f, .085f), new Color(.34f, .24f, .14f));
-            Part(root, PrimitiveType.Cylinder, new Vector3(0f, 1.63f, 0f),
-                new Vector3(.20f, .13f, .20f), new Color(.27f, .26f, .22f));
-            Flame(root, 1.90f, .46f, 5f);
-        }
-
-        private static void Campfire(Transform root)
-        {
-            for (int i = 0; i < 11; i++)
+            foreach (var renderer in obj.GetComponentsInChildren<MeshRenderer>())
             {
-                float a = i * 2f * Mathf.PI / 11f;
-                Part(root, PrimitiveType.Cube,
-                    new Vector3(Mathf.Cos(a) * .77f, .1f, Mathf.Sin(a) * .77f),
-                    new Vector3(.36f, .2f, .33f), new Color(.47f, .47f, .41f))
-                    .transform.localRotation = Quaternion.Euler(0f, a * Mathf.Rad2Deg, 0f);
+                var materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    Material source = materials[i];
+                    if (source == null || !source.HasProperty("_Color")) continue;
+                    // Key by original material name and actual color, not by
+                    // distance band; all trees retain their authored palette.
+                    string key = source.name.Replace('/', '_') + "-" +
+                        ColorUtility.ToHtmlStringRGB(source.color);
+                    if (!Shades.TryGetValue(key, out Material replacement))
+                    {
+                        replacement = new Material(shader);
+                        replacement.color = source.color;
+                        replacement = SavedMaterial("CampColor-" + key, replacement);
+                        Shades.Add(key, replacement);
+                    }
+                    materials[i] = replacement;
+                }
+                renderer.sharedMaterials = materials;
             }
-            for (int i = 0; i < 3; i++)
-                Part(root, PrimitiveType.Cylinder, new Vector3(0f, .13f, 0f),
-                    new Vector3(.12f, .55f, .12f), new Color(.28f, .19f, .11f))
-                    .transform.localRotation = Quaternion.Euler(0f, i * 60f, 90f);
-            Flame(root, .48f, .88f, 6f);
+        }
+
+        private static void AddFlicker(string name, Vector3 position,
+            float radius, float intensity, float phase)
+        {
+            var flame = new GameObject(name);
+            flame.transform.position = position;
+            var light = flame.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(1f, .63f, .34f);
+            light.range = radius;
+            light.intensity = intensity;
+            light.shadows = LightShadows.None;
+            var motion = flame.AddComponent<CampFlame>();
+            motion.Warmth = light;
+            motion.BaseIntensity = intensity;
+            motion.Phase = phase;
         }
 
         /// <summary>GameCI custom build method, invoked separately for each target.</summary>
