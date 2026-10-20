@@ -145,13 +145,19 @@ export function instanceAsset(parent,source,placements,baseOffset=0) {
     parts.forEach(p=>p.dispose());
   }
 }
-export function buildEnvironment(parent,sourceTree) {
-  const layout=createLayout();
-  buildTerrain(parent);instanceAsset(parent,sourceTree,layout.trees,-.035);
+export function createForestFloorPatches(layout) {
+  // Shared source of truth for browser and Unity: the same tree-root soil
+  // and rock-base patches must be included in both representations.
   const patches=[];
   layout.trees.forEach((p,i)=>patches.push(patch(p.x,p.z,1.3*p.scale,1.1*p.scale,0x5e6b46,i+12)));
   layout.rocks.filter(p=>p.type>0).forEach((p,i)=>patches.push(patch(p.x,p.z,p.radius*1.2,p.radius*.9,0x737351,i+120)));
-  const merged=mergeGeometries(patches);surface(parent,merged);patches.forEach(g=>g.dispose());
+  const merged=mergeGeometries(patches);patches.forEach(g=>g.dispose());
+  return merged;
+}
+export function buildEnvironment(parent,sourceTree) {
+  const layout=createLayout();
+  buildTerrain(parent);instanceAsset(parent,sourceTree,layout.trees,-.035);
+  surface(parent,createForestFloorPatches(layout));
   for(let type=0;type<3;type++) {
     instances(parent,createGrassGeometry(type),leaves,layout.plants.filter(p=>p.type===type));
     instances(parent,createRockGeometry(type),earth,layout.rocks.filter(p=>p.type===type),-.035);
