@@ -8,6 +8,7 @@ namespace Orcbands
     {
         public Light Warmth;
         public float Phase;
+        public float BaseIntensity = 2.8f;
         private Vector3 originalScale;
 
         private void Awake() { originalScale = transform.localScale; }
@@ -20,7 +21,13 @@ namespace Orcbands
                 originalScale.x * (1f + pulse * .35f),
                 originalScale.y * (1f + pulse),
                 originalScale.z * (1f + pulse * .35f));
-            if (Warmth != null) Warmth.intensity = 1.6f + pulse * .8f;
+            if (Warmth != null)
+            {
+                Warmth.intensity = BaseIntensity * (1f + pulse * .28f);
+                float amber = Mathf.Clamp01(.5f + pulse * 2f);
+                Warmth.color = Color.Lerp(new Color(1f, .49f, .25f),
+                    new Color(1f, .75f, .43f), amber);
+            }
         }
     }
 }
