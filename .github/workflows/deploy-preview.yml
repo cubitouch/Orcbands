@@ -9,6 +9,7 @@ on:
       - "tools/generate-hut.mjs"
       - "unity/**"
       - "tools/validate-unity-starter.mjs"
+      - "tools/generate-unity-environment.mjs"
       - "tools/smoke-unity-webgl.mjs"
       - ".github/workflows/deploy-preview.yml"
   workflow_dispatch:
@@ -28,6 +29,10 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Export approved forest layout and 3D props
+        run: |
+          npm install --no-save --ignore-scripts three@0.166.1
+          node tools/generate-unity-environment.mjs
       - name: Build Unity browser player
         uses: game-ci/unity-builder@v4
         env:
