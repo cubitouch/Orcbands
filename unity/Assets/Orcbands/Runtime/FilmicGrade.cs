@@ -2,32 +2,22 @@ using UnityEngine;
 
 namespace Orcbands
 {
-    /// <summary>Simple ACES-inspired tone mapping of the built-in camera output.</summary>
+    /// <summary>
+    /// ACES-inspired tone mapping of the built-in renderer. The material
+    /// is a serialized scene reference so Unity does not strip the shader
+    /// from its WebGL player build.
+    /// </summary>
     [RequireComponent(typeof(Camera))]
     public sealed class FilmicGrade : MonoBehaviour
     {
-        private Material grade;
-
-        private void OnEnable()
-        {
-            Shader shader = Shader.Find("Hidden/Orcbands/FilmicGrade");
-            if (shader == null || !shader.isSupported)
-            {
-                Debug.LogWarning("Orcbands: filmic shader unavailable; render without grading.");
-                return;
-            }
-            grade = new Material(shader) { hideFlags = HideFlags.DontSave };
-        }
+        public Material GradeMaterial;
 
         private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            if (grade == null) Graphics.Blit(source, destination);
-            else Graphics.Blit(source, destination, grade);
-        }
-
-        private void OnDisable()
-        {
-            if (grade != null) Destroy(grade);
-            grade = null;
+            if (GradeMaterial == null || !GradeMaterial.shader.isSupported)
+                Graphics.Blit(source, destination);
+            else
+                Graphics.Blit(source, destination, GradeMaterial);
         }
     }
+}
