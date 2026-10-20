@@ -1,0 +1,119 @@
+newmtl timber
+Ka 0.05 0.05 0.05
+Kd 0.4 0.275 0.16
+Ks 0 0 0
+illum 1
+
+newmtl timber_light
+Ka 0.05 0.05 0.05
+Kd 0.5 0.355 0.215
+Ks 0 0 0
+illum 1
+
+newmtl timber_dark
+Ka 0.05 0.05 0.05
+Kd 0.265 0.17 0.095
+Ks 0 0 0
+illum 1
+
+newmtl plank
+Ka 0.05 0.05 0.05
+Kd 0.37 0.255 0.155
+Ks 0 0 0
+illum 1
+
+newmtl plank_warm
+Ka 0.05 0.05 0.05
+Kd 0.42 0.29 0.175
+Ks 0 0 0
+illum 1
+
+newmtl plank_shadow
+Ka 0.05 0.05 0.05
+Kd 0.295 0.195 0.115
+Ks 0 0 0
+illum 1
+
+newmtl roof_red
+Ka 0.05 0.05 0.05
+Kd 0.56 0.235 0.19
+Ks 0 0 0
+illum 1
+
+newmtl roof_light
+Ka 0.05 0.05 0.05
+Kd 0.62 0.275 0.22
+Ks 0 0 0
+illum 1
+
+newmtl roof_warm
+Ka 0.05 0.05 0.05
+Kd 0.59 0.25 0.195
+Ks 0 0 0
+illum 1
+
+newmtl roof_shadow
+Ka 0.05 0.05 0.05
+Kd 0.48 0.19 0.16
+Ks 0 0 0
+illum 1
+
+newmtl roof_dark
+Ka 0.05 0.05 0.05
+Kd 0.335 0.125 0.105
+Ks 0 0 0
+illum 1
+
+newmtl stone
+Ka 0.05 0.05 0.05
+Kd 0.41 0.405 0.36
+Ks 0 0 0
+illum 1
+
+newmtl stone_light
+Ka 0.05 0.05 0.05
+Kd 0.5 0.48 0.425
+Ks 0 0 0
+illum 1
+
+newmtl stone_shadow
+Ka 0.05 0.05 0.05
+Kd 0.32 0.33 0.3
+Ks 0 0 0
+illum 1
+
+newmtl bone
+Ka 0.05 0.05 0.05
+Kd 0.72 0.625 0.42
+Ks 0 0 0
+illum 1
+
+newmtl bone_shadow
+Ka 0.05 0.05 0.05
+Kd 0.51 0.42 0.265
+Ks 0 0 0
+illum 1
+
+newmtl iron
+Ka 0.05 0.05 0.05
+Kd 0.115 0.128 0.12
+Ks 0 0 0
+illum 1
+
+newmtl interior
+Ka 0.05 0.05 0.05
+Kd 0.087 0.062 0.041
+Ks 0 0 0
+illum 1
+
+newmtl cloth
+Ka 0.05 0.05 0.05
+Kd 0.36 0.061 0.054
+Ks 0 0 0
+illum 1
+
+newmtl cloth_light
+Ka 0.05 0.05 0.05
+Kd 0.46 0.082 0.063
+Ks 0 0 0
+illum 1

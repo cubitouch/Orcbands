@@ -1,0 +1,18 @@
+# Unity-generated data; keep Assets, Packages and ProjectSettings versioned.
+/Library/
+/Temp/
+/Obj/
+/Logs/
+/UserSettings/
+/MemoryCaptures/
+/Recordings/
+/Build/
+/Builds/
+*.csproj
+*.sln
+*.slnx
+*.userprefs
+.DS_Store
+# Recreated deterministically from the source assets and editor script.
+/Assets/Scenes/OrcbandsStarter.unity
+/Assets/Scenes/OrcbandsStarter.unity.meta

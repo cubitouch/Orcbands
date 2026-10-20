@@ -1,4 +1,4 @@
-name: Deploy Orcbands Asset Lab
+name: Deploy Orcbands Browser Previews
 
 on:
   push:
@@ -7,6 +7,9 @@ on:
       - "preview/**"
       - "tools/generate-tree.mjs"
       - "tools/generate-hut.mjs"
+      - "unity/**"
+      - "tools/validate-unity-starter.mjs"
+      - "tools/smoke-unity-webgl.mjs"
       - ".github/workflows/deploy-preview.yml"
   workflow_dispatch:
 
@@ -20,7 +23,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  unity-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Unity browser player
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          targetPlatform: WebGL
+          buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
+          versioning: None
+      - name: Check static hosting asset format
+        shell: bash
+        run: |
+          test -f build/WebGL/Orcbands/index.html
+          if find build/WebGL/Orcbands/Build -name '*.gz' -o -name '*.br' | grep -q .; then
+            echo "::error::Unity WebGL payload requires compression headers unsupported by GitHub Pages."
+            exit 1
+          fi
+      - name: Store Unity browser build
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-unity-published-build
+          path: build/WebGL/Orcbands/
+          if-no-files-found: error
+
   deploy:
+    needs: unity-build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -62,10 +97,20 @@ jobs:
           },indent=2)+'\n')
           print('Asset build:',assets)
           PY
+      - name: Download successful Unity player
+        uses: actions/download-artifact@v4
+        with:
+          name: orcbands-unity-published-build
+          path: preview/unity
+      - name: Verify both previews are present
+        run: |
+          test -f preview/index.html
+          test -f preview/unity/index.html
+          test -d preview/unity/Build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: preview
-      - name: Deploy browser viewer to GitHub Pages
+      - name: Deploy Asset Lab and Unity player to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
