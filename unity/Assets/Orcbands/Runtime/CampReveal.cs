@@ -28,3 +28,4 @@ namespace Orcbands
             Shader.SetGlobalFloat("_CampFogEnabled", 0f);
         }
     }
+}
