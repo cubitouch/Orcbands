@@ -14,6 +14,8 @@ for (const name of ['low-poly-pine-01.obj', 'low-poly-pine-01.mtl',
 for (const path of [
   'unity/Assets/Editor/OrcbandsSceneSetup.cs',
   'unity/Assets/Orcbands/Shaders/VertexColorLit.shader',
+  'unity/Assets/Orcbands/Shaders/WorldColorLit.shader',
+  'unity/Assets/Orcbands/Runtime/CampReveal.cs',
   'unity/Assets/Orcbands/Runtime/CampFlame.cs',
   'tools/generate-unity-environment.mjs',
   'unity/Assets/Orcbands/Runtime/OrcbandsController.cs',
