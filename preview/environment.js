@@ -19,7 +19,7 @@ function triangle(out,colors,a,b,c,color) {
 function surface(parent,g,material=earth) {
   const mesh=new THREE.Mesh(g,material);mesh.receiveShadow=true;parent.add(mesh);return mesh;
 }
-function buildTerrain(parent) {
+export function createTerrainGeometry() {
   const vertices=[],colors=[];
   // One continuous mesh: dense vertices in the walkable woodland, coarse in distant meadow.
   const xs=[-250],zs=[-250];
@@ -59,7 +59,10 @@ function buildTerrain(parent) {
     // Alternating diagonals avoid a dominant directional pattern at path edges.
     if((x+z)%2){face(a,b,d);face(a,d,c)}else{face(a,b,c);face(b,d,c)}
   }
-  surface(parent,geometry(vertices,colors)).name='Forest floor';
+  return geometry(vertices,colors);
+}
+function buildTerrain(parent) {
+  surface(parent,createTerrainGeometry()).name='Forest floor';
 }
 function patch(x,z,rx,rz,color,seed) {
   const random=seededRandom(seed),vertices=[],colors=[],n=11;
