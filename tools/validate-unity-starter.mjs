@@ -28,3 +28,14 @@ console.log('Unity starter bridge validated: 4 copied mesh inputs, manifest, ver
 
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /244/);
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /camera.fieldOfView = 38f/);
+
+// Catch a truncated namespace/class in the standalone visibility component
+// before the expensive Unity editor compilation; this is not a C# compiler.
+const revealSource = file('unity/Assets/Orcbands/Runtime/CampReveal.cs');
+const braces = revealSource.match(/[{}]/g) ?? [];
+let balance = 0;
+for (const brace of braces) {
+  balance += brace === '{' ? 1 : -1;
+  assert(balance >= 0, 'CampReveal.cs has an unmatched closing brace');
+}
+assert.equal(balance, 0, 'CampReveal.cs has an unmatched opening brace');
