@@ -5,6 +5,14 @@ on:
     paths:
       - "unity/**"
       - "tools/validate-unity-starter.mjs"
+      - "tools/generate-unity-environment.mjs"
+      - "preview/environment-layout.js"
+      - "preview/environment.js"
+      - "preview/ground-surface.js"
+      - "preview/resources.js"
+      - "preview/resource-geometry.js"
+      - "preview/storage-resources.js"
+      - "preview/settlement-resources.js"
       - "tools/smoke-unity-webgl.mjs"
       - ".github/workflows/unity-starter.yml"
   workflow_dispatch:
@@ -31,6 +39,12 @@ jobs:
           node-version: "22"
       - name: Verify unchanged exported meshes and Unity bootstrap files
         run: node tools/validate-unity-starter.mjs
+      - name: Export approved forest layout and 3D props
+        run: |
+          npm install --no-save --ignore-scripts three@0.166.1
+          node tools/generate-unity-environment.mjs
+      - name: Check exported approved Unity content
+        run: node tools/validate-unity-environment.mjs
 
   license-check:
     runs-on: ubuntu-latest
@@ -59,6 +73,10 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Export approved forest layout and 3D props
+        run: |
+          npm install --no-save --ignore-scripts three@0.166.1
+          node tools/generate-unity-environment.mjs
       - name: Build Orcbands for browser
         uses: game-ci/unity-builder@v4
         env:
@@ -97,6 +115,10 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      - name: Export approved forest layout and 3D props
+        run: |
+          npm install --no-save --ignore-scripts three@0.166.1
+          node tools/generate-unity-environment.mjs
       - name: Build Orcbands for macOS
         uses: game-ci/unity-builder@v4
         env:

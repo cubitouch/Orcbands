@@ -13,6 +13,9 @@ for (const name of ['low-poly-pine-01.obj', 'low-poly-pine-01.mtl',
 }
 for (const path of [
   'unity/Assets/Editor/OrcbandsSceneSetup.cs',
+  'unity/Assets/Orcbands/Shaders/VertexColorLit.shader',
+  'unity/Assets/Orcbands/Runtime/CampFlame.cs',
+  'tools/generate-unity-environment.mjs',
   'unity/Assets/Orcbands/Runtime/OrcbandsController.cs',
   '.github/workflows/unity-starter.yml'
 ]) assert(existsSync(resolve(root, path)), 'Missing ' + path);
@@ -20,3 +23,6 @@ assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /void Build\(\)/
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /GenerateScene\(\);/);
 assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'), /GetMouseButtonDown\(1\)/);
 console.log('Unity starter bridge validated: 4 copied mesh inputs, manifest, version, scene and CI.');
+
+assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /244/);
+assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /camera.fieldOfView = 38f/);

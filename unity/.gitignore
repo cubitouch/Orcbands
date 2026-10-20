@@ -16,3 +16,8 @@
 # Recreated deterministically from the source assets and editor script.
 /Assets/Scenes/OrcbandsStarter.unity
 /Assets/Scenes/OrcbandsStarter.unity.meta
+
+# Derived from the version-controlled Three.js source by
+# node tools/generate-unity-environment.mjs; do not commit generated geometry.
+/Assets/Orcbands/Generated/
+/Assets/Orcbands/Generated.meta
