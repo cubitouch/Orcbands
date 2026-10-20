@@ -134,6 +134,7 @@ namespace Orcbands.Editor
             camera.nearClipPlane = .1f;
             camera.farClipPlane = 240f;
             camera.allowHDR = true;
+            cameraObject.AddComponent<FilmicGrade>();
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = RenderSettings.fogColor;
             cameraObject.transform.position = new Vector3(-20f, 22f, 26f);
