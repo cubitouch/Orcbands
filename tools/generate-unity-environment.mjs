@@ -8,7 +8,9 @@ import {
   createLayout, groundHeight, wornGround, HUT_PLACEMENT, TORCH_PLACEMENTS,
 } from '../preview/environment-layout.js';
 import { groundVariation, noise } from '../preview/ground-surface.js';
-import { createGrassGeometry, createRockGeometry } from '../preview/environment.js';
+import { createGrassGeometry, createRockGeometry, createForestFloorPatches } from '../preview/environment.js';
+import { buildCampfire } from '../preview/campfire.js';
+import { buildTorches } from '../preview/torches.js';
 import { resourceGeometry } from '../preview/resources.js';
 
 const root = resolve(import.meta.dirname, '../unity/Assets/Orcbands/Generated');
@@ -37,9 +39,9 @@ function exportMesh(name, items) {
   const floats = [];
   const tmp = new THREE.Vector3();
   const color = new THREE.Color();
-  for (const { geom, position = [0, 0, 0], scale = 1, angle = 0, colorIsSrgb = false } of items) {
+  for (const { geom, position = [0, 0, 0], scale = 1, angle = 0, matrix = null, materialColor = null, colorIsSrgb = false } of items) {
     const pos = geom.attributes.position, colors = geom.attributes.color;
-    const m = new THREE.Matrix4().compose(
+    const m = matrix ?? new THREE.Matrix4().compose(
       new THREE.Vector3(...position),
       new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle),
       new THREE.Vector3(scale, scale, scale));
@@ -53,7 +55,8 @@ function exportMesh(name, items) {
       tmp.fromBufferAttribute(pos, j).applyMatrix4(m);
       tmp.x = -tmp.x;
       if (colors) color.fromBufferAttribute(colors, j);
-      else color.setRGB(.52, .60, .46);
+      else color.setRGB(1, 1, 1);
+      if (materialColor) color.multiply(materialColor);
       floats.push(tmp.x, tmp.y, tmp.z,
         Math.max(0, Math.min(1, colorIsSrgb ? color.r : linearToSrgb(color.r))),
         Math.max(0, Math.min(1, colorIsSrgb ? color.g : linearToSrgb(color.g))),
@@ -106,6 +109,43 @@ terrainBytes.writeInt32LE(verts.length / 6, 0);
 for (let i = 0; i < verts.length; i++) terrainBytes.writeFloatLE(verts[i], i * 4 + 4);
 writeFileSync(resolve(root, 'terrain.bytes'), terrainBytes);
 console.log('terrain', verts.length / 18, 'triangles', terrainBytes.length, 'bytes');
+
+
+// Export the original authored hearth and torch geometry rather than replacing
+// their silhouettes with Unity capsules/cubes. Flame meshes are a separate
+// emissive channel; light intensity remains animated by the Unity component.
+// Reflect the world in exactly the same way as resources and terrain.
+function exportAuthoredGroup(name, root, isFlame) {
+  root.updateMatrixWorld(true);
+  const items = [];
+  root.traverse(mesh => {
+    if (!mesh.isMesh) return;
+    const glow = /Flame|flame|Glowing coals/.test(mesh.name);
+    if (glow !== isFlame) return;
+    if (Array.isArray(mesh.material)) throw new Error('Unhandled fire material groups');
+    const instances = mesh.isInstancedMesh ? mesh.count : 1;
+    for (let i = 0; i < instances; i++) {
+      const instance = new THREE.Matrix4();
+      if (mesh.isInstancedMesh) mesh.getMatrixAt(i, instance);
+      const world = new THREE.Matrix4().multiplyMatrices(mesh.matrixWorld, instance);
+      const materialColor = mesh.material.color?.clone() ?? new THREE.Color(1, 1, 1);
+      items.push({geom:mesh.geometry, matrix:world, materialColor});
+    }
+  });
+  if (!items.length) throw new Error('Missing approved authored art: ' + name);
+  exportMesh(name, items);
+}
+const hearthScene = new THREE.Group();
+const hearth = buildCampfire(hearthScene, layout.campfire);
+hearth.update(0);
+exportAuthoredGroup('hearth-art', hearth.root, false);
+exportAuthoredGroup('hearth-flames', hearth.root, true);
+const torchesScene = new THREE.Group();
+const torches = buildTorches(torchesScene);
+torches.update(0);
+exportAuthoredGroup('torches-art', torches.root, false);
+exportAuthoredGroup('torches-flames', torches.root, true);
+exportMesh('forest-patches', [{geom: createForestFloorPatches(layout)}]);
 
 const resources = layout.resources.map(p => ({
   geom: resourceGeometry(p.kind, p.state),
