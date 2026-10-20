@@ -20,10 +20,12 @@ for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.sta
   throw new Error('Missing forest resource: ' + key);
 writeFileSync(resolve(root, 'grove-layout.json'), JSON.stringify({
   seed: layout.seed,
-  trees: layout.trees,
-  hut: HUT_PLACEMENT,
-  campfire: layout.campfire,
-  torches: TORCH_PLACEMENTS,
+  // Three.js is right-handed and Unity's world is left-handed: reflect X
+  // so the original camera/view and the authored layout match on screen.
+  trees: layout.trees.map(p => ({ ...p, x: -p.x, angle: -p.angle })),
+  hut: { ...HUT_PLACEMENT, x: -HUT_PLACEMENT.x, angle: -HUT_PLACEMENT.angle },
+  campfire: { ...layout.campfire, x: -layout.campfire.x },
+  torches: TORCH_PLACEMENTS.map(p => ({ ...p, x: -p.x })),
   resourceCount: layout.resources.length,
 }, null, 2) + '\n');
 
@@ -45,8 +47,11 @@ function exportMesh(name, items) {
     const count = indices ? indices.length : pos.count;
     if (count % 3) throw new Error(name + ' is not a triangle mesh');
     for (let i = 0; i < count; i++) {
-      const j = indices ? indices[i] : i;
+      // Swap winding as well as flipping X so normals remain outward/upward.
+      const source = Math.floor(i / 3) * 3 + [0, 2, 1][i % 3];
+      const j = indices ? indices[source] : source;
       tmp.fromBufferAttribute(pos, j).applyMatrix4(m);
+      tmp.x = -tmp.x;
       if (colors) color.fromBufferAttribute(colors, j);
       else color.setRGB(.52, .60, .46);
       floats.push(tmp.x, tmp.y, tmp.z,
@@ -88,9 +93,11 @@ for (let iz = 0; iz < side; iz++) for (let ix = 0; ix < side; ix++) {
     const px = (tri[0][0] + tri[1][0] + tri[2][0]) / 3;
     const pz = (tri[0][2] + tri[1][2] + tri[2][2]) / 3;
     const face = shade(px, pz);
-    for (const vertex of tri) {
+    // X reflection reverses triangle winding. Keep the collider facing upward.
+    for (const vertex of [tri[0], tri[2], tri[1]]) {
       const tint = wornGround(px, pz) > .12 ? face : shade(vertex[0], vertex[2]);
-      verts.push(...vertex, linearToSrgb(tint.r), linearToSrgb(tint.g), linearToSrgb(tint.b));
+      verts.push(-vertex[0], vertex[1], vertex[2],
+        linearToSrgb(tint.r), linearToSrgb(tint.g), linearToSrgb(tint.b));
     }
   }
 }

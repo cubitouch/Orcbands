@@ -96,7 +96,7 @@ namespace Orcbands
             if (Input.GetKeyDown(KeyCode.R))
             {
                 focus = new Vector3(0f, 0f, -1f);
-                GameCamera.transform.position = new Vector3(20f, 22f, 26f);
+                GameCamera.transform.position = new Vector3(-20f, 22f, 26f);
                 GameCamera.transform.LookAt(focus);
             }
         }

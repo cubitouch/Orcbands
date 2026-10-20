@@ -41,7 +41,7 @@ namespace Orcbands.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shades.Clear();
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(.39f, .43f, .37f);
+            RenderSettings.ambientLight = new Color(.30f, .35f, .29f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogStartDistance = 46f;
@@ -52,7 +52,9 @@ namespace Orcbands.Editor
 
             Shader vertexShader = Shader.Find("Orcbands/VertexColorLit");
             if (vertexShader == null) throw new InvalidOperationException("Missing VertexColorLit shader");
-            Material art = SavedMaterial("ForestArt", new Material(vertexShader));
+            Material art = new Material(vertexShader);
+            art.SetColor("_Tint", new Color(.78f, .80f, .78f));
+            art = SavedMaterial("ForestArt", art);
             var ground = ColoredMesh("Ground", "terrain", art, true);
             ColoredMesh("Approved resources and storage", "resource-art", art, false);
             ColoredMesh("Approved rock geometry", "stone-props", art, false);
@@ -78,7 +80,6 @@ namespace Orcbands.Editor
                 {
                     renderer.shadowCastingMode = distance < 25f ? ShadowCastingMode.On : ShadowCastingMode.Off;
                     renderer.receiveShadows = distance < 25f;
-                    if (ring == 0) continue;
                     var materials = renderer.sharedMaterials;
                     for (int m = 0; m < materials.Length; m++)
                     {
@@ -88,7 +89,7 @@ namespace Orcbands.Editor
                         if (!Shades.TryGetValue(key, out Material tinted))
                         {
                             tinted = new Material(baseMat);
-                            tinted.color *= ring == 1 ? .70f : .45f;
+                            tinted.color *= ring == 0 ? .83f : ring == 1 ? .61f : .37f;
                             tinted = SavedMaterial("PineShade-" + key, tinted);
                             Shades.Add(key, tinted);
                         }
@@ -131,14 +132,14 @@ namespace Orcbands.Editor
             camera.farClipPlane = 240f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = RenderSettings.fogColor;
-            cameraObject.transform.position = new Vector3(20f, 22f, 26f);
+            cameraObject.transform.position = new Vector3(-20f, 22f, 26f);
             cameraObject.transform.LookAt(new Vector3(0f, 0f, -1f));
 
             GameObject sunObject = new GameObject("Warm sun");
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
-            sun.color = new Color(1f, .88f, .75f);
-            sun.intensity = 1.5f;
+            sun.color = new Color(1f, .92f, .83f);
+            sun.intensity = 1.28f;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .80f;
             sunObject.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
