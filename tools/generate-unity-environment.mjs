@@ -8,7 +8,7 @@ import {
   createLayout, groundHeight, wornGround, HUT_PLACEMENT, TORCH_PLACEMENTS,
 } from '../preview/environment-layout.js';
 import { groundVariation, noise } from '../preview/ground-surface.js';
-import { createGrassGeometry, createRockGeometry, createForestFloorPatches } from '../preview/environment.js';
+import { createGrassGeometry, createRockGeometry, createForestFloorPatches, createTerrainGeometry } from '../preview/environment.js';
 import { buildCampfire } from '../preview/campfire.js';
 import { buildTorches } from '../preview/torches.js';
 import { resourceGeometry } from '../preview/resources.js';
@@ -70,46 +70,10 @@ function exportMesh(name, items) {
   writeFileSync(resolve(root, name + '.bytes'), buffer);
   console.log(name, count / 3, 'triangles', buffer.length, 'bytes');
 }
-// Terrain: reproduce the approved woodland's height, mottled grass and irregular
-// worn paths from the exact JS functions. A 0.75m grid reads well at RTS height.
-const terrain = [];
-const shade = (x, z) => {
-  const variation = groundVariation(x, z);
-  const worn = wornGround(x, z);
-  const dirt = worn > .73 ? 1 : worn > .43 ? .72 : worn > .23 ? .32 : 0;
-  const grass = new THREE.Color(0x637648).lerp(new THREE.Color(0x85935b),
-    .54 + (variation - .5) * .24);
-  const soil = new THREE.Color(0x857152).lerp(new THREE.Color(0xa28b65),
-    .22 + noise(x * .9 + 18, z * .9) * .65);
-  return grass.lerp(soil, dirt).multiplyScalar(.98 + variation * .04);
-};
-const verts = [];
-const step = .75, half = 49, side = Math.round(2 * half / step);
-for (let iz = 0; iz < side; iz++) for (let ix = 0; ix < side; ix++) {
-  const x = -half + ix * step, z = -half + iz * step;
-  const a = [x, groundHeight(x, z), z];
-  const b = [x, groundHeight(x, z + step), z + step];
-  const c = [x + step, groundHeight(x + step, z), z];
-  const d = [x + step, groundHeight(x + step, z + step), z + step];
-  for (const tri of (ix + iz) % 2 ? [[a, b, d], [a, d, c]] : [[a, b, c], [b, d, c]]) {
-    // Flat earth/soil flecks like the Three.js terrain, preserving silhouettes.
-    const px = (tri[0][0] + tri[1][0] + tri[2][0]) / 3;
-    const pz = (tri[0][2] + tri[1][2] + tri[2][2]) / 3;
-    const face = shade(px, pz);
-    // X reflection reverses triangle winding. Keep the collider facing upward.
-    for (const vertex of [tri[0], tri[2], tri[1]]) {
-      const tint = wornGround(px, pz) > .12 ? face : shade(vertex[0], vertex[2]);
-      verts.push(-vertex[0], vertex[1], vertex[2],
-        linearToSrgb(tint.r), linearToSrgb(tint.g), linearToSrgb(tint.b));
-    }
-  }
-}
-const terrainBytes = Buffer.allocUnsafe(4 + verts.length * 4);
-terrainBytes.writeInt32LE(verts.length / 6, 0);
-for (let i = 0; i < verts.length; i++) terrainBytes.writeFloatLE(verts[i], i * 4 + 4);
-writeFileSync(resolve(root, 'terrain.bytes'), terrainBytes);
-console.log('terrain', verts.length / 18, 'triangles', terrainBytes.length, 'bytes');
-
+// Unity now loads the exact approved terrain geometry with the original
+// nonuniform tessellation, meandering paths, far meadow and color flecks.
+// No independent 0.75m reconstruction that can introduce checkerboard faceting.
+exportMesh('terrain', [{geom: createTerrainGeometry()}]);
 
 // Export the original authored hearth and torch geometry rather than replacing
 // their silhouettes with Unity capsules/cubes. Flame meshes are a separate
