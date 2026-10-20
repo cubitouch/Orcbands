@@ -96,7 +96,7 @@ namespace Orcbands.Editor
                 ApplyWorldMaterials(tree, worldShader);
                 foreach (var renderer in tree.GetComponentsInChildren<MeshRenderer>())
                 {
-                    renderer.shadowCastingMode = distance < 25f ? ShadowCastingMode.On : ShadowCastingMode.Off;
+                    renderer.shadowCastingMode = distance < 30f ? ShadowCastingMode.On : ShadowCastingMode.Off;
                     renderer.receiveShadows = distance < 25f;
                 }
             }
@@ -147,7 +147,7 @@ namespace Orcbands.Editor
             sun.color = new Color(1f, .92f, .83f);
             sun.intensity = .98f;
             sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = .57f;
+            sun.shadowStrength = .74f;
             sunObject.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
             RenderSettings.sun = sun;
 
