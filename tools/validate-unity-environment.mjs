@@ -8,7 +8,7 @@ assert.equal(grove.seed, 2302);
 assert.equal(grove.trees.length, 244);
 assert.equal(grove.torches.length, 4);
 assert(grove.resourceCount >= 15);
-for (const name of ['terrain', 'resource-art', 'stone-props', 'grass-props']) {
+for (const name of ['terrain', 'resource-art', 'stone-props', 'grass-props', 'forest-patches', 'hearth-art', 'hearth-flames', 'torches-art', 'torches-flames']) {
   const file = resolve(root, name + '.bytes');
   const data = readFileSync(file);
   const count = data.readInt32LE(0);
