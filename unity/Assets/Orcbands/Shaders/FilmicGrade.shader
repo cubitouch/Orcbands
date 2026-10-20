@@ -20,11 +20,14 @@ Shader "Hidden/Orcbands/FilmicGrade"
             {
                 float4 sampleColor = tex2D(_MainTex, i.uv);
                 float3 source = max(sampleColor.rgb, 0);
-                float3 exposed = source * .86;
+                float3 exposed = source * .96;
                 float3 mapped = saturate((exposed * (2.51 * exposed + .03)) /
                     (exposed * (2.43 * exposed + .59) + .14));
+                // A subtle S-curve and recovered chroma keep the original
+                // pine/roof palettes from washing into beige and grey.
+                mapped = saturate((mapped - .42) * 1.14 + .42);
                 float luma = dot(mapped, float3(.2126,.7152,.0722));
-                mapped = lerp(float3(luma, luma, luma), mapped, .94);
+                mapped = saturate(lerp(float3(luma, luma, luma), mapped, 1.15));
                 return float4(mapped, sampleColor.a);
             }
             ENDCG
