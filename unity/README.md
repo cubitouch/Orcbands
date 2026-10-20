@@ -38,12 +38,22 @@ materials here rather than changing the approved original browser geometry.
 validation on Unity-related PRs. The Unity Web build additionally runs when
 repository Action secrets `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD`
 are available. The macOS build is opt-in via **Actions → Unity Starter Builds →
-Run workflow → StandaloneOSX** because hosted macOS runners cost more.
+Run workflow → StandaloneOSX** to limit CI usage.
 
 The GameCI integration uses the custom method
 `Orcbands.Editor.OrcbandsSceneSetup.Build` to recreate and build the same
 scene without requiring a checked-in Unity scene YAML. It uploads each player
-build as a GitHub Actions artifact; **it does not deploy or replace GitHub Pages**.
+build as a GitHub Actions artifact. The existing Asset Lab remains served at
+`https://cubitouch.github.io/Orcbands/`. After integration on `main`,
+`.github/workflows/deploy-preview.yml` rebuilds Unity and publishes the playable
+WebGL starter at `https://cubitouch.github.io/Orcbands/unity/`, while preserving
+the Asset Lab at its current URL. PR builds also run a headless Chromium load
+smoke check and upload a review screenshot.
+
+Unity WebGL compression is disabled for GitHub Pages so JavaScript/WASM files
+do not require server Content-Encoding headers. The web preview is only
+published from `main`, not an unmerged PR. Keep the draft unmerged until
+the actual preview/controls are reviewed.
 
 See https://game.ci/docs/github/activation/ for current personal-license
 instructions. Unity Personal licence activation on hosted CI is not guaranteed,

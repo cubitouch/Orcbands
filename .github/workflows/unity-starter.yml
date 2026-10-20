@@ -5,6 +5,7 @@ on:
     paths:
       - "unity/**"
       - "tools/validate-unity-starter.mjs"
+      - "tools/smoke-unity-webgl.mjs"
       - ".github/workflows/unity-starter.yml"
   workflow_dispatch:
     inputs:
@@ -69,6 +70,19 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
+      - name: Install headless Chromium smoke dependencies
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify WebGL actually boots in Chromium
+        run: node tools/smoke-unity-webgl.mjs
+      - name: Upload WebGL smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-unity-browser-smoke
+          path: smoke-artifacts/unity-webgl/
+          if-no-files-found: ignore
       - name: Upload WebGL player
         uses: actions/upload-artifact@v4
         with:
@@ -79,7 +93,7 @@ jobs:
   macos:
     needs: [validate-bridge, license-check]
     if: needs.license-check.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.platform == 'StandaloneOSX'
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4

@@ -113,6 +113,10 @@ namespace Orcbands.Editor
         {
             GenerateScene();
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
+            // GitHub Pages serves static files without Content-Encoding for
+            // Unity's pre-compressed WebGL bundles. Emit uncompressed files.
+            if (target == BuildTarget.WebGL)
+                PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
             if (target != BuildTarget.WebGL && target != BuildTarget.StandaloneOSX)
                 throw new InvalidOperationException("Unsupported Orcbands CI target: " + target);
 
