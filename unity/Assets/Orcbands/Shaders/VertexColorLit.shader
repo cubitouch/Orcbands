@@ -11,7 +11,7 @@ Shader "Orcbands/VertexColorLit"
         LOD 200
         Cull Off
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows
+        #pragma surface surf Lambert fullforwardshadows finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Tint;
         half _Unlit;
@@ -31,17 +31,23 @@ Shader "Orcbands/VertexColorLit"
                          + sin(world.z * 2.1 + world.x * .6) * .10;
             float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
-            float3 distant = lerp(float3(luminance, luminance, luminance), baseColor, .38) * .24;
-            distant = lerp(distant, float3(.035, .052, .057), .38);
+            float3 distant = lerp(float3(luminance, luminance, luminance), baseColor, .55) * .53;
+            distant = lerp(distant, float3(.072, .102, .096), .25);
             return lerp(baseColor, distant, obscured);
         }
 
         void surf(Input IN, inout SurfaceOutput o)
         {
-            float3 shaded = CampShade(IN.color.rgb * _Tint.rgb, IN.worldPos);
+            float3 shaded = IN.color.rgb * _Tint.rgb;
             o.Albedo = shaded * (1.0 - _Unlit);
             o.Emission = shaded * _Unlit;
             o.Alpha = 1;
+        }
+        // Three.js applies visibility to the already-lit pixel. Applying
+        // it to albedo made Unity's bright camp and outer trees diverge.
+        void FinalizeColor(Input IN, SurfaceOutput o, inout fixed4 color)
+        {
+            color.rgb = CampShade(color.rgb, IN.worldPos);
         }
         ENDCG
     }
