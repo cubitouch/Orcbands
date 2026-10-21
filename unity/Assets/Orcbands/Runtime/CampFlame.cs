@@ -6,6 +6,9 @@ namespace Orcbands
     // approved Three.js campfire, without per-frame geometry regeneration.
     public sealed class CampFlame : MonoBehaviour
     {
+        // Diagnostics only: hold direct fire illumination steady while
+        // keeping flame meshes, smoke and sparks animated.
+        public static bool HoldLightFlicker;
         public Light Warmth;
         public float Phase;
         public float BaseIntensity = 2.8f;
@@ -23,8 +26,10 @@ namespace Orcbands
                 originalScale.z * (1f + pulse * .35f));
             if (Warmth != null)
             {
-                Warmth.intensity = BaseIntensity * (1f + pulse * .28f);
-                float amber = Mathf.Clamp01(.5f + pulse * 2f);
+                Warmth.intensity = HoldLightFlicker
+                    ? BaseIntensity : BaseIntensity * (1f + pulse * .28f);
+                float amber = HoldLightFlicker ? .5f
+                    : Mathf.Clamp01(.5f + pulse * 2f);
                 Warmth.color = Color.Lerp(new Color(1f, .49f, .25f),
                     new Color(1f, .75f, .43f), amber);
             }
