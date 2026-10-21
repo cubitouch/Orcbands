@@ -3,8 +3,8 @@ import {paint,triangles,join,beam,logGeometry} from './resource-geometry.js?v=__
 import {storageResourceGeometry} from './storage-resources.js?v=__ORCBANDS_REVISION__';
 
 // Aged timber and muted iron-red roofing match the main hut's imported MTL.
-// Keep individual slat variation without the former salmon/orange lean-to.
-const TIMBER=0x59432f,END=0x987853,ROOF=[0x803f34,0x8b4a3c,0x76392e,0x854435];
+// Keep individual slat variation, but reduce the lean-to's orange cast.
+const TIMBER=0x59432f,END=0x987853,ROOF=[0x76312d,0x83372f,0x702c29,0x7e352d];
 function box(parts,x,y,z,w,h,d,color=TIMBER,seed=1){const g=paint(new THREE.BoxGeometry(w,h,d),color,seed);g.translate(x,y+h/2,z);parts.push(g)}
 function timber(parts,a,b,width=.16,color=TIMBER){
  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
