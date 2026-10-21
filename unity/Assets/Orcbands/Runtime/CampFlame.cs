@@ -15,13 +15,14 @@ namespace Orcbands
     {
         public Light Warmth;
         public float BaseIntensity = 2.8f;
+        public Color LightColor = new Color(1f, .63f, .34f);
         public float Phase; // Retained for compatibility with generated scenes.
 
         private void Start()
         {
             if (Warmth == null) return;
             Warmth.intensity = BaseIntensity;
-            Warmth.color = new Color(1f, .63f, .34f);
+            Warmth.color = LightColor;
         }
     }
 }
