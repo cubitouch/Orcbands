@@ -72,7 +72,7 @@ namespace Orcbands.Editor
             Material terrainArt = new Material(art);
             terrainArt.SetTexture("_ForestShadowTex", pineShadowMap);
             terrainArt.SetFloat("_ForestShadowStrength", .78f);
-            terrainArt.SetColor("_Tint", new Color(.80f, .83f, .76f));
+            terrainArt.SetColor("_Tint", new Color(.74f, .77f, .72f));
             terrainArt = SavedMaterial("WoodlandGroundWithShadows", terrainArt);
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
@@ -291,6 +291,13 @@ namespace Orcbands.Editor
                             replacement.color = new Color(
                                 source.color.r * .86f, source.color.g * .77f,
                                 source.color.b * .75f, source.color.a);
+                        else if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
+                            // Preserve every authored needle/light/shadow MTL
+                            // swatch, but compensate for Unity's overly pastel
+                            // Lambert result compared with MeshStandardMaterial.
+                            replacement.color = new Color(
+                                source.color.r * .82f, source.color.g * .85f,
+                                source.color.b * .73f, source.color.a);
                         else replacement.color = source.color;
                         if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
                             replacement.SetFloat("_SurfaceContrast", 1.23f);

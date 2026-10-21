@@ -33,9 +33,13 @@ Shader "Orcbands/WorldColorLit"
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
             // Port the original Three.js visibility attenuation verbatim.
             // Keep subdued tree and terrain detail outside the revealed camp.
+            // The Three.js output is linear and tone-mapped afterwards;
+            // Unity's gamma-space WebGL surface output is not equivalent.
+            // Lift hidden detail before the grade so the edge reads as a
+            // muted woodland, not black cut-out triangles.
             float3 distant = lerp(float3(luminance, luminance, luminance),
-                                   baseColor, .38) * .24;
-            distant = lerp(distant, float3(.035, .052, .057), .38);
+                                   baseColor, .46) * .45;
+            distant = lerp(distant, float3(.075, .096, .087), .25);
             return lerp(baseColor, distant, obscured);
         }
 
