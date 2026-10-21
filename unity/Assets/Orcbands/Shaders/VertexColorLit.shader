@@ -36,7 +36,10 @@ Shader "Orcbands/VertexColorLit"
             float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
             float3 distant = lerp(float3(luminance, luminance, luminance), baseColor, .38) * .33;
-            distant = lerp(distant, float3(.035, .052, .057), .38);
+            // Three.js fog tint is authored in linear RGB. Convert that
+            // tint to sRGB before mixing in the Gamma-space Unity player,
+            // otherwise the entire distant forest collapses into black.
+            distant = lerp(distant, float3(.206, .253, .265), .38);
             return lerp(baseColor, distant, obscured);
         }
 
