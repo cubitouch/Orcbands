@@ -67,6 +67,16 @@ try {
     fullPage: true
   });
   await page.keyboard.press('f');
+  // Capture motion from the *actual* Unity player rather than treating a
+  // successful static screenshot as proof that smoke and flames are animated.
+  const baseline = await page.locator('#unity-canvas').screenshot({
+    path: resolve(root, 'smoke-artifacts/unity-webgl/fire-motion-1.png')
+  });
+  await page.waitForTimeout(1400);
+  const later = await page.locator('#unity-canvas').screenshot({
+    path: resolve(root, 'smoke-artifacts/unity-webgl/fire-motion-2.png')
+  });
+  assert(!baseline.equals(later), 'Unity fire scene did not change across frames');
   assert.deepEqual(errors, [], 'Browser errors occurred while loading Unity WebGL');
   console.log('Unity WebGL loaded successfully; review screenshot: ' + screenshot);
 } finally {
