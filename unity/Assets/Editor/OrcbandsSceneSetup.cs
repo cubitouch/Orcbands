@@ -70,7 +70,7 @@ namespace Orcbands.Editor
             Material terrainArt = new Material(art);
             terrainArt.SetTexture("_ForestShadowTex", pineShadowMap);
             terrainArt.SetFloat("_ForestShadowStrength", .78f);
-            terrainArt.SetColor("_Tint", new Color(.87f, .88f, .83f));
+            terrainArt.SetColor("_Tint", new Color(.80f, .83f, .76f));
             terrainArt = SavedMaterial("WoodlandGroundWithShadows", terrainArt);
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
@@ -277,7 +277,14 @@ namespace Orcbands.Editor
                     if (!Shades.TryGetValue(key, out Material replacement))
                     {
                         replacement = new Material(shader);
-                        replacement.color = source.color;
+                        // The source MTL roof swatches look too peachy under
+                        // Unity's gamma/lighting response. Match the deeper
+                        // red finish from the approved Three.js hut preview.
+                        if (source.name.StartsWith("roof_", StringComparison.OrdinalIgnoreCase))
+                            replacement.color = new Color(
+                                source.color.r * .86f, source.color.g * .77f,
+                                source.color.b * .75f, source.color.a);
+                        else replacement.color = source.color;
                         replacement = SavedMaterial("CampColor-" + key, replacement);
                         Shades.Add(key, replacement);
                     }
