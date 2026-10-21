@@ -4,12 +4,20 @@ import {createLayout,groundHeight,pathDistance,pathPoint,wornGround} from '../pr
 const layout=createLayout();
 assert.deepEqual(layout,createLayout(),'Scene must reproduce exactly');
 assert.notDeepEqual(layout,createLayout(42),'Seed must control variation');
-assert(layout.trees.length>=235&&layout.trees.length<=250,'Deep surrounding woodland');
+assert.equal(layout.trees.length,244,'Keep the 244-pine authored level');
+const widths=new Set(layout.trees.map(p=>p.width));
+const heights=new Set(layout.trees.map(p=>p.height));
+assert(widths.size>=3&&heights.size>=3,'Forest must mix tall, narrow and broad low crowns');
+assert(layout.trees.some(p=>p.height>1.2)&&layout.trees.some(p=>p.height<.85),
+  'Tree silhouettes must differ meaningfully at RTS viewing distance');
 assert.deepEqual([...new Set(layout.plants.map(p=>p.type))].sort(),[0,1,2]);
 assert.deepEqual([...new Set(layout.rocks.map(p=>p.type))].sort(),[0,1,2]);
 for(const tree of layout.trees) {
-  assert(tree.scale>=.83&&tree.scale<=1.17,'Only modest uniform tree scales');
-  assert(pathDistance(tree.x,tree.z)>1.36*tree.scale+.3,'Tree canopy must clear the path');
+  assert(tree.scale>=.83&&tree.scale<=1.17,'Keep original deterministic overall scale range');
+  assert(tree.width>=.78&&tree.width<=1.14&&tree.height>=.77&&tree.height<=1.27,
+    'Separate crown and height variants must remain restrained');
+  assert(pathDistance(tree.x,tree.z)>1.36*tree.scale*tree.width+.30,
+    'Wider crowns must not obstruct walkable paths');
   assert(Math.hypot(tree.x/6,tree.z/5)>1,'Central clearing remains available');
 }
 for(const p of [...layout.trees,...layout.rocks,...layout.plants]) {

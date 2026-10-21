@@ -103,10 +103,17 @@ function outerForest(seed,existing){
    trees.push({x,z,scale,angle:random()*Math.PI*2});placed++;
   }
  }
- // Connect the pockets into woodland rather than leaving separate islands on a lawn.
+ // Satellite trees favour existing groves, with a few independent strays.
+ // Uneven thickets and gaps replace the scattered peripheral ring.
  let connected=0;
- for(let attempt=0;connected<72&&attempt<4000;attempt++){
-  const x=-34+random()*68,z=-38+random()*69,scale=.83+random()*.34;
+ for(let attempt=0;connected<72&&attempt<6000;attempt++){
+  const satellite=random()<.68;
+  const [cx,cz]=satellite?clusters[Math.floor(random()*clusters.length)]:[0,0];
+  const a=random()*Math.PI*2,r=5.1+random()*8.2;
+  const x=satellite?cx+Math.cos(a)*r:-34+random()*68;
+  const z=satellite?cz+Math.sin(a)*r:-38+random()*69;
+  const scale=.83+random()*.34;
+  if(Math.abs(x)>42||Math.abs(z)>47)continue;
   if(Math.hypot(x/20,z/18)<1.04 || pathDistance(x,z)<1.36*scale+.38)continue;
   if([...existing,...trees].some(t=>Math.hypot(t.x-x,t.z-z)<2.12))continue;
   trees.push({x,z,scale,angle:random()*Math.PI*2});connected++;
@@ -162,6 +169,16 @@ export function createLayout(seed = GROVE_SEED) {
    const radius=[.30,.36,.55][type]*scale;
    if(pathDistance(x,z)>radius+.25)plants.push({x,z,type,scale,angle:forestRandom()*6.28,color:forestRandom()});
   }
-  return {seed,trees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
+  // Alter crown width and height independently to break identical triangular
+  // silhouettes. Restrict crown expansion next to walkable routes.
+  const silhouetteRandom=seededRandom(seed+9301);
+  const shapedTrees=trees.map(tree=>{
+    const roll=silhouetteRandom();
+    const widthTarget=roll<.23?.83:roll<.42?1.14:roll<.57?1.04:.97;
+    const height=roll<.23?1.27:roll<.42?.86:roll<.57?.77:1.05;
+    const clearance=(pathDistance(tree.x,tree.z)-.33)/(1.36*tree.scale);
+    return {...tree,width:Math.max(.78,Math.min(widthTarget,clearance)),height};
+  });
+  return {seed,trees:shapedTrees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
    plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearTorch(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearResource(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT},resources:RESOURCE_PLACEMENTS.map(p=>({...p}))};
 }

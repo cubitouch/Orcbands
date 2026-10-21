@@ -19,7 +19,7 @@ namespace Orcbands.Editor
         private const string PinePath = "Assets/Orcbands/Art/low-poly-pine-01.obj";
         private const string HutPath = "Assets/Orcbands/Art/timber-hut-01.obj";
 
-        [Serializable] public class P { public float x, z, scale = 1f, angle; }
+        [Serializable] public class P { public float x, z, scale = 1f, angle, width = 1f, height = 1f; }
         [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; }
         private const string Generated = "Assets/Orcbands/Generated/";
         private static readonly Dictionary<string, Material> Shades = new Dictionary<string, Material>();
@@ -109,7 +109,7 @@ namespace Orcbands.Editor
                 tree.name = "Pine " + (i + 1).ToString("D3");
                 tree.transform.position = Surface(ground, pos.x, pos.z) - Vector3.up * .035f * pos.scale;
                 tree.transform.rotation = Quaternion.Euler(0f, pos.angle * Mathf.Rad2Deg, 0f);
-                tree.transform.localScale = Vector3.one * pos.scale;
+                tree.transform.localScale = new Vector3(pos.scale * pos.width, pos.scale * pos.height, pos.scale * pos.width);
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
                 ApplyWorldMaterials(tree, worldShader);
                 foreach (var renderer in tree.GetComponentsInChildren<MeshRenderer>())
@@ -325,8 +325,8 @@ namespace Orcbands.Editor
                         // red finish from the approved Three.js hut preview.
                         if (source.name.StartsWith("roof_", StringComparison.OrdinalIgnoreCase))
                             replacement.color = new Color(
-                                source.color.r * .80f, source.color.g * .62f,
-                                source.color.b * .60f, source.color.a);
+                                source.color.r * .77f, source.color.g * .64f,
+                                source.color.b * .65f, source.color.a);
                         else if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
                             // Preserve original swatch variation while keeping
                             // spruce greens deep, rather than mint/lime under
@@ -339,8 +339,8 @@ namespace Orcbands.Editor
                             // Source Three.js timber is dark aged wood, not the
                             // honey-gold Unity import under ambient light.
                             replacement.color = new Color(
-                                source.color.r * .82f, source.color.g * .80f,
-                                source.color.b * .77f, source.color.a);
+                                source.color.r * .79f, source.color.g * .76f,
+                                source.color.b * .75f, source.color.a);
                         else replacement.color = source.color;
                         if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
                             replacement.SetFloat("_SurfaceContrast", 1.29f);
