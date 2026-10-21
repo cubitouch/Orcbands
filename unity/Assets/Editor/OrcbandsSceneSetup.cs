@@ -46,13 +46,13 @@ namespace Orcbands.Editor
             RenderSettings.ambientSkyColor = new Color(.54f, .63f, .53f);
             RenderSettings.ambientEquatorColor = new Color(.43f, .48f, .41f);
             RenderSettings.ambientGroundColor = new Color(.29f, .29f, .26f);
-            // Fog-of-war is applied per world-space material. Do NOT stack
-            // camera-distance / atmospheric fog on top of gameplay visibility.
-            RenderSettings.fog = false;
+            // Like the original Three.js renderer, use atmospheric distance
+            // fog (85-135m) *and* the six-source camp visibility mask.
+            RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogStartDistance = 85f;
             RenderSettings.fogEndDistance = 135f;
-            RenderSettings.fogColor = new Color(.24f, .31f, .28f);
+            RenderSettings.fogColor = new Color(64f/255f, 83f/255f, 79f/255f);
             QualitySettings.shadows = ShadowQuality.All;
             QualitySettings.shadowDistance = 65f;
 
@@ -152,7 +152,7 @@ namespace Orcbands.Editor
             camera.clearFlags = CameraClearFlags.SolidColor;
             // A subdued distant clearing for areas outside the level mesh;
             // the woodland itself is obscured by the authored fog of war.
-            camera.backgroundColor = new Color(.12f, .16f, .14f);
+            camera.backgroundColor = new Color(64f/255f, 83f/255f, 79f/255f);
             cameraObject.transform.position = new Vector3(-20f, 22f, 26f);
             cameraObject.transform.LookAt(new Vector3(0f, 0f, -1f));
 
@@ -172,6 +172,7 @@ namespace Orcbands.Editor
 
             var controllerObject = new GameObject("Orcbands Controller");
             var reveal = controllerObject.AddComponent<CampReveal>();
+            reveal.GameCamera = camera;
             reveal.Sources = new Vector4[6];
             reveal.Sources[0] = new Vector4(layout.hut.x, layout.hut.z, 10.5f, 0f);
             reveal.Sources[1] = new Vector4(layout.campfire.x, layout.campfire.z, 5f, 0f);

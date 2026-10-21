@@ -24,6 +24,8 @@ for (const path of [
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /void Build\(\)/);
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /GenerateScene\(\);/);
 assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'), /GetMouseButtonDown\(1\)/);
+assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /RenderSettings\\.fog = true/);
+assert.match(file('unity/Assets/Orcbands/Runtime/CampReveal.cs'), /RevealedAtmosphere/);
 console.log('Unity starter bridge validated: 4 copied mesh inputs, manifest, version, scene and CI.');
 
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /244/);
