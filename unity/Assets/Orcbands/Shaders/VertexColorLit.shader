@@ -14,7 +14,7 @@ Shader "Orcbands/VertexColorLit"
         LOD 200
         Cull Off
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows vertex:AnimateFire finalcolor:FinalizeColor
+        #pragma surface surf Lambert fullforwardshadows noforwardadd vertex:AnimateFire finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Tint;
         half _Unlit;
