@@ -196,3 +196,24 @@ The WebGL smoke test now compares the same unchanged camera frame 2.8 seconds
 apart and asserts that an affected distant-forest sample remains stable. It
 also saves the pair as `stationary/forest-t0.png` and
 `stationary/forest-t3.png`, alongside the existing fire-motion captures.
+
+
+## Ground colour transitions — Unity-only export
+
+The original Three.js terrain uses intentional discrete soil/grass swatches,
+assigned per triangle. In Unity's darker gamma/filmic pipeline these can read
+as large straight-edged **light rectangles** even when every dynamic light and
+shadow layer is disabled (confirmed by PR #45 diagnostic renders).
+
+The exported Unity terrain now samples the same existing worn-ground signal
+using continuous smoothstep coverage and shared per-vertex colours. This
+removes abrupt transitions while preserving the ground geometry, route layout,
+plant and building positions, authored pine silhouettes and the established
+palette. The default Three.js `createTerrainGeometry()` is deliberately
+unchanged and remains the source of truth for the original browser version.
+
+Compare Unity's original and smoothed renders at the same camera angle,
+especially the broad dirt patches below/left of the hut and the shelter.
+Check that the paths remain visible, woodland remains dark, and ambient
+shading and all fire effects remain intact. Keep visual approval separate
+from an automatically passing WebGL build.
