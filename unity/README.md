@@ -176,3 +176,23 @@ CI stores `fog-camera-pan.png`, `fog-camera-zoom.png` and
 landmarks near the treeline at both camera positions and confirm that fog does
 not develop moving grey discs. Press F to toggle the six-source visibility,
 then R to reset the camera.
+
+
+## Stationary-forest lighting stability
+
+PR #43 isolated a bug that made large parts of the forest pulse grey/green **even
+when the camera did not move**. Three matched WebGL pairs demonstrated that the
+changes disappeared when the five campfire/torch point lights were held steady;
+disabling sunlight shadows had no additional effect. The moving visibility/fog
+mask was not the cause of this time-dependent regression.
+
+Unity now keeps **point-light intensity and colour static**. The fire shapes
+still deform in the GPU shader, their procedural smoke and sparks still move,
+and the camp retains warm illumination. This is a deliberate compromise: do
+not reintroduce dynamic point-light flicker until it is spatially confined and
+proven not to affect distant trees or large terrain meshes.
+
+The WebGL smoke test now compares the same unchanged camera frame 2.8 seconds
+apart and asserts that an affected distant-forest sample remains stable. It
+also saves the pair as `stationary/forest-t0.png` and
+`stationary/forest-t3.png`, alongside the existing fire-motion captures.
