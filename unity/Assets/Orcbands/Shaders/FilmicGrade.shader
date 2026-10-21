@@ -23,11 +23,10 @@ Shader "Hidden/Orcbands/FilmicGrade"
                 float3 exposed = source * .96;
                 float3 mapped = saturate((exposed * (2.51 * exposed + .03)) /
                     (exposed * (2.43 * exposed + .59) + .14));
-                // A subtle S-curve and recovered chroma keep the original
-                // pine/roof palettes from washing into beige and grey.
-                mapped = saturate((mapped - .42) * 1.14 + .42);
-                float luma = dot(mapped, float3(.2126,.7152,.0722));
-                mapped = saturate(lerp(float3(luma, luma, luma), mapped, 1.15));
+                // Do not add a second contrast or saturation curve: that
+                // destroyed the dark foliage detail in the original art
+                // and made lit needles and grass look artificially vivid.
+                // One filmic mapping pass is the intended colour treatment.
                 return float4(mapped, sampleColor.a);
             }
             ENDCG
