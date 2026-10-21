@@ -106,3 +106,14 @@ assert.match(fireLight, /Warmth\.intensity = BaseIntensity;/);
 assert.doesNotMatch(fireLight, /void Update\(/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /distantForestChangedFraction < \.012/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /stationary.*forest-t0\.png/s);
+
+// Fog-of-war/atmosphere ambient tint may be emitted ONLY by ForwardBase.
+// Unity's ForwardAdd executes finalcolor again for every extra point light;
+// adding the constant in those passes created rectangular light tiles even
+// in reveal-mask-only and baked-shadow-only diagnostic modes (PR #48).
+for (const shader of ['WorldColorLit', 'VertexColorLit']) {
+  const source = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
+  assert.match(source, /#if !defined\(UNITY_PASS_FORWARDADD\)[\s\S]*distant \+= float3\(\.12, \.15, \.13\) \* \.29;/);
+  assert.match(source, /#if defined\(UNITY_PASS_FORWARDADD\)[\s\S]*color\.rgb \*= 1\.0 - atmosphericFog;/);
+  assert.match(source, /#else[\s\S]*color\.rgb = lerp\(color\.rgb, _CampAtmosphereColor,/);
+}

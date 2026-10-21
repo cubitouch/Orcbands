@@ -55,9 +55,17 @@ Shader "Orcbands/VertexColorLit"
             // Keep the distant pine silhouettes readable like the original
             // WebGL grove; the filmic pass otherwise crushes their dark detail.
             // This only changes the unrevealed forest, never the lit camp.
+            // The fog mapping is affine: a linear attenuation of lighting
+            // plus an ambient colour offset. Unity calls 'finalcolor' once
+            // per forward light pass, not only for the final composited pixel.
+            // Only the base pass may contribute the constant woodland tint;
+            // adding it in ForwardAdd emits a bright tile for each extra
+            // point light even where that light contributes zero radiance.
             float3 distant = lerp(float3(luminance, luminance, luminance),
-                                   baseColor, .43) * .53;
-            distant = lerp(distant, float3(.12, .15, .13), .29);
+                                   baseColor, .43) * (.53 * .71);
+#if !defined(UNITY_PASS_FORWARDADD)
+            distant += float3(.12, .15, .13) * .29;
+#endif
             return lerp(baseColor, distant, obscured);
         }
 
@@ -118,8 +126,15 @@ Shader "Orcbands/VertexColorLit"
             float worldDistance = distance(IN.worldPos.xz, _CampAtmosphereOrigin.xy);
             float atmosphericFog = smoothstep(85.0, 135.0, worldDistance)
                                    * _CampAtmosphereEnabled;
+#if defined(UNITY_PASS_FORWARDADD)
+            // ForwardAdd is accumulated over the ForwardBase pass. The
+            // distant atmospheric colour is an additive *constant*, so it
+            // must not be emitted repeatedly by each point-light pass.
+            color.rgb *= 1.0 - atmosphericFog;
+#else
             color.rgb = lerp(color.rgb, _CampAtmosphereColor,
                              atmosphericFog);
+#endif
         }
         ENDCG
     }

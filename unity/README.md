@@ -196,3 +196,32 @@ The WebGL smoke test now compares the same unchanged camera frame 2.8 seconds
 apart and asserts that an affected distant-forest sample remains stable. It
 also saves the pair as `stationary/forest-t0.png` and
 `stationary/forest-t3.png`, alongside the existing fire-motion captures.
+
+
+## Forward-additive lighting and the bright rectangular tiles
+
+The residual static, straight-edged bright rectangles were not fixed by
+camera-anchored fog, stationary point lights, smoothing terrain colors or
+Gaussian reveal falloff. PR #48 isolated the reveal and baked-shadow outputs
+at the same camera. **The exact same rectangular brightness discontinuities
+appeared in both diagnostic views**, so they could not originate solely from
+one mask's geometry.
+
+The custom surface shaders use Unity's `finalcolor` callback. This runs in
+both `ForwardBase` and **each extra `ForwardAdd` point-light pass**. The
+original callback blended a fixed woodland grey-green and atmospheric colour
+into *every* pass, injecting a constant even when a point light had zero
+radiance. The subsequent additive accumulation created square/rectangular
+light regions associated with per-light rasterization.
+
+The shaders now use the same linear reveal attenuation in every pass, but add
+the constant ambient tint and far atmospheric colour **only in ForwardBase**.
+ForwardAdd uses pure multiplicative attenuation, so black light contributions
+stay black; there is no bright constant to accumulate repeatedly. This keeps
+all five static warm lights, animated fire meshes, smoke and sparks.
+
+Before merging, compare the same-camera Unity WebGL `starter.png` capture
+against PR #48's original and mask-isolation captures. Check the exact ground
+rectangle, then fire/spark visibility and dark forest readability. This is a
+lighting-composition correction, not a change to the underlying terrain or
+visibility layout.
