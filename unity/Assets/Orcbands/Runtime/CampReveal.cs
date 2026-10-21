@@ -10,17 +10,30 @@ namespace Orcbands
     {
         // Each vector holds the reflected Unity world X, Z and reveal radius.
         public Vector4[] Sources;
+        public bool FogOfWarVisible { get; private set; } = true;
 
-        private void OnEnable()
+        // Compare visibility and original materials without altering scene data.
+        public void SetFogOfWar(bool visible)
         {
+            FogOfWarVisible = visible;
+            Apply();
+        }
+
+        private void Start() { Apply(); }
+
+        private void OnEnable() { Apply(); }
+
+        private void Apply()
+        {
+            // OnEnable can occur while the editor is still constructing
+            // this component, before the six-source layout is assigned.
             if (Sources == null || Sources.Length != 6)
             {
-                Debug.LogError("Orcbands: camp reveal requires six approved sources");
                 Shader.SetGlobalFloat("_CampFogEnabled", 0f);
                 return;
             }
             Shader.SetGlobalVectorArray("_CampRevealSources", Sources);
-            Shader.SetGlobalFloat("_CampFogEnabled", 1f);
+            Shader.SetGlobalFloat("_CampFogEnabled", FogOfWarVisible ? 1f : 0f);
         }
 
         private void OnDisable()

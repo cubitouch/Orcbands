@@ -35,12 +35,13 @@ Shader "Orcbands/VertexColorLit"
                          + sin(world.z * 2.1 + world.x * .6) * .10;
             float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
-            float3 distant = lerp(float3(luminance, luminance, luminance), baseColor, .38) * .33;
-            // Three.js fog tint is authored in linear RGB. Convert that
-            // tint to sRGB before mixing in the Gamma-space Unity player,
-            // otherwise the entire distant forest collapses into black.
-            distant = lerp(distant, float3(.206, .253, .265), .38);
-            return lerp(baseColor, distant, obscured);
+            // This is Warcraft-like fog OF WAR, not atmospheric mist.
+            // Darken the *existing* lit surface while retaining some local
+            // colour/shape detail. Avoid any uniform grey veil/tint.
+            float3 detail = lerp(float3(luminance, luminance, luminance),
+                                  baseColor, .38);
+            float3 hidden = detail * .36 + float3(.005, .012, .009);
+            return lerp(baseColor, hidden, obscured);
         }
 
         void surf(Input IN, inout SurfaceOutput o)

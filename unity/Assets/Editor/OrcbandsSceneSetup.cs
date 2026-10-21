@@ -46,7 +46,9 @@ namespace Orcbands.Editor
             RenderSettings.ambientSkyColor = new Color(.54f, .63f, .53f);
             RenderSettings.ambientEquatorColor = new Color(.43f, .48f, .41f);
             RenderSettings.ambientGroundColor = new Color(.29f, .29f, .26f);
-            RenderSettings.fog = true;
+            // Fog-of-war is applied per world-space material. Do NOT stack
+            // camera-distance / atmospheric fog on top of gameplay visibility.
+            RenderSettings.fog = false;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogStartDistance = 85f;
             RenderSettings.fogEndDistance = 135f;
@@ -146,7 +148,9 @@ namespace Orcbands.Editor
             var film = cameraObject.AddComponent<FilmicGrade>();
             film.GradeMaterial = SavedMaterial("BrowserFilmicGrade", new Material(Shader.Find("Hidden/Orcbands/FilmicGrade")));
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = RenderSettings.fogColor;
+            // A subdued distant clearing for areas outside the level mesh;
+            // the woodland itself is obscured by the authored fog of war.
+            camera.backgroundColor = new Color(.12f, .16f, .14f);
             cameraObject.transform.position = new Vector3(-20f, 22f, 26f);
             cameraObject.transform.LookAt(new Vector3(0f, 0f, -1f));
 
@@ -177,6 +181,7 @@ namespace Orcbands.Editor
             controller.SelectionRing = ringObject.transform;
             controller.GameCamera = camera;
             controller.Ground = ground.GetComponent<Collider>();
+            controller.Reveal = reveal;
             Directory.CreateDirectory("Assets/Scenes");
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new InvalidOperationException("Unable to save Unity forest scene");
@@ -285,6 +290,12 @@ namespace Orcbands.Editor
                                 source.color.r * .86f, source.color.g * .77f,
                                 source.color.b * .75f, source.color.a);
                         else replacement.color = source.color;
+                        if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
+                            replacement.SetFloat("_SurfaceContrast", 1.19f);
+                        else if (source.name.IndexOf("bark", StringComparison.OrdinalIgnoreCase) >= 0)
+                            replacement.SetFloat("_SurfaceContrast", 1.09f);
+                        else if (source.name.StartsWith("roof_", StringComparison.OrdinalIgnoreCase))
+                            replacement.SetFloat("_SurfaceContrast", 1.07f);
                         replacement = SavedMaterial("CampColor-" + key, replacement);
                         Shades.Add(key, replacement);
                     }

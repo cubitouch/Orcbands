@@ -39,3 +39,20 @@ for (const brace of braces) {
   assert(balance >= 0, 'CampReveal.cs has an unmatched closing brace');
 }
 assert.equal(balance, 0, 'CampReveal.cs has an unmatched opening brace');
+
+// Guard the meaning of fog: the six-source Warcraft-like visibility mask is
+// not a camera-distance atmospheric fog layer.
+const sceneSource = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
+assert.match(sceneSource, /RenderSettings\.fog = false;/);
+assert.match(sceneSource, /controller\.Reveal = reveal;/);
+for (const shader of ['WorldColorLit', 'VertexColorLit']) {
+  const src = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
+  assert.match(src, /_CampRevealSources\[6\]/);
+  assert.match(src, /smoothstep\(-5\.0, 3\.0,/);
+  assert(!src.includes('float3(.206, .253, .265)'),
+    'Avoid the removed grey FOW overlay');
+}
+assert.match(file('tools/generate-unity-tree-shadows.mjs'),
+  /addRootContactOcclusion\(soft, trees, size\)/);
+assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'),
+  /KeyCode\.F/);

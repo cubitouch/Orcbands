@@ -103,6 +103,42 @@ function blurInto(source, size) {
   return end;
 }
 
+// Add local ambient occlusion directly below each tree. Cast shadows alone
+// fall away from the sun and leave the trunks visually floating above the soil.
+// Keep two feathered Gaussian scales: tight roots + broad low canopy, with
+// multiplicative union to avoid opaque hard circles where trees overlap.
+export function addRootContactOcclusion(mask, trees, size = SHADOW_MAP_SIZE) {
+  const worldPerTexel = 2 * SHADOW_HALF_EXTENT / size;
+  let enhancedRoots = 0;
+  for (const tree of trees) {
+    const centerX = (tree.x + SHADOW_HALF_EXTENT) / worldPerTexel;
+    const centerY = (SHADOW_HALF_EXTENT - tree.z) / worldPerTexel;
+    const scale = tree.scale ?? 1;
+    const rootSigma = Math.max(.30, .43 * scale);
+    const canopySigma = Math.max(.75, .94 * scale);
+    const radius = Math.ceil(3 * canopySigma / worldPerTexel);
+    let peakAdded = 0;
+    for (let row = Math.max(0, Math.floor(centerY - radius));
+         row <= Math.min(size - 1, Math.ceil(centerY + radius)); row++) {
+      const wz = (row + .5 - centerY) * worldPerTexel;
+      for (let col = Math.max(0, Math.floor(centerX - radius));
+           col <= Math.min(size - 1, Math.ceil(centerX + radius)); col++) {
+        const wx = (col + .5 - centerX) * worldPerTexel;
+        const dist2 = wx * wx + wz * wz;
+        const root = .48 * Math.exp(-dist2 / (2 * rootSigma * rootSigma));
+        const canopy = .15 * Math.exp(-dist2 / (2 * canopySigma * canopySigma));
+        const contact = Math.min(.70, root + canopy);
+        const pixel = row * size + col;
+        const before = mask[pixel];
+        mask[pixel] = 1 - (1 - before) * (1 - contact);
+        if (contact > .40) peakAdded = Math.max(peakAdded, mask[pixel] - before);
+      }
+    }
+    if (peakAdded > .025) enhancedRoots++;
+  }
+  return enhancedRoots;
+}
+
 function projectToPixels(vertex, placement, size) {
   const cosine = Math.cos(placement.angle), sine = Math.sin(placement.angle);
   const [x, y, z] = vertex;
@@ -145,11 +181,14 @@ export function generateTreeShadowTexture(trees, destination) {
     }
   }
   const soft = blurInto(shadow, size);
+  const enhancedRoots = addRootContactOcclusion(soft, trees, size);
+  if (enhancedRoots < trees.length / 3)
+    throw new Error('Most pine roots lack contact shading: ' + enhancedRoots);
   const count = shadow.reduce((sum, value) => sum + (value ? 1 : 0), 0);
   if (count < 3000 || count > size * size * .5)
     throw new Error('Suspicious original pine shadow coverage: ' + count);
   const bytes = saveMaskPNG(soft, size, destination);
   console.log('Original-tree sun-shadow map', trees.length, 'trees,', count,
-    'covered texels,', bytes, 'PNG bytes');
-  return { count, bytes };
+    'covered texels,', enhancedRoots, 'grounded roots,', bytes, 'PNG bytes');
+  return { count, bytes, enhancedRoots };
 }

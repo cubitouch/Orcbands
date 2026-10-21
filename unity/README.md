@@ -115,3 +115,25 @@ layout**, but materials, lighting and fog are rendered by Unity. Not yet an
 identical render: fog-of-war mask/smoke/polished GUI remain future improvements.
 Check the generated screenshot artifact on the Unity PR before merging. The
 first WebGL milestone is environmental parity, not gameplay parity.
+
+## Visual fidelity: fog of war, contact shadows and materials
+
+The visibility effect is **Warcraft-style fog of war**, not weather or actual
+grey fog. A six-source world-space mask (hut, hearth and four torches) dims
+unrevealed geometry smoothly, retaining muted detail. Unity's normal
+camera-distance fog is deliberately **disabled** to avoid a flat veil.
+
+The original pine OBJ silhouettes create sun-cast shadows on the ground.
+A soft, scale-aware root and low-canopy occlusion pass augments those shadows
+*directly beneath trees*, so they do not appear to float. The original MTL
+foliage swatches also receive slightly more local tonal separation.
+
+In desktop and WebGL, press **F** to toggle fog of war for direct comparison
+of lighting/materials. This is a review shortcut, not a gameplay exploration
+system. CI publishes both `starter.png` (fog of war **on**) and
+`fog-of-war-disabled.png` (fog of war **off**) from the same build. Keep
+the original Asset Lab and this Unity scene side-by-side at equal framing
+when checking colour, contact shading and fog-of-war boundaries.
+
+Do **not** merge PR #40 solely because validation/CI passes; review the
+actual screenshots and confirm material/fog depth first.

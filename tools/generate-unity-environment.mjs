@@ -18,7 +18,9 @@ const root = resolve(import.meta.dirname, '../unity/Assets/Orcbands/Generated');
 mkdirSync(root, { recursive: true });
 const layout = createLayout();
 if (layout.trees.length !== 244) throw new Error('Expected the approved 244-pine forest');
-generateTreeShadowTexture(layout.trees, resolve(root, 'approved-pine-shadows.png'));
+const shadowResult = generateTreeShadowTexture(layout.trees, resolve(root, 'approved-pine-shadows.png'));
+if (shadowResult.enhancedRoots < 80)
+  throw new Error('Too few tree roots have ground-contact shading');
 const expected = ['shelter/stocked', 'construction/roof', 'bush/full', 'wood/stump', 'stone/full'];
 for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.state === key))
   throw new Error('Missing forest resource: ' + key);
