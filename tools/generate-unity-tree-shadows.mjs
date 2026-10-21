@@ -131,7 +131,9 @@ export function addRootContactOcclusion(mask, trees, size = SHADOW_MAP_SIZE) {
         const pixel = row * size + col;
         const before = mask[pixel];
         mask[pixel] = 1 - (1 - before) * (1 - contact);
-        if (contact > .40) peakAdded = Math.max(peakAdded, mask[pixel] - before);
+        // A projected cast shadow may already be near 1 at the tree base.
+        // Validate grounded pixels rather than only the incremental change.
+        if (contact > .40) peakAdded = Math.max(peakAdded, mask[pixel]);
       }
     }
     if (peakAdded > .025) enhancedRoots++;
