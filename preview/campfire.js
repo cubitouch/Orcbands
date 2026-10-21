@@ -66,7 +66,7 @@ export function buildCampfire(parent,placement){
   time=t;
   motion.forEach(animate=>animate(t));
   const warmth=fireSignal(t,.8);
-  light.intensity=7.2+warmth*1.6;
+  light.intensity=7.7+warmth*1.65;
   light.color.setHSL(.075+warmth*.012,1,.62);
   light.position.set(Math.sin(t*2.8)*.055,.76+warmth*.035,Math.cos(t*3.1)*.045);
   emberMaterial.color.setHSL(.045+warmth*.008,.95,.42+warmth*.035);
