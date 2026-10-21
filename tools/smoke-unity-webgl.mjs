@@ -49,6 +49,29 @@ try {
   }, null, { timeout: 180000 });
   assert(await loaded.jsonValue(), 'Unity never completed WebGL initialization');
   await page.waitForTimeout(2500);
+  // Reproduce the reported time-dependent grey area with ZERO camera input.
+  // Isolate changes from fire point lights, sun shadow maps, and FOW.
+  const diagnosticDir = resolve(root, 'smoke-artifacts/unity-webgl/stationary');
+  await mkdir(diagnosticDir, { recursive: true });
+  const stationaryPair = async (label) => {
+    await page.waitForTimeout(800);
+    await page.locator('#unity-canvas').screenshot({
+      path: resolve(diagnosticDir, label + '-t0.png')
+    });
+    await page.waitForTimeout(2800);
+    await page.locator('#unity-canvas').screenshot({
+      path: resolve(diagnosticDir, label + '-t3.png')
+    });
+  };
+  await stationaryPair('normal');
+  await page.locator('#unity-canvas').focus();
+  await page.keyboard.press('l'); // Freeze only firelight, not flames or smoke.
+  await stationaryPair('firelight-frozen');
+  await page.keyboard.press('k'); // Disable sun shadow casting independently.
+  await stationaryPair('firelight-frozen-sun-shadows-off');
+  await page.keyboard.press('l');
+  await page.keyboard.press('k');
+  // The normal fire + sun configuration is restored after capture.
   // Review the same broad landscape presentation as the original Asset Lab,
   // not Unity's default white 960x600 player chrome.
   const viewport = page.locator('#viewport');
