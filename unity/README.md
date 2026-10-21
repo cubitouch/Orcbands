@@ -137,3 +137,21 @@ when checking colour, contact shading and fog-of-war boundaries.
 
 Do **not** merge PR #40 solely because validation/CI passes; review the
 actual screenshots and confirm material/fog depth first.
+
+
+## Fire effects restoration — Unity visual pass 3
+
+The approved source flame mesh is no longer frozen in Unity. GPU vertex motion
+bends the original triangles using five authored fire centers, preserving
+anchored bases and independent hearth/torch phases. Two small bounded particle
+systems per source add procedural soft smoke discs and additive drifting sparks.
+They use fixed seeds, controlled lifetimes, WebGL-safe unlit materials, and no
+third-party art or per-frame geometry rebuilds. The local fire lights continue
+to flicker.
+
+On fire-visual PRs, **inspect both fog-on/off screenshots plus fire-motion-1.png
+and fire-motion-2.png**, and compare the hearth and torch effects against the
+Three.js camp. CI now requires that the real Unity canvas change across frames,
+though human review must still check that the movement looks good. Keep the PR
+unmerged until its WebGL images have been inspected. The decorative effects do
+not implement gameplay and the Unity HUD has not yet been ported.

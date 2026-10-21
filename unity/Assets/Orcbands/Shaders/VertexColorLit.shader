@@ -4,6 +4,7 @@ Shader "Orcbands/VertexColorLit"
     {
         _Tint ("Tint", Color) = (1,1,1,1)
         _Unlit ("Fire emission", Range(0,1)) = 0
+        _FireMotion ("Deform original fire mesh", Range(0,1)) = 0
         _ForestShadowTex ("Original pine sun shadows", 2D) = "white" {}
         _ForestShadowStrength ("Pine shadow strength", Range(0,1)) = 0
     }
@@ -13,10 +14,12 @@ Shader "Orcbands/VertexColorLit"
         LOD 200
         Cull Off
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows finalcolor:FinalizeColor
+        #pragma surface surf Lambert fullforwardshadows vertex:AnimateFire finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Tint;
         half _Unlit;
+        half _FireMotion;
+        float4 _CampFireSources[5];
         sampler2D _ForestShadowTex;
         half _ForestShadowStrength;
         struct Input { float4 color : COLOR; float3 worldPos; };
@@ -46,10 +49,46 @@ Shader "Orcbands/VertexColorLit"
             // Unity's gamma-space WebGL surface output is not equivalent.
             // Lift hidden detail before the grade so the edge reads as a
             // muted woodland, not black cut-out triangles.
+            // Keep the distant pine silhouettes readable like the original
+            // WebGL grove; the filmic pass otherwise crushes their dark detail.
+            // This only changes the unrevealed forest, never the lit camp.
             float3 distant = lerp(float3(luminance, luminance, luminance),
-                                   baseColor, .46) * .45;
-            distant = lerp(distant, float3(.075, .096, .087), .25);
+                                   baseColor, .43) * .53;
+            distant = lerp(distant, float3(.12, .15, .13), .29);
             return lerp(baseColor, distant, obscured);
+        }
+
+        // Animate the actual Three.js faceted flame triangles, never the
+        // hearth stones, tree meshes or decorative world geometry. Flame-base
+        // vertices stay anchored while high tips bend and stretch.
+        void AnimateFire(inout appdata_full v)
+        {
+            if (_FireMotion < .5) return;
+            float3 world = mul(unity_ObjectToWorld, v.vertex).xyz;
+            float4 emitter = _CampFireSources[0];
+            float minDistance = 1e9;
+            [unroll] for (int i = 0; i < 5; i++)
+            {
+                float2 offset = world.xz - _CampFireSources[i].xy;
+                float distanceSquared = dot(offset, offset);
+                if (distanceSquared < minDistance)
+                {
+                    minDistance = distanceSquared;
+                    emitter = _CampFireSources[i];
+                }
+            }
+            float height = max(0, world.y - emitter.z);
+            float normalizedHeight = saturate(height / (minDistance < .5 ? 1.05 : 1.1));
+            float tipWeight = normalizedHeight * normalizedHeight;
+            float t = _Time.y;
+            float phase = emitter.w + dot(world.xz, float2(.37, .59));
+            // Two frequencies + vertical breathing track the source fire-motion
+            // animation while preserving its original source mesh and palette.
+            world.x += tipWeight * (.14 * sin(t * 4.4 + phase + height * 1.8)
+                                 + .038 * sin(t * 9.2 + phase * 1.7));
+            world.z += tipWeight * .09 * sin(t * 3.3 + phase * 1.4 + height);
+            world.y += .07 * sin(3.8 * t + phase) * sin(3.14159265 * normalizedHeight);
+            v.vertex = mul(unity_WorldToObject, float4(world, 1));
         }
 
         void surf(Input IN, inout SurfaceOutput o)

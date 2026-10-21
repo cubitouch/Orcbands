@@ -81,6 +81,7 @@ namespace Orcbands.Editor
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
             fireArt.SetFloat("_Unlit", 1f);
+            fireArt.SetFloat("_FireMotion", 1f);
             fireArt = SavedMaterial("ApprovedFireGlow", fireArt);
             var ground = ColoredMesh("Ground", "terrain", terrainArt, true);
             // Root patches sit above terrain and must receive the SAME baked
@@ -184,6 +185,27 @@ namespace Orcbands.Editor
             RenderSettings.sun = sun;
 
             var controllerObject = new GameObject("Orcbands Controller");
+            // Keep all five original fire positions synchronized across the
+            // bending flame shader and bounded smoke/ember particle pools.
+            Shader particleShader = Shader.Find("Orcbands/FireParticles");
+            if (particleShader == null)
+                throw new InvalidOperationException("Missing smoke and ember shader");
+            var fireAtmosphere = controllerObject.AddComponent<CampFireAtmosphere>();
+            var smokeMaterial = new Material(particleShader);
+            var emberMaterial = new Material(particleShader);
+            emberMaterial.SetFloat("_DstBlend", (float)BlendMode.One);
+            fireAtmosphere.SmokeMaterial = SavedMaterial("SmokeSoftParticles", smokeMaterial);
+            fireAtmosphere.EmberMaterial = SavedMaterial("EmberGlowParticles", emberMaterial);
+            fireAtmosphere.Sources = new Vector4[5];
+            var fireGround = Surface(ground, layout.campfire.x, layout.campfire.z);
+            fireAtmosphere.Sources[0] = new Vector4(layout.campfire.x, layout.campfire.z,
+                fireGround.y + .19f, .8f);
+            for (int i = 0; i < layout.torches.Length; i++)
+            {
+                P p = layout.torches[i];
+                fireAtmosphere.Sources[i + 1] = new Vector4(p.x, p.z,
+                    Surface(ground, p.x, p.z).y + 1.76f, i * 2.3f);
+            }
             var reveal = controllerObject.AddComponent<CampReveal>();
             reveal.GameCamera = camera;
             reveal.Sources = new Vector4[6];
