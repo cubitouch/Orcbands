@@ -112,8 +112,8 @@ Shader "Orcbands/VertexColorLit"
             float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
             color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
             color.rgb = CampShade(color.rgb, IN.worldPos);
-            // Formerly distance(_WorldSpaceCameraPos, IN.worldPos): moving
-            // the camera swept a grey 85–135m band across stationary trees.
+            // The old camera-relative distance blend swept grey bands
+            // over stationary trees during RTS navigation.
             // Fix the distant fade in world space around the original clearing.
             float worldDistance = distance(IN.worldPos.xz, _CampAtmosphereOrigin.xy);
             float atmosphericFog = smoothstep(85.0, 135.0, worldDistance)
