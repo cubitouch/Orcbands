@@ -196,3 +196,23 @@ The WebGL smoke test now compares the same unchanged camera frame 2.8 seconds
 apart and asserts that an affected distant-forest sample remains stable. It
 also saves the pair as `stationary/forest-t0.png` and
 `stationary/forest-t3.png`, alongside the existing fire-motion captures.
+
+## Fog-of-war boundary: organic feathering (Unity visual experiment)
+
+The wide bright/grey **rectangle** remains in both PR #45 and PR #46 terrain
+captures. Those captures always had camp visibility enabled, so they never
+isolated the six-source reveal. Compare the identical-camera WebGL `starter.png`
+and `fog-of-war-disabled.png` instead: that bright/dark perimeter disappears
+when fog-of-war is turned off.
+
+Unity used the original hard maximum of six finite-radius reveals, creating
+a merged, sometimes box-like shape around the hut, hearth and torches.
+This Unity-only experiment retains all six authored positions and the fixed
+world-coordinate shader calculation, but blends continuous radial influence
+using a Gaussian for each source and an overlapping union. The aim is a
+natural, broad falloff rather than a visible rectangular boundary.
+
+The mask stays static when the camera and gameplay actors are stationary.
+The underlying approved Three.js fog shader is deliberately unchanged.
+Compare the generated fog-on and fog-off Unity screenshots before merging,
+including the dark treeline, hut and all four torch locations.
