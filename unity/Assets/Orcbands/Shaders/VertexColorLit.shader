@@ -35,8 +35,8 @@ Shader "Orcbands/VertexColorLit"
                          + sin(world.z * 2.1 + world.x * .6) * .10;
             float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
-            float3 distant = lerp(float3(luminance, luminance, luminance), baseColor, .55) * .53;
-            distant = lerp(distant, float3(.072, .102, .096), .25);
+            float3 distant = lerp(float3(luminance, luminance, luminance), baseColor, .38) * .24;
+            distant = lerp(distant, float3(.035, .052, .057), .38);
             return lerp(baseColor, distant, obscured);
         }
 

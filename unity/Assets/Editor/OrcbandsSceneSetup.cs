@@ -70,6 +70,7 @@ namespace Orcbands.Editor
             Material terrainArt = new Material(art);
             terrainArt.SetTexture("_ForestShadowTex", pineShadowMap);
             terrainArt.SetFloat("_ForestShadowStrength", .78f);
+            terrainArt.SetColor("_Tint", new Color(.87f, .88f, .83f));
             terrainArt = SavedMaterial("WoodlandGroundWithShadows", terrainArt);
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
@@ -153,7 +154,7 @@ namespace Orcbands.Editor
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.color = new Color(1f, .92f, .83f);
-            sun.intensity = .98f;
+            sun.intensity = .92f;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .74f;
             // Source Three.js sun sits at (-22, 36, 18); Unity mirrors X.
