@@ -95,6 +95,34 @@ try {
   ], { encoding: 'utf8', timeout: 30000 });
   if (encoded.status !== 0)
     console.warn('Could not encode optional fire motion review clip:', encoded.stderr);
+  // Regression captures for the fog patch reported during RTS navigation.
+  // The camera moves, but the six-source visibility and distant atmospheric
+  // fade must remain attached to stable world-space positions.
+  await page.locator('#unity-canvas').focus();
+  await page.keyboard.down('w');
+  await page.waitForTimeout(900);
+  await page.keyboard.up('w');
+  await page.screenshot({
+    path: resolve(root, 'smoke-artifacts/unity-webgl/fog-camera-pan.png'),
+    fullPage: true
+  });
+  await page.locator('#unity-canvas').hover();
+  await page.mouse.wheel(0, -520);
+  await page.waitForTimeout(650);
+  await page.screenshot({
+    path: resolve(root, 'smoke-artifacts/unity-webgl/fog-camera-zoom.png'),
+    fullPage: true
+  });
+  // Keep two visibility states at the same moved camera position for review.
+  await page.keyboard.press('f');
+  await page.waitForTimeout(350);
+  await page.screenshot({
+    path: resolve(root, 'smoke-artifacts/unity-webgl/fog-camera-zoom-reveal-off.png'),
+    fullPage: true
+  });
+  await page.keyboard.press('f');
+  await page.keyboard.press('r');
+  await page.waitForTimeout(350);
   assert.deepEqual(errors, [], 'Browser errors occurred while loading Unity WebGL');
   console.log('Unity WebGL loaded successfully; review screenshot: ' + screenshot);
 } finally {
