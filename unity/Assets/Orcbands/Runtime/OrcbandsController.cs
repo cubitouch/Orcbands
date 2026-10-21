@@ -17,6 +17,8 @@ namespace Orcbands
         private Vector3 focus = new Vector3(0f, 0f, -1f);
         private const float MoveSpeed = 4.5f;
 
+        // Diagnostic-only mode; never ship this toggle to production.
+        private int revealDiagnosticMode;
         private void Update()
         {
             if (Worker == null || GameCamera == null || Ground == null) return;
@@ -24,6 +26,12 @@ namespace Orcbands
             // baseline until gameplay-driven exploration is implemented.
             if (Reveal != null && Input.GetKeyDown(KeyCode.F))
                 Reveal.SetFogOfWar(!Reveal.FogOfWarVisible);
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                revealDiagnosticMode = (revealDiagnosticMode + 1) % 6;
+                Shader.SetGlobalFloat("_CampRevealDebug", revealDiagnosticMode);
+                Debug.Log("Unity reveal layer diagnostic: " + revealDiagnosticMode);
+            }
 
             if (Input.GetMouseButtonDown(0))
             {
