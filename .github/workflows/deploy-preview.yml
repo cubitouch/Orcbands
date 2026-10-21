@@ -34,6 +34,14 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
+      - name: Restore Unity WebGL Library cache
+        id: unity-library-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: unity/Library
+          key: Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-${{ hashFiles('unity/Assets/**', 'unity/Packages/**', 'unity/ProjectSettings/**', 'preview/**', 'tools/generate-unity-*.mjs') }}
+          restore-keys: |
+            Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-
       - name: Build Unity browser player
         uses: game-ci/unity-builder@v4
         env:
@@ -45,6 +53,14 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
+      - name: Save Unity WebGL Library cache
+        if: steps.unity-library-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        timeout-minutes: 4
+        continue-on-error: true
+        with:
+          path: unity/Library
+          key: ${{ steps.unity-library-cache.outputs.cache-primary-key }}
       - name: Check static hosting asset format
         shell: bash
         run: |
