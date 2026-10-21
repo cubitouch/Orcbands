@@ -196,3 +196,22 @@ The WebGL smoke test now compares the same unchanged camera frame 2.8 seconds
 apart and asserts that an affected distant-forest sample remains stable. It
 also saves the pair as `stationary/forest-t0.png` and
 `stationary/forest-t3.png`, alongside the existing fire-motion captures.
+
+
+## Temporary diagnostic — additive-light bounding rectangles
+
+PR #48 isolated screen-aligned rectangles that appeared in both the
+visibility-mask-only and baked-shadow-texture-only captures. PR #49 removed
+the constant fog tint from additional lighting passes, but real WebGL
+screenshots show the rectangle persists. This diagnostic disables forward
+additive passes entirely on both scene surface shaders with
+`#pragma surface ... noforwardadd` to test whether those passes produce the
+rectangle. The directional sun, baked pine shadows, base ambient/visibility,
+fire geometry, smoke and sparks are unchanged. Extra point lights may become
+vertex-lit or lose some contribution while this experiment is active.
+
+Compare the full exact-camera screenshot with PR #48's original; look for a
+sharp rectangular boundary at the same position. **Do not merge this
+experiment** until the visual consequences are understood. If this removes
+the rectangle, replace it with a production plan that preserves gentle warm
+camp point-light illumination without forward-additive scissor artifacts.
