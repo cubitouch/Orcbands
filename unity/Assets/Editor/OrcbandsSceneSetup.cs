@@ -311,7 +311,12 @@ namespace Orcbands.Editor
             // GitHub Pages serves static files without Content-Encoding for
             // Unity's pre-compressed WebGL bundles. Emit uncompressed files.
             if (target == BuildTarget.WebGL)
+            {
                 PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+                // Use the Asset Lab's dark, landscape-oriented presentation,
+                // not the white branded Unity starter template.
+                PlayerSettings.WebGL.template = "PROJECT:Orcbands";
+            }
             if (target != BuildTarget.WebGL && target != BuildTarget.StandaloneOSX)
                 throw new InvalidOperationException("Unsupported Orcbands CI target: " + target);
 
