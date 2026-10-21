@@ -49,6 +49,13 @@ try {
   }, null, { timeout: 180000 });
   assert(await loaded.jsonValue(), 'Unity never completed WebGL initialization');
   await page.waitForTimeout(2500);
+  // Review the same broad landscape presentation as the original Asset Lab,
+  // not Unity's default white 960x600 player chrome.
+  const viewport = page.locator('#viewport');
+  assert.equal(await viewport.count(), 1, 'Expected Orcbands gallery WebGL template');
+  const box = await page.locator('#unity-canvas').boundingBox();
+  assert(box && box.width > 1050 && box.height > 390,
+    'Unity should fill the approved wide landscape gallery');
   await page.screenshot({ path: screenshot, fullPage: true });
   assert.deepEqual(errors, [], 'Browser errors occurred while loading Unity WebGL');
   console.log('Unity WebGL loaded successfully; review screenshot: ' + screenshot);
