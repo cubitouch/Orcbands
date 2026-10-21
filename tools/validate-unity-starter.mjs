@@ -64,3 +64,11 @@ assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'),
 
 assert.match(sceneSource,
   /"forest-patches", terrainArt, false/);
+
+// Lighting parity: the source scene's hearth and four torches contribute
+// actual illumination, not just emissive meshes. Verify the Unity builder
+// does not silently regress to its original under-lit 0.9 / 0.72 lights.
+const sceneCode = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
+assert.match(sceneCode, /QualitySettings\.pixelLightCount = 6;/);
+assert.match(sceneCode, /5\.5f, 4\.2f, \.8f\);/);
+assert.match(sceneCode, /5\.2f, 2\.9f, i \* 2\.3f\);/);

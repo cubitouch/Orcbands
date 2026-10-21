@@ -43,9 +43,9 @@ namespace Orcbands.Editor
             // The original Asset Lab uses a strong sky/ground hemisphere,
             // not the flat dim ambience from the first Unity import.
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.54f, .63f, .53f);
-            RenderSettings.ambientEquatorColor = new Color(.43f, .48f, .41f);
-            RenderSettings.ambientGroundColor = new Color(.29f, .29f, .26f);
+            RenderSettings.ambientSkyColor = new Color(.48f, .57f, .49f);
+            RenderSettings.ambientEquatorColor = new Color(.37f, .44f, .37f);
+            RenderSettings.ambientGroundColor = new Color(.26f, .27f, .25f);
             // Like the original Three.js renderer, use atmospheric distance
             // fog (85-135m) *and* the six-source camp visibility mask.
             RenderSettings.fog = true;
@@ -55,6 +55,8 @@ namespace Orcbands.Editor
             RenderSettings.fogColor = new Color(64f/255f, 83f/255f, 79f/255f);
             QualitySettings.shadows = ShadowQuality.All;
             QualitySettings.shadowDistance = 65f;
+            // Five authored firelights must survive Unity's forward-light selection.
+            QualitySettings.pixelLightCount = 6;
 
             Shader vertexShader = Shader.Find("Orcbands/VertexColorLit");
             Shader worldShader = Shader.Find("Orcbands/WorldColorLit");
@@ -118,13 +120,13 @@ namespace Orcbands.Editor
             // Three.js; only the lightweight animated point lights are Unity-native.
             AddFlicker("Hearth firelight",
                 Surface(ground, layout.campfire.x, layout.campfire.z) + Vector3.up * .76f,
-                5f, .90f, .8f);
+                5.5f, 4.2f, .8f);
             for (int i = 0; i < layout.torches.Length; i++)
             {
                 P loc = layout.torches[i];
                 AddFlicker("Torch firelight " + (i + 1),
                     Surface(ground, loc.x, loc.z) + Vector3.up * 2f,
-                    5f, .72f, i * 2.3f);
+                    5.2f, 2.9f, i * 2.3f);
             }
 
             GameObject worker = GameObject.CreatePrimitive(PrimitiveType.Capsule);
