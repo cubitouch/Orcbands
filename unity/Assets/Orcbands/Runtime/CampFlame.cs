@@ -2,32 +2,26 @@ using UnityEngine;
 
 namespace Orcbands
 {
-    // Small, deterministic flame/light movement matching the style of the
-    // approved Three.js campfire, without per-frame geometry regeneration.
+    /// <summary>
+    /// Stationary fire illumination. The original flame mesh still deforms in
+    /// VertexColorLit and smoke/embers remain animated in CampFireAtmosphere.
+    ///
+    /// Dynamic point-light intensity/colour caused broad regions of distant
+    /// terrain to pulse even with a stationary RTS camera (PR #43 captures).
+    /// Keep this light warm and steady until we can constrain firelight to
+    /// genuinely local geometry without changing distant forest shading.
+    /// </summary>
     public sealed class CampFlame : MonoBehaviour
     {
         public Light Warmth;
-        public float Phase;
         public float BaseIntensity = 2.8f;
-        private Vector3 originalScale;
+        public float Phase; // Retained for compatibility with generated scenes.
 
-        private void Awake() { originalScale = transform.localScale; }
-
-        private void Update()
+        private void Start()
         {
-            float t = Time.time * 3.1f + Phase;
-            float pulse = Mathf.Sin(t) * .10f + Mathf.Sin(t * 1.71f) * .055f;
-            transform.localScale = new Vector3(
-                originalScale.x * (1f + pulse * .35f),
-                originalScale.y * (1f + pulse),
-                originalScale.z * (1f + pulse * .35f));
-            if (Warmth != null)
-            {
-                Warmth.intensity = BaseIntensity * (1f + pulse * .28f);
-                float amber = Mathf.Clamp01(.5f + pulse * 2f);
-                Warmth.color = Color.Lerp(new Color(1f, .49f, .25f),
-                    new Color(1f, .75f, .43f), amber);
-            }
+            if (Warmth == null) return;
+            Warmth.intensity = BaseIntensity;
+            Warmth.color = new Color(1f, .63f, .34f);
         }
     }
 }
