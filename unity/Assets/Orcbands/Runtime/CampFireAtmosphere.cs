@@ -32,7 +32,7 @@ namespace Orcbands
                 return;
             }
             ApplySources();
-            Texture2D smokeDisc = SoftDisc(64, .85f);
+            Texture2D smokeDisc = SoftDisc(64, .51f);
             Texture2D sparkDisc = SoftDisc(32, .35f);
             smokeDisc.name = "Procedural soft smoke disc";
             sparkDisc.name = "Procedural ember disc";
@@ -94,16 +94,16 @@ namespace Orcbands
                 ? new ParticleSystem.MinMaxCurve(hearth ? 1.5f : 1.0f, hearth ? 2.4f : 1.7f)
                 : new ParticleSystem.MinMaxCurve(hearth ? 4.3f : 3.0f, hearth ? 5.6f : 4.1f);
             main.startSize = ember
-                ? new ParticleSystem.MinMaxCurve(hearth ? .025f : .015f, hearth ? .058f : .033f)
-                : new ParticleSystem.MinMaxCurve(hearth ? .22f : .12f, hearth ? .45f : .24f);
+                ? new ParticleSystem.MinMaxCurve(hearth ? .035f : .024f, hearth ? .072f : .048f)
+                : new ParticleSystem.MinMaxCurve(hearth ? .36f : .20f, hearth ? .70f : .42f);
             main.maxParticles = ember ? (hearth ? 24 : 8) : (hearth ? 20 : 10);
             main.startColor = ember
                 ? new Color(1f, .55f, .15f, .9f)
-                : new Color(.66f, .70f, .65f, hearth ? .22f : .16f);
+                : new Color(.64f, .68f, .62f, hearth ? .35f : .27f);
 
             var emission = ps.emission;
             emission.rateOverTime = ember ? (hearth ? 4.2f : 1.0f)
-                : (hearth ? 2.6f : 1.2f);
+                : (hearth ? 3.0f : 1.35f);
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Sphere;
