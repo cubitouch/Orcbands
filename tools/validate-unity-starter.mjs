@@ -26,8 +26,8 @@ for (const path of [
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /void Build\(\)/);
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /GenerateScene\(\);/);
 assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'), /GetMouseButtonDown\(1\)/);
-assert(file('unity/Assets/Editor/OrcbandsSceneSetup.cs').includes('RenderSettings.fog = true;'),
-  'Original Three.js distance fog must remain enabled');
+assert(file('unity/Assets/Editor/OrcbandsSceneSetup.cs').includes('RenderSettings.fog = false;'),
+  'Built-in camera-relative fog should not overlap our authored world-space shaders');
 assert.match(file('unity/Assets/Orcbands/Runtime/CampReveal.cs'), /RevealedAtmosphere/);
 console.log('Unity starter bridge validated: 4 copied mesh inputs, manifest, version, scene and CI.');
 
@@ -48,14 +48,18 @@ assert.equal(balance, 0, 'CampReveal.cs has an unmatched opening brace');
 // The original combines perspective-distance atmospheric fog with the
 // separate six-source Warcraft-like visibility mask.
 const sceneSource = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
-assert.match(sceneSource, /RenderSettings\.fog = true;/);
+assert.match(sceneSource, /RenderSettings\.fog = false;/);
 assert.match(sceneSource, /controller\.Reveal = reveal;/);
 for (const shader of ['WorldColorLit', 'VertexColorLit']) {
   const src = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
   assert.match(src, /_CampRevealSources\[6\]/);
   assert.match(src, /smoothstep\(-5\.0, 3\.0,/);
   assert.match(src, /_CampAtmosphereColor/);
-  assert.match(src, /distanceToCamera - 85\.0/);
+  assert.match(src, /_CampAtmosphereOrigin/);
+  assert.match(src, /smoothstep\\(85\\.0, 135\\.0, worldDistance\\)/);
+  assert.doesNotMatch(src, /distance\\(_WorldSpaceCameraPos, IN\\.worldPos\\)/,
+    'World fog cannot depend on moving camera position');
+  assert.match(src, /distance\(IN\.worldPos\.xz, _CampAtmosphereOrigin\.xy\)/);
   assert(!src.includes('float3(.206, .253, .265)'),
     'Avoid the removed grey FOW overlay');
 }
@@ -88,3 +92,8 @@ assert.match(particles, /SmokeMaterial/);
 assert.match(particles, /EmberMaterial/);
 assert.match(file('unity/Assets/Orcbands/Shaders/FireParticles.shader'), /Blend \[_SrcBlend\] \[_DstBlend\]/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /fire-motion-2\.png/);
+
+// World-anchored atmosphere is configured once, not updated from camera motion.
+assert.match(revealSource, /Shader\.SetGlobalVector\("_CampAtmosphereOrigin"/);
+assert.match(file('tools/smoke-unity-webgl.mjs'), /fog-camera-pan\.png/);
+assert.match(file('tools/smoke-unity-webgl.mjs'), /fog-camera-zoom\.png/);
