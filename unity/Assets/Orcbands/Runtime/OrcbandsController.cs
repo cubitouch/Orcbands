@@ -10,6 +10,10 @@ namespace Orcbands
         public Collider Ground;
         public Transform SelectionRing;
         public CampReveal Reveal;
+        // Debug-only controls for ground rectangles: no changes to released game.
+        public Light Sun;
+        public Material GroundMaterial;
+        private bool pointLightsOff, sunShadowsOff, bakedShadowsOff, groundUnlit;
 
         private bool selected;
         private bool hasDestination;
@@ -24,6 +28,29 @@ namespace Orcbands
             // baseline until gameplay-driven exploration is implemented.
             if (Reveal != null && Input.GetKeyDown(KeyCode.F))
                 Reveal.SetFogOfWar(!Reveal.FogOfWarVisible);
+            // Toggle one independent rendering layer at a time while keeping
+            // camera, reveal geometry, terrain mesh and all props fixed.
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                pointLightsOff = !pointLightsOff;
+                foreach (var fire in FindObjectsByType<CampFlame>(FindObjectsSortMode.None))
+                    if (fire.Warmth != null) fire.Warmth.enabled = !pointLightsOff;
+            }
+            if (Sun != null && Input.GetKeyDown(KeyCode.K))
+            {
+                sunShadowsOff = !sunShadowsOff;
+                Sun.shadows = sunShadowsOff ? LightShadows.None : LightShadows.Soft;
+            }
+            if (GroundMaterial != null && Input.GetKeyDown(KeyCode.J))
+            {
+                bakedShadowsOff = !bakedShadowsOff;
+                GroundMaterial.SetFloat("_ForestShadowStrength", bakedShadowsOff ? 0f : .88f);
+            }
+            if (GroundMaterial != null && Input.GetKeyDown(KeyCode.U))
+            {
+                groundUnlit = !groundUnlit;
+                GroundMaterial.SetFloat("_Unlit", groundUnlit ? 1f : 0f);
+            }
 
             if (Input.GetMouseButtonDown(0))
             {
