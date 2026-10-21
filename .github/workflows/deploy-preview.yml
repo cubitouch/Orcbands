@@ -10,6 +10,7 @@ on:
       - "unity/**"
       - "tools/validate-unity-starter.mjs"
       - "tools/generate-unity-environment.mjs"
+      - "tools/generate-unity-tree-shadows.mjs"
       - "tools/smoke-unity-webgl.mjs"
       - ".github/workflows/deploy-preview.yml"
   workflow_dispatch:
