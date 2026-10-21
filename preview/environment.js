@@ -164,15 +164,15 @@ export function createForestFloorPatches(layout) {
   // Small worn, leaf-darkened islands feather the road into the woodland.
   // These are real shared meshes so Unity inherits them through the exporter.
   const random=seededRandom(layout.seed+7701);
-  for(let i=0;i<90;i++){
+  for(let i=0;i<54;i++){
     const t=.08+random()*.84,z=25-50*t;
     const x=-2+5.2*Math.sin((t*1.8-.4)*Math.PI)+.34*Math.sin(t*26)+.18*Math.sin(t*47);
     const side=random()<.5?-1:1;
     const edge=1.12+.20*Math.sin(t*16)+.13*Math.cos(t*29);
     const px=x+side*(edge+.35+random()*.95),pz=z+(random()-.5)*1.25;
     if(wornGround(px,pz)<.10)continue;
-    const shade=[0x6a694a,0x74694d,0x777655,0x807354][i%4];
-    patches.push(patch(px,pz,.20+random()*.30,.13+random()*.22,shade,7700+i));
+    const shade=[0x707052,0x787257,0x767657,0x7b7558][i%4];
+    patches.push(patch(px,pz,.15+random()*.25,.12+random()*.18,shade,7700+i));
   }
   const merged=mergeGeometries(patches);patches.forEach(g=>g.dispose());
   return merged;
