@@ -10,6 +10,8 @@ namespace Orcbands
         public Collider Ground;
         public Transform SelectionRing;
         public CampReveal Reveal;
+        // Temporary per-run lighting isolation for WebGL screenshot diagnostics.
+        public Light SunLight;
 
         private bool selected;
         private bool hasDestination;
@@ -24,6 +26,11 @@ namespace Orcbands
             // baseline until gameplay-driven exploration is implemented.
             if (Reveal != null && Input.GetKeyDown(KeyCode.F))
                 Reveal.SetFogOfWar(!Reveal.FogOfWarVisible);
+            if (Input.GetKeyDown(KeyCode.L))
+                CampFlame.HoldLightFlicker = !CampFlame.HoldLightFlicker;
+            if (SunLight != null && Input.GetKeyDown(KeyCode.K))
+                SunLight.shadows = SunLight.shadows == LightShadows.None
+                    ? LightShadows.Soft : LightShadows.None;
 
             if (Input.GetMouseButtonDown(0))
             {
