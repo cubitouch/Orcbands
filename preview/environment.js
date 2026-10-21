@@ -32,18 +32,23 @@ export function createTerrainGeometry() {
   for(let i=0;i<114;i++)zs.push(-34+i*68/114);
   for(let n=34;n <=100;n+=2)zs.push(n);
   xs.push(250);zs.push(250);
-  const grassDark=new THREE.Color(0x637648),grassLight=new THREE.Color(0x85935b);
-  const soilDark=new THREE.Color(0x857152),soilLight=new THREE.Color(0xa28b65);
+  // Muted moss and compacted earth: keep worn routes readable without a
+  // uniform golden carpet through the clearing.
+  const grassDark=new THREE.Color(0x5c7049),grassLight=new THREE.Color(0x80915c);
+  const soilDark=new THREE.Color(0x76664f),soilLight=new THREE.Color(0x9c8864);
   const points=[];
   for(const z of zs)for(const x of xs)points.push([x,groundHeight(x,z),z]);
   const shade=(x,z)=>{
-    const variation=groundVariation(x,z);
-    const grass=grassDark.clone().lerp(grassLight,.54+(variation-.5)*.24);
-    const soil=soilDark.clone().lerp(soilLight,.22+noise(x*.9+18,z*.9)*.65);
-    const worn=wornGround(x,z);
-    // Discrete earth/turf flecks give broken polygon edges instead of an airbrushed stripe.
-    const coverage=worn>.73?1:worn>.43?.72:worn>.23?.32:0;
-    return grass.lerp(soil,coverage).multiplyScalar(.98+variation*.04);
+    const variation=groundVariation(x,z),worn=wornGround(x,z);
+    const coarse=noise(x*.32-11,z*.37+24),grain=noise(x*2.1+37,z*2.4-16);
+    const grass=grassDark.clone().lerp(grassLight,.34+variation*.43);
+    const soil=soilDark.clone().lerp(soilLight,.18+noise(x*.91+18,z*.84)*.62);
+    // The route remains continuous, but its shoulders dissolve into small
+    // irregular earth islands, grassy seams and darker packed wheel ruts.
+    const edge=Math.max(0,Math.min(1,(worn-.10)/.78));
+    const broken=Math.max(0,Math.min(1,edge+(grain-.5)*.40+(coarse-.5)*.20));
+    const rut=worn*Math.max(0,.52-noise(x*1.15+7,z*.91-13));
+    return grass.lerp(soil,broken).multiplyScalar(.96+variation*.075-rut*.16);
   };
   const face=(a,b,c)=>{
     vertices.push(...points[a],...points[b],...points[c]);
@@ -121,7 +126,9 @@ function instances(parent,g,material,placements,baseOffset=0) {
   const mesh=new THREE.InstancedMesh(g,material,placements.length);
   placements.forEach((p,i)=>{
     matrix.position.set(p.x,groundHeight(p.x,p.z)+baseOffset*p.scale,p.z);
-    matrix.rotation.set(0,p.angle,0);matrix.scale.setScalar(p.scale);matrix.updateMatrix();mesh.setMatrixAt(i,matrix.matrix);
+    matrix.rotation.set(0,p.angle,0);
+    matrix.scale.set(p.scale*(p.width??1),p.scale*(p.height??1),p.scale*(p.width??1));
+    matrix.updateMatrix();mesh.setMatrixAt(i,matrix.matrix);
     if(p.color!==undefined)mesh.setColorAt(i,new THREE.Color().setRGB(.95+p.color*.08,.96+p.color*.04,.9+p.color*.09));
   });
   mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
@@ -154,6 +161,19 @@ export function createForestFloorPatches(layout) {
   const patches=[];
   layout.trees.forEach((p,i)=>patches.push(patch(p.x,p.z,1.3*p.scale,1.1*p.scale,0x5e6b46,i+12)));
   layout.rocks.filter(p=>p.type>0).forEach((p,i)=>patches.push(patch(p.x,p.z,p.radius*1.2,p.radius*.9,0x737351,i+120)));
+  // Small worn, leaf-darkened islands feather the road into the woodland.
+  // These are real shared meshes so Unity inherits them through the exporter.
+  const random=seededRandom(layout.seed+7701);
+  for(let i=0;i<90;i++){
+    const t=.08+random()*.84,z=25-50*t;
+    const x=-2+5.2*Math.sin((t*1.8-.4)*Math.PI)+.34*Math.sin(t*26)+.18*Math.sin(t*47);
+    const side=random()<.5?-1:1;
+    const edge=1.12+.20*Math.sin(t*16)+.13*Math.cos(t*29);
+    const px=x+side*(edge+.35+random()*.95),pz=z+(random()-.5)*1.25;
+    if(wornGround(px,pz)<.10)continue;
+    const shade=[0x6a694a,0x74694d,0x777655,0x807354][i%4];
+    patches.push(patch(px,pz,.20+random()*.30,.13+random()*.22,shade,7700+i));
+  }
   const merged=mergeGeometries(patches);patches.forEach(g=>g.dispose());
   return merged;
 }
