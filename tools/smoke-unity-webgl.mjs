@@ -56,6 +56,26 @@ try {
   const box = await page.locator('#unity-canvas').boundingBox();
   assert(box && box.width > 1050 && box.height > 390,
     'Unity should fill the approved wide landscape gallery');
+  // Six screenshots of the exact same Unity view, with only one rendering
+  // layer toggled at a time. FOW stays enabled throughout; notably, the
+  // background fog colour never changes as it does when pressing F.
+  const masksDir = resolve(root, 'smoke-artifacts/unity-webgl/mask-isolation');
+  await mkdir(masksDir, { recursive: true });
+  await page.locator('#unity-canvas').focus();
+  const diagnosticLabels = [
+    '00-original', '01-reveal-mask-only', '02-no-reveal',
+    '03-no-reveal-no-atmosphere', '04-baked-pine-mask-only',
+    '05-no-reveal-no-atmosphere-no-baked-shadow'
+  ];
+  for (let index = 0; index < diagnosticLabels.length; index++) {
+    if (index > 0) await page.keyboard.press('m');
+    await page.waitForTimeout(250);
+    await page.locator('#unity-canvas').screenshot({
+      path: resolve(masksDir, diagnosticLabels[index] + '.png')
+    });
+  }
+  await page.keyboard.press('m'); // Restore released normal rendering mode.
+  await page.waitForTimeout(250);
   await page.screenshot({ path: screenshot, fullPage: true });
   // Guard against the stationary-camera forest flicker reproduced by PR #43.
   // This patch of distant pines used to change colour in ~20% of its pixels
