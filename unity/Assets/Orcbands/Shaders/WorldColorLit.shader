@@ -29,15 +29,21 @@ Shader "Orcbands/WorldColorLit"
         float4 _CampAtmosphereOrigin;
         float3 CampShade(float3 baseColor, float3 world)
         {
-            float reveal = -10000.0;
+            // Each source contributes a feathered circle of visibility.
+            // The previous maximum of six hard-edged distance fields made
+            // their union read like a large bright rectangle around the camp.
+            // Gaussian influence is continuous, and probabilistic union keeps
+            // overlapping hut/torch reveal pools from forming straight seams.
+            float concealed = 1.0;
             [unroll] for (int i = 0; i < 6; i++)
             {
                 float3 source = _CampRevealSources[i].xyz;
-                reveal = max(reveal, source.z - distance(world.xz, source.xy));
+                float2 offset = world.xz - source.xy;
+                float sigma = max(1.0, source.z * .90);
+                float gaussian = exp(-.5 * dot(offset, offset) / (sigma * sigma));
+                concealed *= 1.0 - gaussian;
             }
-            float ripple = sin(world.x * 1.7 + sin(world.z * .9)) * .16
-                         + sin(world.z * 2.1 + world.x * .6) * .10;
-            float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
+            float obscured = saturate(concealed) * _CampFogEnabled;
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
             // Port the original Three.js visibility attenuation verbatim.
             // Keep subdued tree and terrain detail outside the revealed camp.
