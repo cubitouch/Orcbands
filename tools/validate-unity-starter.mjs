@@ -78,13 +78,17 @@ assert.match(bakedPines, /placement\.height \?\? 1/);
 assert.match(file('preview/environment.js'), /p\.scale\*\(p\.width\?\?1\)/);
 
 
-// Lighting parity: the source scene's hearth and four torches contribute
-// actual illumination, not just emissive meshes. Verify the Unity builder
-// does not silently regress to its original under-lit 0.9 / 0.72 lights.
+// Lighting parity: distinct stationary warmth for the main hearth and
+// narrower four torches; cool woodland fill must not alter fog shaders.
 const sceneCode = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
 assert.match(sceneCode, /QualitySettings\.pixelLightCount = 6;/);
-assert.match(sceneCode, /5\.5f, 4\.2f, \.8f\);/);
-assert.match(sceneCode, /5\.2f, 2\.9f, i \* 2\.3f\);/);
+assert.match(sceneCode, /5\.7f, 4\.7f, \.8f, new Color\(1f, \.55f, \.27f\)\);/);
+assert.match(sceneCode, /4\.7f, 2\.65f, i \* 2\.3f, new Color\(1f, \.68f, \.39f\)\);/);
+assert.match(sceneCode, /RenderSettings\.ambientSkyColor = new Color\(\.32f, \.40f, \.42f\);/);
+assert.match(sceneCode, /motion\.LightColor = warmthColor;/);
+assert.match(file('unity/Assets/Orcbands/Runtime/CampFlame.cs'),
+  /Warmth\.color = LightColor;/);
+assert.match(file('preview/app.js'), /HemisphereLight\(0xdce9e9,0x586b6c,2\.05\)/);
 
 // Fire visual parity: source mesh deformation, smoke and sparks must all be
 // present in the built scene (not just an intensity-flickering point light).
