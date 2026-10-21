@@ -77,7 +77,7 @@ function exportMesh(name, items) {
 // Unity now loads the exact approved terrain geometry with the original
 // nonuniform tessellation, meandering paths, far meadow and color flecks.
 // No independent 0.75m reconstruction that can introduce checkerboard faceting.
-exportMesh('terrain', [{geom: createTerrainGeometry()}]);
+exportMesh('terrain', [{geom: createTerrainGeometry({smoothPathColors:true})}]);
 
 // Export the original authored hearth and torch geometry rather than replacing
 // their silhouettes with Unity capsules/cubes. Flame meshes are a separate
