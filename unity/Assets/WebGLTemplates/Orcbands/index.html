@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102018">
+  <title>Orcbands — Unity playable preview</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #101b16; color: #e7f0de; }
+    body { padding: 20px clamp(12px, 3.5vw, 48px) 22px; }
+    header, footer { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    header { min-height: 34px; margin-bottom: 14px; }
+    h1 { font-size: 25px; letter-spacing: .018em; line-height: 1; margin: 0; color: #c4dd91; }
+    h1 span { color: #f2f6ec; }
+    .tag { border: 1px solid #46674c; border-radius: 99px; padding: 7px 11px; color: #bdd2ae; font-size: 11px; letter-spacing: .045em; }
+    #viewport { position: relative; max-width: 1440px; height: min(70vh, 760px); min-height: 350px; margin: 0 auto; overflow: hidden; border: 1px solid #3a5846; border-radius: 15px; background: #293e31; }
+    #unity-canvas { display: block; width: 100%; height: 100%; background: #293e31; outline: none; }
+    #unity-canvas:focus-visible { outline: 3px solid #c3df96; outline-offset: -4px; }
+    #unity-loading-bar { position: absolute; z-index: 2; inset: 0; display: grid; align-content: center; justify-content: center; gap: 12px; background: #1b2c24; color: #d5e5c4; text-align: center; }
+    #unity-loading-bar strong { font-size: 22px; }
+    .progress { width: min(300px, 70vw); height: 8px; background: #415742; border-radius: 20px; overflow: hidden; }
+    #unity-progress-bar-full { background: #a6c876; width: 0%; height: 100%; transition: width .1s linear; }
+    #unity-warning { position: absolute; left: 16px; right: 16px; top: 16px; z-index: 3; pointer-events: none; color: #e8caa4; }
+    footer { margin-top: 13px; flex-wrap: wrap; color: #a9bda7; font-size: 13px; }
+    footer p { margin: 0; }
+    footer a { color: #c9e6a5; text-decoration: none; border: 1px solid #405945; border-radius: 7px; padding: 9px 13px; }
+    footer a:hover, footer a:focus-visible { background: #2e4934; }
+    @media (max-width: 700px) {
+      body { padding: 12px; }
+      h1 { font-size: 22px; }
+      #viewport { height: min(68svh, 650px); min-height: 320px; }
+      .tag { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span>ORC</span>BANDS</h1>
+    <span class="tag">UNITY · FIRST PLAYABLE PREVIEW</span>
+  </header>
+  <main id="viewport" aria-label="Orcbands Unity game">
+    <canvas id="unity-canvas" tabindex="0" aria-label="Interactive Orcbands camp"></canvas>
+    <div id="unity-loading-bar" role="status" aria-live="polite">
+      <strong>Loading Orcbands forest…</strong>
+      <div class="progress"><div id="unity-progress-bar-full"></div></div>
+    </div>
+    <div id="unity-warning" role="alert"></div>
+  </main>
+  <footer>
+    <p>Worker: left-click · Move: right-click · Camera: WASD · Wheel · Q/E · R</p>
+    <a href="../">Compare with original Asset Lab ↗</a>
+  </footer>
+  <script>
+    const canvas = document.querySelector('#unity-canvas');
+    const loading = document.querySelector('#unity-loading-bar');
+    const progress = document.querySelector('#unity-progress-bar-full');
+    const warning = document.querySelector('#unity-warning');
+    const buildUrl = 'Build';
+    const config = {
+      dataUrl: buildUrl + '/{{{ DATA_FILENAME }}}',
+      frameworkUrl: buildUrl + '/{{{ FRAMEWORK_FILENAME }}}',
+      codeUrl: buildUrl + '/{{{ CODE_FILENAME }}}',
+      streamingAssetsUrl: 'StreamingAssets',
+      companyName: '{{{ COMPANY_NAME }}}',
+      productName: '{{{ PRODUCT_NAME }}}',
+      productVersion: '{{{ PRODUCT_VERSION }}}'
+    };
+    const script = document.createElement('script');
+    script.src = buildUrl + '/{{{ LOADER_FILENAME }}}';
+    script.onload = () => {
+      createUnityInstance(canvas, config, amount => {
+        progress.style.width = Math.round(amount * 100) + '%';
+      }).then(instance => {
+        loading.style.display = 'none';
+        canvas.focus({ preventScroll: true });
+      }).catch(message => {
+        warning.textContent = String(message);
+        loading.textContent = 'Unable to start the WebGL preview.';
+      });
+    };
+    script.onerror = () => {
+      warning.textContent = 'Unable to download the Unity loader.';
+      loading.textContent = 'Unable to start the WebGL preview.';
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
