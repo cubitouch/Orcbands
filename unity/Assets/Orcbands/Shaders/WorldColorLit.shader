@@ -42,9 +42,12 @@ Shader "Orcbands/WorldColorLit"
             // Unity's gamma-space WebGL surface output is not equivalent.
             // Lift hidden detail before the grade so the edge reads as a
             // muted woodland, not black cut-out triangles.
+            // Keep the distant pine silhouettes readable like the original
+            // WebGL grove; the filmic pass otherwise crushes their dark detail.
+            // This only changes the unrevealed forest, never the lit camp.
             float3 distant = lerp(float3(luminance, luminance, luminance),
-                                   baseColor, .46) * .45;
-            distant = lerp(distant, float3(.075, .096, .087), .25);
+                                   baseColor, .43) * .53;
+            distant = lerp(distant, float3(.12, .15, .13), .29);
             return lerp(baseColor, distant, obscured);
         }
 
