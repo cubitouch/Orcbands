@@ -53,7 +53,10 @@ assert.match(sceneSource, /controller\.Reveal = reveal;/);
 for (const shader of ['WorldColorLit', 'VertexColorLit']) {
   const src = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
   assert.match(src, /_CampRevealSources\[6\]/);
-  assert.match(src, /smoothstep\(-5\.0, 3\.0,/);
+  assert.match(src, /float gaussian = exp\(-\.5 \* dot\(offset, offset\)/);
+  assert.match(src, /concealed \*= 1\.0 - gaussian;/);
+  assert.doesNotMatch(src, /reveal = max\(reveal,/,
+    'Do not restore the hard-edged six-source camp visibility union');
   assert.match(src, /_CampAtmosphereColor/);
   assert.match(src, /_CampAtmosphereOrigin/);
   assert.match(src, /smoothstep\(85\.0, 135\.0, worldDistance\)/);
