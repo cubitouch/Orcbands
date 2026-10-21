@@ -70,6 +70,13 @@ assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'),
 
 assert.match(sceneSource,
   /"forest-patches", terrainArt, false/);
+assert.match(sceneSource, /pos\.scale \* pos\.width/);
+assert.match(sceneSource, /pos\.scale \* pos\.height/);
+const bakedPines = file('tools/generate-unity-tree-shadows.mjs');
+assert.match(bakedPines, /placement\.width \?\? 1/);
+assert.match(bakedPines, /placement\.height \?\? 1/);
+assert.match(file('preview/environment.js'), /p\.scale\*\(p\.width\?\?1\)/);
+
 
 // Lighting parity: the source scene's hearth and four torches contribute
 // actual illumination, not just emissive meshes. Verify the Unity builder
