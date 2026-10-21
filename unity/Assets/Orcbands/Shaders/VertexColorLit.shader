@@ -4,6 +4,8 @@ Shader "Orcbands/VertexColorLit"
     {
         _Tint ("Tint", Color) = (1,1,1,1)
         _Unlit ("Fire emission", Range(0,1)) = 0
+        _ForestShadowTex ("Original pine sun shadows", 2D) = "white" {}
+        _ForestShadowStrength ("Pine shadow strength", Range(0,1)) = 0
     }
     SubShader
     {
@@ -15,6 +17,8 @@ Shader "Orcbands/VertexColorLit"
         #pragma target 3.0
         fixed4 _Tint;
         half _Unlit;
+        sampler2D _ForestShadowTex;
+        half _ForestShadowStrength;
         struct Input { float4 color : COLOR; float3 worldPos; };
 
         float4 _CampRevealSources[6];
@@ -47,6 +51,12 @@ Shader "Orcbands/VertexColorLit"
         // it to albedo made Unity's bright camp and outer trees diverge.
         void FinalizeColor(Input IN, SurfaceOutput o, inout fixed4 color)
         {
+            // Shadow silhouettes projected from the approved OBJ pines
+            // and the original Three.js sun vector. Unity mirrors world X.
+            float2 uv = float2(.5 - IN.worldPos.x / 110.0,
+                               .5 + IN.worldPos.z / 110.0);
+            float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
+            color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
             color.rgb = CampShade(color.rgb, IN.worldPos);
         }
         ENDCG
