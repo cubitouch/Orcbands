@@ -74,7 +74,7 @@ namespace Orcbands.Editor
             Material terrainArt = new Material(art);
             terrainArt.SetTexture("_ForestShadowTex", pineShadowMap);
             terrainArt.SetFloat("_ForestShadowStrength", .78f);
-            terrainArt.SetColor("_Tint", new Color(.74f, .77f, .72f));
+            terrainArt.SetColor("_Tint", new Color(.82f, .80f, .70f));
             terrainArt = SavedMaterial("WoodlandGroundWithShadows", terrainArt);
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
@@ -292,15 +292,22 @@ namespace Orcbands.Editor
                         // red finish from the approved Three.js hut preview.
                         if (source.name.StartsWith("roof_", StringComparison.OrdinalIgnoreCase))
                             replacement.color = new Color(
-                                source.color.r * .86f, source.color.g * .77f,
-                                source.color.b * .75f, source.color.a);
+                                source.color.r * .80f, source.color.g * .62f,
+                                source.color.b * .60f, source.color.a);
                         else if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
                             // Preserve every authored needle/light/shadow MTL
                             // swatch, but compensate for Unity's overly pastel
                             // Lambert result compared with MeshStandardMaterial.
                             replacement.color = new Color(
-                                source.color.r * .82f, source.color.g * .85f,
-                                source.color.b * .73f, source.color.a);
+                                source.color.r * .77f, source.color.g * .79f,
+                                source.color.b * .69f, source.color.a);
+                        else if (source.name.StartsWith("timber", StringComparison.OrdinalIgnoreCase)
+                              || source.name.StartsWith("plank", StringComparison.OrdinalIgnoreCase))
+                            // Source Three.js timber is dark aged wood, not the
+                            // honey-gold Unity import under ambient light.
+                            replacement.color = new Color(
+                                source.color.r * .82f, source.color.g * .80f,
+                                source.color.b * .77f, source.color.a);
                         else replacement.color = source.color;
                         if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
                             replacement.SetFloat("_SurfaceContrast", 1.23f);
