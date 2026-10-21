@@ -12,11 +12,13 @@ import { createGrassGeometry, createRockGeometry, createForestFloorPatches, crea
 import { buildCampfire } from '../preview/campfire.js';
 import { buildTorches } from '../preview/torches.js';
 import { resourceGeometry } from '../preview/resources.js';
+import { generateTreeShadowTexture } from './generate-unity-tree-shadows.mjs';
 
 const root = resolve(import.meta.dirname, '../unity/Assets/Orcbands/Generated');
 mkdirSync(root, { recursive: true });
 const layout = createLayout();
 if (layout.trees.length !== 244) throw new Error('Expected the approved 244-pine forest');
+generateTreeShadowTexture(layout.trees, resolve(root, 'approved-pine-shadows.png'));
 const expected = ['shelter/stocked', 'construction/roof', 'bush/full', 'wood/stump', 'stone/full'];
 for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.state === key))
   throw new Error('Missing forest resource: ' + key);
