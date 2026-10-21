@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Keep the latest iteration's expensive WebGL captures, not superseded PR runs.
+concurrency:
+  group: orcbands-forest-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -73,7 +78,7 @@ jobs:
           node tools/validate-campfire.mjs
           node tools/validate-camp-visibility.mjs
           node tools/validate-fire-atmosphere.mjs
-          ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
+          ORCBANDS_LOCAL_THREE=1 ORCBANDS_ESSENTIAL_CAPTURE=1 node tools/smoke-preview.mjs
           ORCBANDS_LOCAL_THREE=1 node tools/smoke-camp-ui.mjs
       - name: Attach browser screenshots
         if: always()
