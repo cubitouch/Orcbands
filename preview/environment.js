@@ -19,7 +19,9 @@ function triangle(out,colors,a,b,c,color) {
 function surface(parent,g,material=earth) {
   const mesh=new THREE.Mesh(g,material);mesh.receiveShadow=true;parent.add(mesh);return mesh;
 }
-export function createTerrainGeometry() {
+// Unity can opt into continuous worn-soil transitions without changing the
+// approved Three.js Asset Lab's original deliberately faceted ground.
+export function createTerrainGeometry({ smoothPathColors = false } = {}) {
   const vertices=[],colors=[];
   // One continuous mesh: dense vertices in the walkable woodland, coarse in distant meadow.
   const xs=[-250],zs=[-250];
@@ -41,8 +43,13 @@ export function createTerrainGeometry() {
     const grass=grassDark.clone().lerp(grassLight,.54+(variation-.5)*.24);
     const soil=soilDark.clone().lerp(soilLight,.22+noise(x*.9+18,z*.9)*.65);
     const worn=wornGround(x,z);
-    // Discrete earth/turf flecks give broken polygon edges instead of an airbrushed stripe.
-    const coverage=worn>.73?1:worn>.43?.72:worn>.23?.32:0;
+    // The Web Asset Lab keeps its familiar broken-up low-poly earth flecks.
+    // Unity's gamma/filmic result turns these per-face jumps into oversized,
+    // rectangular light-looking patches. Smooth the Unity *colour export*
+    // only, using the same procedural paths and palette.
+    const coverage=smoothPathColors
+      ? THREE.MathUtils.smoothstep(worn,.09,.88)
+      : worn>.73?1:worn>.43?.72:worn>.23?.32:0;
     return grass.lerp(soil,coverage).multiplyScalar(.98+variation*.04);
   };
   const face=(a,b,c)=>{
@@ -50,7 +57,10 @@ export function createTerrainGeometry() {
     const x=(points[a][0]+points[b][0]+points[c][0])/3,z=(points[a][2]+points[b][2]+points[c][2])/3;
     const color=shade(x,z),flat=wornGround(x,z)>.12;
     for(const i of [a,b,c]){
-      const c=flat?color:shade(points[i][0],points[i][2]);
+      // Continuous per-vertex gradients remove large face-size transition
+      // blocks in Unity while retaining the original grass/soil textures.
+      const c=smoothPathColors ? shade(points[i][0],points[i][2])
+        : (flat?color:shade(points[i][0],points[i][2]));
       colors.push(c.r,c.g,c.b);
     }
   };
