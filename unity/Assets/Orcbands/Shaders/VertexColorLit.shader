@@ -26,6 +26,9 @@ Shader "Orcbands/VertexColorLit"
 
         float4 _CampRevealSources[6];
         float _CampFogEnabled;
+        // Diagnostic-only view: 0 normal, 1 mask, 2 no reveal,
+        // 3 no reveal/atmosphere, 4 baked texture, 5 raw lit terrain.
+        float _CampRevealDebug;
         // Distance fog from the original Three.js scene (85–135m).
         // Unity's surface-shader finalcolor path does not reliably inherit
         // built-in fog on WebGL, so apply it explicitly after camp visibility.
@@ -58,6 +61,12 @@ Shader "Orcbands/VertexColorLit"
             float3 distant = lerp(float3(luminance, luminance, luminance),
                                    baseColor, .43) * .53;
             distant = lerp(distant, float3(.12, .15, .13), .29);
+            if (_CampRevealDebug > .5 && _CampRevealDebug < 1.5)
+            {
+                float revealValue = 1.0 - obscured;
+                return float3(revealValue, revealValue, revealValue);
+            }
+            if (_CampRevealDebug > 1.5) return baseColor;
             return lerp(baseColor, distant, obscured);
         }
 
@@ -110,8 +119,17 @@ Shader "Orcbands/VertexColorLit"
             float2 uv = float2(.5 - IN.worldPos.x / 110.0,
                                .5 + IN.worldPos.z / 110.0);
             float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
-            color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
+            // Diagnostics always show one layer at a time at fixed camera.
+            if (_CampRevealDebug > 3.5 && _CampRevealDebug < 4.5)
+            {
+                color.rgb = float3(shadow, shadow, shadow);
+                return;
+            }
+            if (_CampRevealDebug < 4.5)
+                color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
             color.rgb = CampShade(color.rgb, IN.worldPos);
+            if (_CampRevealDebug > .5 && _CampRevealDebug < 1.5) return;
+            if (_CampRevealDebug > 2.5) return;
             // The old camera-relative distance blend swept grey bands
             // over stationary trees during RTS navigation.
             // Fix the distant fade in world space around the original clearing.
