@@ -11,7 +11,7 @@ Shader "Orcbands/WorldColorLit"
         LOD 200
         Cull Off
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows finalcolor:FinalizeColor
+        #pragma surface surf Lambert fullforwardshadows noforwardadd finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Color;
         half _SurfaceContrast;
