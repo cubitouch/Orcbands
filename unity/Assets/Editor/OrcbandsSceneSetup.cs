@@ -47,12 +47,12 @@ namespace Orcbands.Editor
             RenderSettings.ambientSkyColor = new Color(.35f, .43f, .38f);
             RenderSettings.ambientEquatorColor = new Color(.25f, .30f, .26f);
             RenderSettings.ambientGroundColor = new Color(.17f, .19f, .18f);
-            // Like the original Three.js renderer, use atmospheric distance
-            // fog (85-135m) *and* the six-source camp visibility mask.
-            RenderSettings.fog = true;
-            RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = 85f;
-            RenderSettings.fogEndDistance = 135f;
+            // Our two world-space shaders own the woodland atmosphere and
+            // six-source fog of war. Built-in camera-distance fog applies a
+            // second, moving grey band on top when zooming/orbiting in WebGL.
+            // Keep Unity's built-in fog disabled so only the stable material
+            // atmosphere and authored visibility mask control the forest.
+            RenderSettings.fog = false;
             RenderSettings.fogColor = new Color(64f/255f, 83f/255f, 79f/255f);
             QualitySettings.shadows = ShadowQuality.All;
             QualitySettings.shadowDistance = 65f;

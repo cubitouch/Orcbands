@@ -45,6 +45,9 @@ namespace Orcbands
             Color atmosphere = FogOfWarVisible ? HiddenAtmosphere : RevealedAtmosphere;
             RenderSettings.fogColor = atmosphere;
             Shader.SetGlobalColor("_CampAtmosphereColor", atmosphere);
+            // Keep the distant terrain fade fixed to the original grove
+            // instead of a camera-relative grey band during pan/zoom/orbit.
+            Shader.SetGlobalVector("_CampAtmosphereOrigin", new Vector4(0f, -1f, 0f, 0f));
             Shader.SetGlobalFloat("_CampAtmosphereEnabled", 1f);
             if (GameCamera != null) GameCamera.backgroundColor = atmosphere;
         }

@@ -155,3 +155,24 @@ Three.js camp. CI now requires that the real Unity canvas change across frames,
 though human review must still check that the movement looks good. Keep the PR
 unmerged until its WebGL images have been inspected. The decorative effects do
 not implement gameplay and the Unity HUD has not yet been ported.
+
+
+## Stable woodland fog during camera movement
+
+The original fog-of-war mask (hut, hearth and four torches) is anchored to
+world-space XZ coordinates. An additional Unity 85–135m atmospheric fade
+was formerly measured from the moving RTS camera. Its grey band shifted
+over otherwise stationary trees and terrain during pan/zoom/orbit; Unity's
+built-in fog could add another camera-relative pass.
+
+The scene now disables built-in Unity fog and evaluates its gentle, distant
+horizon fade **from the fixed grove origin (0, -1)** in the two custom material
+shaders. The six-source visibility, flame shaders, trees, paths, and terrain
+are unchanged. This deliberately favors stable camp readability over a
+physically camera-relative distance haze.
+
+CI stores `fog-camera-pan.png`, `fog-camera-zoom.png` and
+`fog-camera-zoom-reveal-off.png` next to the baseline screenshots. Compare
+landmarks near the treeline at both camera positions and confirm that fog does
+not develop moving grey discs. Press F to toggle the six-source visibility,
+then R to reset the camera.

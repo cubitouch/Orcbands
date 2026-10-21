@@ -31,6 +31,9 @@ Shader "Orcbands/VertexColorLit"
         // built-in fog on WebGL, so apply it explicitly after camp visibility.
         float3 _CampAtmosphereColor;
         float _CampAtmosphereEnabled;
+        // Stable camp-centred woodland horizon, independent of RTS camera pan,
+        // orbit and zoom. This is not the six-source fog-of-war visibility mask.
+        float4 _CampAtmosphereOrigin;
         float3 CampShade(float3 baseColor, float3 world)
         {
             float reveal = -10000.0;
@@ -109,8 +112,11 @@ Shader "Orcbands/VertexColorLit"
             float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
             color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
             color.rgb = CampShade(color.rgb, IN.worldPos);
-            float distanceToCamera = distance(_WorldSpaceCameraPos, IN.worldPos);
-            float atmosphericFog = saturate((distanceToCamera - 85.0) / 50.0)
+            // The old camera-relative distance blend swept grey bands
+            // over stationary trees during RTS navigation.
+            // Fix the distant fade in world space around the original clearing.
+            float worldDistance = distance(IN.worldPos.xz, _CampAtmosphereOrigin.xy);
+            float atmosphericFog = smoothstep(85.0, 135.0, worldDistance)
                                    * _CampAtmosphereEnabled;
             color.rgb = lerp(color.rgb, _CampAtmosphereColor,
                              atmosphericFog);
