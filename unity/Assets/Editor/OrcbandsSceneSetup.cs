@@ -220,6 +220,8 @@ namespace Orcbands.Editor
             controller.GameCamera = camera;
             controller.Ground = ground.GetComponent<Collider>();
             controller.Reveal = reveal;
+            controller.Sun = sun;
+            controller.GroundMaterial = terrainArt;
             Directory.CreateDirectory("Assets/Scenes");
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new InvalidOperationException("Unable to save Unity forest scene");
