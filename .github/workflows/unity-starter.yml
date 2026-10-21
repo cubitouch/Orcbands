@@ -6,6 +6,7 @@ on:
       - "unity/**"
       - "tools/validate-unity-starter.mjs"
       - "tools/generate-unity-environment.mjs"
+      - "tools/generate-unity-tree-shadows.mjs"
       - "preview/environment-layout.js"
       - "preview/environment.js"
       - "preview/ground-surface.js"
