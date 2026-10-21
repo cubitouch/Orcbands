@@ -103,6 +103,9 @@ namespace Orcbands
 
         private void OnGUI()
         {
+            // The WebGL host already displays control hints below the canvas.
+            // Preserve the in-game hints only for native desktop builds.
+            if (Application.platform == RuntimePlatform.WebGLPlayer) return;
             var previous = GUI.color;
             GUI.color = new Color(.11f, .17f, .14f, .84f);
             GUI.DrawTexture(new Rect(16, 16, 348, 78), Texture2D.whiteTexture);

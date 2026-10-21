@@ -74,7 +74,7 @@
         progress.style.width = Math.round(amount * 100) + '%';
       }).then(instance => {
         loading.style.display = 'none';
-        canvas.focus({ preventScroll: true });
+        // Click the canvas to direct keyboard controls to the game.
       }).catch(message => {
         warning.textContent = String(message);
         loading.textContent = 'Unable to start the WebGL preview.';
