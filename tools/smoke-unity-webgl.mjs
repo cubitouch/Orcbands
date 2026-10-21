@@ -56,6 +56,31 @@ try {
   const box = await page.locator('#unity-canvas').boundingBox();
   assert(box && box.width > 1050 && box.height > 390,
     'Unity should fill the approved wide landscape gallery');
+  // Ground rectangle provenance: successive layer-isolation snapshots
+  // with identical camera, no player motion, no FOW state changes.
+  const lightDir = resolve(root, 'smoke-artifacts/unity-webgl/ground-layers');
+  await mkdir(lightDir, { recursive: true });
+  const snapGround = async (name) => {
+    await page.waitForTimeout(300);
+    await page.locator('#unity-canvas').screenshot({
+      path: resolve(lightDir, name + '.png')
+    });
+  };
+  await page.locator('#unity-canvas').click({ position: {x:20,y:20} });
+  await snapGround('01-original');
+  await page.keyboard.press('l'); // All camp point lights off
+  await snapGround('02-no-point-lights');
+  await page.keyboard.press('k'); // Also disable realtime sun shadow map
+  await snapGround('03-no-realtime-shadows');
+  await page.keyboard.press('j'); // Also disable authored baked pine shade map
+  await snapGround('04-no-baked-shadows');
+  await page.keyboard.press('u'); // Also disable lighting on terrain: raw colours
+  await snapGround('05-unlit-ground-colors');
+  await page.keyboard.press('u');
+  await page.keyboard.press('j');
+  await page.keyboard.press('k');
+  await page.keyboard.press('l');
+  await page.waitForTimeout(200);
   await page.screenshot({ path: screenshot, fullPage: true });
   // Guard against the stationary-camera forest flicker reproduced by PR #43.
   // This patch of distant pines used to change colour in ~20% of its pixels
