@@ -72,3 +72,17 @@ const sceneCode = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
 assert.match(sceneCode, /QualitySettings\.pixelLightCount = 6;/);
 assert.match(sceneCode, /5\.5f, 4\.2f, \.8f\);/);
 assert.match(sceneCode, /5\.2f, 2\.9f, i \* 2\.3f\);/);
+
+// Fire visual parity: source mesh deformation, smoke and sparks must all be
+// present in the built scene (not just an intensity-flickering point light).
+assert.match(file('unity/Assets/Orcbands/Shaders/VertexColorLit.shader'), /vertex:AnimateFire/);
+assert.match(file('unity/Assets/Orcbands/Shaders/VertexColorLit.shader'), /_CampFireSources\[5\]/);
+assert.match(sceneCode, /fireArt\.SetFloat\("_FireMotion", 1f\)/);
+assert.match(sceneCode, /AddComponent<CampFireAtmosphere>\(\)/);
+assert.match(sceneCode, /fireAtmosphere\.Sources\[i \+ 1\]/);
+const particles = file('unity/Assets/Orcbands/Runtime/CampFireAtmosphere.cs');
+assert.match(particles, /new ParticleSystem\.MinMaxGradient\(gradient\)/);
+assert.match(particles, /SmokeMaterial/);
+assert.match(particles, /EmberMaterial/);
+assert.match(file('unity/Assets/Orcbands/Shaders/FireParticles.shader'), /Blend \[_SrcBlend\] \[_DstBlend\]/);
+assert.match(file('tools/smoke-unity-webgl.mjs'), /fire-motion-2\.png/);
