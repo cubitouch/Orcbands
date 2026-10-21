@@ -52,7 +52,7 @@ namespace Orcbands.Editor
             RenderSettings.fogEndDistance = 135f;
             RenderSettings.fogColor = new Color(.24f, .31f, .28f);
             QualitySettings.shadows = ShadowQuality.All;
-            QualitySettings.shadowDistance = 55f;
+            QualitySettings.shadowDistance = 65f;
 
             Shader vertexShader = Shader.Find("Orcbands/VertexColorLit");
             Shader worldShader = Shader.Find("Orcbands/WorldColorLit");
@@ -63,11 +63,19 @@ namespace Orcbands.Editor
             // hard tree darkening made the whole forest muddy.
             art.SetColor("_Tint", Color.white);
             art = SavedMaterial("ForestArt", art);
+            Texture2D pineShadowMap =
+                AssetDatabase.LoadAssetAtPath<Texture2D>(Generated + "approved-pine-shadows.png");
+            if (pineShadowMap == null)
+                throw new InvalidOperationException("Missing exported approved pine shadow map");
+            Material terrainArt = new Material(art);
+            terrainArt.SetTexture("_ForestShadowTex", pineShadowMap);
+            terrainArt.SetFloat("_ForestShadowStrength", .78f);
+            terrainArt = SavedMaterial("WoodlandGroundWithShadows", terrainArt);
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
             fireArt.SetFloat("_Unlit", 1f);
             fireArt = SavedMaterial("ApprovedFireGlow", fireArt);
-            var ground = ColoredMesh("Ground", "terrain", art, true);
+            var ground = ColoredMesh("Ground", "terrain", terrainArt, true);
             ColoredMesh("Tree roots and woodland ground patches", "forest-patches", art, false);
             ColoredMesh("Approved resources and storage", "resource-art", art, false);
             ColoredMesh("Approved rock geometry", "stone-props", art, false);
@@ -148,7 +156,11 @@ namespace Orcbands.Editor
             sun.intensity = .98f;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .74f;
-            sunObject.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
+            // Source Three.js sun sits at (-22, 36, 18); Unity mirrors X.
+            // Point the Unity light along the equivalent mirrored rays.
+            sunObject.transform.rotation = Quaternion.LookRotation(
+                new Vector3(-22f, -36f, -18f).normalized, Vector3.up);
+            sun.shadowCustomResolution = 2048;
             RenderSettings.sun = sun;
 
             var controllerObject = new GameObject("Orcbands Controller");
