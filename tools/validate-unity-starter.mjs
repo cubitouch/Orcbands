@@ -5,6 +5,8 @@ const root = resolve(import.meta.dirname, '..');
 function file(path) { return readFileSync(resolve(root, path), 'utf8'); }
 const manifest = JSON.parse(file('unity/Packages/manifest.json'));
 assert.equal(manifest.dependencies['com.unity.modules.physics'], '1.0.0');
+assert.equal(manifest.dependencies['com.unity.modules.particlesystem'], '1.0.0',
+  'Unity smoke and sparks require the built-in Particle System module');
 assert.match(file('unity/ProjectSettings/ProjectVersion.txt'), /^m_EditorVersion: 6000\.3\.24f1/m);
 for (const name of ['low-poly-pine-01.obj', 'low-poly-pine-01.mtl',
                     'timber-hut-01.obj', 'timber-hut-01.mtl']) {
