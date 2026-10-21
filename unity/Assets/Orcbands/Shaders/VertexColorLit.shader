@@ -1,20 +1,80 @@
 Shader "Orcbands/VertexColorLit"
 {
-    Properties { _Tint ("Tint", Color) = (1,1,1,1) }
+    Properties
+    {
+        _Tint ("Tint", Color) = (1,1,1,1)
+        _Unlit ("Fire emission", Range(0,1)) = 0
+        _ForestShadowTex ("Original pine sun shadows", 2D) = "white" {}
+        _ForestShadowStrength ("Pine shadow strength", Range(0,1)) = 0
+    }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
         LOD 200
         Cull Off
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows
+        #pragma surface surf Lambert fullforwardshadows finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Tint;
-        struct Input { float4 color : COLOR; };
-        void surf (Input IN, inout SurfaceOutput o)
+        half _Unlit;
+        sampler2D _ForestShadowTex;
+        half _ForestShadowStrength;
+        struct Input { float4 color : COLOR; float3 worldPos; };
+
+        float4 _CampRevealSources[6];
+        float _CampFogEnabled;
+        // Distance fog from the original Three.js scene (85–135m).
+        // Unity's surface-shader finalcolor path does not reliably inherit
+        // built-in fog on WebGL, so apply it explicitly after camp visibility.
+        float3 _CampAtmosphereColor;
+        float _CampAtmosphereEnabled;
+        float3 CampShade(float3 baseColor, float3 world)
         {
-            o.Albedo = IN.color.rgb * _Tint.rgb;
+            float reveal = -10000.0;
+            [unroll] for (int i = 0; i < 6; i++)
+            {
+                float3 source = _CampRevealSources[i].xyz;
+                reveal = max(reveal, source.z - distance(world.xz, source.xy));
+            }
+            float ripple = sin(world.x * 1.7 + sin(world.z * .9)) * .16
+                         + sin(world.z * 2.1 + world.x * .6) * .10;
+            float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
+            float luminance = dot(baseColor, float3(.2126, .7152, .0722));
+            // Port the original Three.js visibility attenuation verbatim.
+            // Keep subdued tree and terrain detail outside the revealed camp.
+            // The Three.js output is linear and tone-mapped afterwards;
+            // Unity's gamma-space WebGL surface output is not equivalent.
+            // Lift hidden detail before the grade so the edge reads as a
+            // muted woodland, not black cut-out triangles.
+            float3 distant = lerp(float3(luminance, luminance, luminance),
+                                   baseColor, .46) * .45;
+            distant = lerp(distant, float3(.075, .096, .087), .25);
+            return lerp(baseColor, distant, obscured);
+        }
+
+        void surf(Input IN, inout SurfaceOutput o)
+        {
+            float3 shaded = IN.color.rgb * _Tint.rgb;
+            o.Albedo = shaded * (1.0 - _Unlit);
+            o.Emission = shaded * _Unlit;
             o.Alpha = 1;
+        }
+        // Three.js applies visibility to the already-lit pixel. Applying
+        // it to albedo made Unity's bright camp and outer trees diverge.
+        void FinalizeColor(Input IN, SurfaceOutput o, inout fixed4 color)
+        {
+            // Shadow silhouettes projected from the approved OBJ pines
+            // and the original Three.js sun vector. Unity mirrors world X.
+            float2 uv = float2(.5 - IN.worldPos.x / 110.0,
+                               .5 + IN.worldPos.z / 110.0);
+            float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
+            color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
+            color.rgb = CampShade(color.rgb, IN.worldPos);
+            float distanceToCamera = distance(_WorldSpaceCameraPos, IN.worldPos);
+            float atmosphericFog = saturate((distanceToCamera - 85.0) / 50.0)
+                                   * _CampAtmosphereEnabled;
+            color.rgb = lerp(color.rgb, _CampAtmosphereColor,
+                             atmosphericFog);
         }
         ENDCG
     }

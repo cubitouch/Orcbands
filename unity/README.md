@@ -76,6 +76,37 @@ license file or account credentials to the repository itself.
 Navigation around obstacles, real resource objects, a worker task state
 machine, carrying/delivery, dynamic resource counters and persisted scene data.
 
+## Visual fidelity pass 2 — awaiting WebGL review
+
+This branch now reuses the **authored Three.js hearth and torch geometry**, tree-root
+ground patches and per-source visibility falloff rather than substitutes. Unity
+lighting moves closer to the original warm hemisphere and sunlight; the imported
+pine/hut palettes are preserved rather than darkened in hard distance rings.
+Flames use emissive vertex colors and a bounded animated light (their sculpted
+mesh shapes do **not** yet deform); smoke and the original HUD remain separate
+follow-ups.
+
+### Manual comparison to perform before merging
+
+1. Open the Three.js grove and the new GitHub Actions Unity WebGL screenshot
+   side by side at 1280×800.
+2. Verify the near pines, red hut roof, winding trail, tree-root patches and
+   sheltered storage match their shapes, color balance and positions.
+3. Inspect the six-source soft reveal around the hut/hearth/four torches;
+   no three-band tree-color steps or abrupt fog circles should remain.
+4. Inspect each torch basket and the hearth: authored stones/logs and faceted
+   tongues should replace cylinders/cubes/capsules.
+5. Try Q/E orbit, pan, zoom, click worker and right-click move.
+6. Review WebGL compilation **and** the screenshot artifact. If colors,
+   face culling, fog or shader support is wrong, leave this PR unmerged.
+
+### Still not equivalent
+
+The Three.js fire/smoke has per-vertex flame deformation, drifting smoke and
+sparks. The Unity pass exports its actual shape but only animates the light.
+Unity's color pipeline/tone mapping also differs; the pass is a closer visual
+approximation, **not proven parity** until inspected.
+
 ## Art fidelity review
 
 Compare the Unity preview and the approved Three.js Asset Lab at the same
@@ -84,3 +115,25 @@ layout**, but materials, lighting and fog are rendered by Unity. Not yet an
 identical render: fog-of-war mask/smoke/polished GUI remain future improvements.
 Check the generated screenshot artifact on the Unity PR before merging. The
 first WebGL milestone is environmental parity, not gameplay parity.
+
+## Visual fidelity: fog of war, contact shadows and materials
+
+The visibility effect is **Warcraft-style fog of war**, not weather or actual
+grey fog. A six-source world-space mask (hut, hearth and four torches) dims
+unrevealed geometry smoothly, retaining muted detail. Unity's normal
+camera-distance fog is deliberately **disabled** to avoid a flat veil.
+
+The original pine OBJ silhouettes create sun-cast shadows on the ground.
+A soft, scale-aware root and low-canopy occlusion pass augments those shadows
+*directly beneath trees*, so they do not appear to float. The original MTL
+foliage swatches also receive slightly more local tonal separation.
+
+In desktop and WebGL, press **F** to toggle fog of war for direct comparison
+of lighting/materials. This is a review shortcut, not a gameplay exploration
+system. CI publishes both `starter.png` (fog of war **on**) and
+`fog-of-war-disabled.png` (fog of war **off**) from the same build. Keep
+the original Asset Lab and this Unity scene side-by-side at equal framing
+when checking colour, contact shading and fog-of-war boundaries.
+
+Do **not** merge PR #40 solely because validation/CI passes; review the
+actual screenshots and confirm material/fog depth first.

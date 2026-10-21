@@ -9,6 +9,7 @@ namespace Orcbands
         public Camera GameCamera;
         public Collider Ground;
         public Transform SelectionRing;
+        public CampReveal Reveal;
 
         private bool selected;
         private bool hasDestination;
@@ -19,6 +20,10 @@ namespace Orcbands
         private void Update()
         {
             if (Worker == null || GameCamera == null || Ground == null) return;
+            // Review/debug control; the six static light sources remain the
+            // baseline until gameplay-driven exploration is implemented.
+            if (Reveal != null && Input.GetKeyDown(KeyCode.F))
+                Reveal.SetFogOfWar(!Reveal.FogOfWarVisible);
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -103,6 +108,9 @@ namespace Orcbands
 
         private void OnGUI()
         {
+            // The WebGL host already displays control hints below the canvas.
+            // Preserve the in-game hints only for native desktop builds.
+            if (Application.platform == RuntimePlatform.WebGLPlayer) return;
             var previous = GUI.color;
             GUI.color = new Color(.11f, .17f, .14f, .84f);
             GUI.DrawTexture(new Rect(16, 16, 348, 78), Texture2D.whiteTexture);
@@ -111,7 +119,7 @@ namespace Orcbands
             GUI.Label(new Rect(28, 47, 330, 20),
                 "Select worker: click    Move: right-click");
             GUI.Label(new Rect(28, 67, 330, 20),
-                "WASD pan · Wheel zoom · Q/E rotate · R reset");
+                "WASD pan · Wheel zoom · Q/E rotate · R reset · F: fog of war");
             GUI.color = previous;
         }
     }

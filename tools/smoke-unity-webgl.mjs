@@ -49,7 +49,24 @@ try {
   }, null, { timeout: 180000 });
   assert(await loaded.jsonValue(), 'Unity never completed WebGL initialization');
   await page.waitForTimeout(2500);
+  // Review the same broad landscape presentation as the original Asset Lab,
+  // not Unity's default white 960x600 player chrome.
+  const viewport = page.locator('#viewport');
+  assert.equal(await viewport.count(), 1, 'Expected Orcbands gallery WebGL template');
+  const box = await page.locator('#unity-canvas').boundingBox();
+  assert(box && box.width > 1050 && box.height > 390,
+    'Unity should fill the approved wide landscape gallery');
   await page.screenshot({ path: screenshot, fullPage: true });
+  // Additional screenshot isolates material/lighting quality from the
+  // static Warcraft-style visibility mask. Keep the default screenshot on.
+  await page.locator('#unity-canvas').click({position:{x:20,y:20}});
+  await page.keyboard.press('f');
+  await page.waitForTimeout(800);
+  await page.screenshot({
+    path: resolve(root, 'smoke-artifacts/unity-webgl/fog-of-war-disabled.png'),
+    fullPage: true
+  });
+  await page.keyboard.press('f');
   assert.deepEqual(errors, [], 'Browser errors occurred while loading Unity WebGL');
   console.log('Unity WebGL loaded successfully; review screenshot: ' + screenshot);
 } finally {
