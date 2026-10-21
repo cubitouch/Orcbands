@@ -106,3 +106,10 @@ assert.match(fireLight, /Warmth\.intensity = BaseIntensity;/);
 assert.doesNotMatch(fireLight, /void Update\(/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /distantForestChangedFraction < \.012/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /stationary.*forest-t0\.png/s);
+
+// Exact diagnostic: remove every additive per-light surface pass from both
+// terrain and original materials. Compare actual WebGL against PR #48/#49.
+for (const shader of ['WorldColorLit', 'VertexColorLit']) {
+  const source = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
+  assert.match(source, /#pragma surface surf Lambert fullforwardshadows noforwardadd/);
+}
