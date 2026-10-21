@@ -117,6 +117,12 @@ try{
  check(desktopMetrics.calls<=66,'Grove draw-call budget exceeded');
  check(desktopMetrics.triangles<195000,'Grove triangle budget exceeded');
  await page.getByRole('button',{name:'Resources',exact:true}).click();
+ // The full browser test still visits and asserts EVERY resource state.
+ // PR CI captures one representative full-resolution image per family
+ // rather than paying for every near-identical software WebGL PNG.
+ const representative={bush:'full',wood:'stump',stone:'full',woodpile:'full',
+   stonepile:'partial',food:'full',shelter:'stocked',construction:'roof'};
+ const essential=process.env.ORCBANDS_ESSENTIAL_CAPTURE==='1';
  for(const key of Object.entries(RESOURCE_STATES).flatMap(([kind,states])=>states.map(state=>kind+'/'+state))){
   await page.locator('[data-resource-family="'+key.split('/')[0]+'"]').click();
   await page.locator('[data-resource="'+key+'"]').click();await page.waitForTimeout(160);
@@ -124,7 +130,9 @@ try{
   check(resource.key===key,'Resource selection must switch geometry');
   if(key.startsWith('bush/'))check(resource.berries===({'bush/full':30,'bush/picked':10,'bush/empty':0})[key],'Berry state count mismatch');
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-'+key.replace('/','-')+'.png')});
+  const [kind,state]=key.split('/');
+  if(!essential||representative[kind]===state)
+   await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-'+key.replace('/','-')+'.png')});
  }
  await page.locator('[data-resource-family="bush"]').click();
  await page.locator('[data-resource="bush/full"]').click();
