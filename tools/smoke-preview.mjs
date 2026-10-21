@@ -43,6 +43,9 @@ try{
  const metrics=()=>page.evaluate(()=>window.__orcbandsReview.metrics());
  const check=(value,message)=>{if(!value)throw Error(message)};
  const moved=(a,b)=>Math.hypot(...a.map((x,i)=>x-b[i]))>.05;
+ // Exercise all behaviour even when saving fewer SwiftShader-rendered PNGs.
+ const essential=process.env.ORCBANDS_ESSENTIAL_CAPTURE==='1';
+ const coreGroveViews=new Set(['overall','path','hut','campfire','shelter','construction']);
 
  await page.goto(url,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.__orcbandsTreeLoaded===true,null,{timeout:60000});
@@ -60,7 +63,8 @@ try{
  for(const view of ['front','rear','roof','detail']){
   await page.locator('[data-hut-view="'+view+'"]').click();
   await page.waitForTimeout(250);
-  await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-'+view+'.png')});
+  if(!essential||view==='roof'||view==='detail')
+   await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-'+view+'.png')});
  }
  const hutMetrics=await metrics();
  check(hutMetrics.calls<=24&&hutMetrics.triangles<4000,'Hut batching/geometry budget exceeded');
@@ -68,7 +72,7 @@ try{
  await page.waitForFunction(()=>window.__orcbandsReview.metrics().rotation>.01);
  await page.getByRole('button',{name:'Reset camera'}).click();
  await page.getByRole('button',{name:'Wireframe'}).click();
- await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-wireframe.png')});
+ if(!essential)await page.screenshot({path:path.join(repo,'smoke-artifacts/hut-wireframe.png')});
  await page.getByRole('button',{name:'Wireframe'}).click();
  await page.getByRole('button',{name:'Forest grove'}).click();
  await page.waitForFunction(()=>window.__orcbandsMode==='grove');
@@ -76,7 +80,8 @@ try{
  for(const view of ['overall','path','low','wide','hut','campfire','fire','berries','woodcut','quarry','stockyard','foodstore','shelter','construction']) {
   await page.evaluate(view=>window.__orcbandsReview.view(view),view);
   await page.waitForTimeout(300);
-  await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
+  if(!essential||coreGroveViews.has(view))
+   await page.screenshot({path:path.join(repo,'smoke-artifacts/grove-'+view+'.png')});
  }
  const desktopMetrics=await metrics();
  if(process.env.ORCBANDS_CAPTURE_FIRE_VIDEO==='1'){
@@ -117,12 +122,9 @@ try{
  check(desktopMetrics.calls<=66,'Grove draw-call budget exceeded');
  check(desktopMetrics.triangles<195000,'Grove triangle budget exceeded');
  await page.getByRole('button',{name:'Resources',exact:true}).click();
- // The full browser test still visits and asserts EVERY resource state.
- // PR CI captures one representative full-resolution image per family
- // rather than paying for every near-identical software WebGL PNG.
- const representative={bush:'full',wood:'stump',stone:'full',woodpile:'full',
-   stonepile:'partial',food:'full',shelter:'stocked',construction:'roof'};
- const essential=process.env.ORCBANDS_ESSENTIAL_CAPTURE==='1';
+ // Every resource state is still selected and asserted; selected snapshots
+ // represent foliage, supplies and both authored construction structures.
+ const representative={bush:'full',woodpile:'full',shelter:'stocked',construction:'roof'};
  for(const key of Object.entries(RESOURCE_STATES).flatMap(([kind,states])=>states.map(state=>kind+'/'+state))){
   await page.locator('[data-resource-family="'+key.split('/')[0]+'"]').click();
   await page.locator('[data-resource="'+key+'"]').click();await page.waitForTimeout(160);
@@ -142,7 +144,7 @@ try{
  const exported=await readFile(path.join(repo,'smoke-artifacts/berry-full.obj'),'utf8');
  check(exported.split('\n').find(line=>line.startsWith('v ')).trim().split(/\s+/).length===7,'Downloaded OBJ must carry RGB vertex colors');
  await page.getByRole('button',{name:'Wireframe',exact:true}).click();
- await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-wireframe.png')});
+ if(!essential)await page.screenshot({path:path.join(repo,'smoke-artifacts/resource-wireframe.png')});
  await page.getByRole('button',{name:'Wireframe',exact:true}).click();
  await page.getByRole('button',{name:'Auto rotate',exact:true}).click();
  await page.waitForFunction(()=>window.__orcbandsReview.metrics().rotation>.01);
@@ -176,7 +178,7 @@ try{
  await page.getByRole('button',{name:'Auto rotate'}).click();
  await page.getByRole('button',{name:'Single tree',exact:true}).click();
  await page.waitForTimeout(200);
- await page.screenshot({path:path.join(repo,'smoke-artifacts/pine-studio-return.png')});
+ if(!essential)await page.screenshot({path:path.join(repo,'smoke-artifacts/pine-studio-return.png')});
  check(!(await metrics()).visibility.enabled,'Studio must not have fog of war');
  check((await page.getByRole('button',{name:'Single tree',exact:true}).getAttribute('aria-pressed'))==='true','Return to studio failed');
 
@@ -209,17 +211,17 @@ try{
  await mobile.getByRole('button',{name:'Reset camera'}).click();await mobile.waitForTimeout(400);
  const mobileReset=await mobile.evaluate(()=>window.__orcbandsReview.metrics());
  check(!moved(mobileReset.camera,mobileMetrics.camera),'Mobile reset failed');
- await mobile.screenshot({path:path.join(repo,'smoke-artifacts/grove-mobile-reset.png')});
+ if(!essential)await mobile.screenshot({path:path.join(repo,'smoke-artifacts/grove-mobile-reset.png')});
  await writeFile(path.join(repo,'smoke-artifacts/metrics.json'),JSON.stringify({desktop:desktopMetrics,mobile:mobileMetrics,hut:hutMetrics},null,2)+'\n');
  await mobile.getByRole('button',{name:'Timber hut',exact:true}).click();
  await mobile.waitForFunction(()=>window.__orcbandsMode==='hut');
- await mobile.screenshot({path:path.join(repo,'smoke-artifacts/hut-mobile.png')});
+ if(!essential)await mobile.screenshot({path:path.join(repo,'smoke-artifacts/hut-mobile.png')});
  await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsHutLoaded&&window.__orcbandsMode==='hut');
  await mobile.getByRole('button',{name:'Resources',exact:true}).click();
  await mobile.locator('[data-resource-family="food"]').click();
  await mobile.locator('[data-resource="food/partial"]').click();
  await mobile.evaluate(()=>window.scrollTo(0,0));
- await mobile.screenshot({path:path.join(repo,'smoke-artifacts/resource-mobile.png')});
+ if(!essential)await mobile.screenshot({path:path.join(repo,'smoke-artifacts/resource-mobile.png')});
  await mobile.reload();await mobile.waitForFunction(()=>window.__orcbandsMode==='resources'&&window.__orcbandsResourceReview.metrics().key==='food/partial');
  await mobile.close();
  if(errors.length)throw Error('Browser errors: '+errors.join('\n'));
