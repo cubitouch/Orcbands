@@ -40,12 +40,13 @@ namespace Orcbands.Editor
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Shades.Clear();
-            // The original Asset Lab uses a strong sky/ground hemisphere,
-            // not the flat dim ambience from the first Unity import.
+            // Restrained ambient fill lets the low sun and fire distinguish
+            // lit forest edges from the deep woodland. Excessive hemispheric
+            // illumination previously washed out the original pine palette.
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.48f, .57f, .49f);
-            RenderSettings.ambientEquatorColor = new Color(.37f, .44f, .37f);
-            RenderSettings.ambientGroundColor = new Color(.26f, .27f, .25f);
+            RenderSettings.ambientSkyColor = new Color(.35f, .43f, .38f);
+            RenderSettings.ambientEquatorColor = new Color(.25f, .30f, .26f);
+            RenderSettings.ambientGroundColor = new Color(.17f, .19f, .18f);
             // Like the original Three.js renderer, use atmospheric distance
             // fog (85-135m) *and* the six-source camp visibility mask.
             RenderSettings.fog = true;
@@ -73,8 +74,9 @@ namespace Orcbands.Editor
                 throw new InvalidOperationException("Missing exported approved pine shadow map");
             Material terrainArt = new Material(art);
             terrainArt.SetTexture("_ForestShadowTex", pineShadowMap);
-            terrainArt.SetFloat("_ForestShadowStrength", .78f);
-            terrainArt.SetColor("_Tint", new Color(.82f, .80f, .70f));
+            terrainArt.SetFloat("_ForestShadowStrength", .88f);
+            // Keep paths legible, but stop the open ground from looking pale.
+            terrainArt.SetColor("_Tint", new Color(.73f, .75f, .67f));
             terrainArt = SavedMaterial("WoodlandGroundWithShadows", terrainArt);
             Material fireArt = new Material(vertexShader);
             fireArt.SetColor("_Tint", Color.white);
@@ -150,7 +152,16 @@ namespace Orcbands.Editor
             camera.farClipPlane = 240f;
             camera.allowHDR = true;
             var film = cameraObject.AddComponent<FilmicGrade>();
-            film.GradeMaterial = SavedMaterial("BrowserFilmicGrade", new Material(Shader.Find("Hidden/Orcbands/FilmicGrade")));
+            var gradeShader = Shader.Find("Hidden/Orcbands/FilmicGrade");
+            if (gradeShader == null)
+                throw new InvalidOperationException("Missing Orcbands filmic grade");
+            var gradeMaterial = new Material(gradeShader);
+            // More deliberate deep greens and contrast, without crushing
+            // the hearth, worker, paths or distant silhouettes into black.
+            gradeMaterial.SetFloat("_Exposure", .83f);
+            gradeMaterial.SetFloat("_Contrast", 1.17f);
+            gradeMaterial.SetFloat("_Saturation", 1.07f);
+            film.GradeMaterial = SavedMaterial("BrowserFilmicGrade", gradeMaterial);
             camera.clearFlags = CameraClearFlags.SolidColor;
             // A subdued distant clearing for areas outside the level mesh;
             // the woodland itself is obscured by the authored fog of war.
@@ -162,9 +173,9 @@ namespace Orcbands.Editor
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.color = new Color(1f, .92f, .83f);
-            sun.intensity = .92f;
+            sun.intensity = 1.08f;
             sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = .74f;
+            sun.shadowStrength = .83f;
             // Source Three.js sun sits at (-22, 36, 18); Unity mirrors X.
             // Point the Unity light along the equivalent mirrored rays.
             sunObject.transform.rotation = Quaternion.LookRotation(
@@ -295,12 +306,12 @@ namespace Orcbands.Editor
                                 source.color.r * .80f, source.color.g * .62f,
                                 source.color.b * .60f, source.color.a);
                         else if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
-                            // Preserve every authored needle/light/shadow MTL
-                            // swatch, but compensate for Unity's overly pastel
-                            // Lambert result compared with MeshStandardMaterial.
+                            // Preserve original swatch variation while keeping
+                            // spruce greens deep, rather than mint/lime under
+                            // the otherwise strong Unity daylight response.
                             replacement.color = new Color(
-                                source.color.r * .77f, source.color.g * .79f,
-                                source.color.b * .69f, source.color.a);
+                                source.color.r * .70f, source.color.g * .72f,
+                                source.color.b * .62f, source.color.a);
                         else if (source.name.StartsWith("timber", StringComparison.OrdinalIgnoreCase)
                               || source.name.StartsWith("plank", StringComparison.OrdinalIgnoreCase))
                             // Source Three.js timber is dark aged wood, not the
@@ -310,9 +321,9 @@ namespace Orcbands.Editor
                                 source.color.b * .77f, source.color.a);
                         else replacement.color = source.color;
                         if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
-                            replacement.SetFloat("_SurfaceContrast", 1.23f);
+                            replacement.SetFloat("_SurfaceContrast", 1.29f);
                         else if (source.name.IndexOf("bark", StringComparison.OrdinalIgnoreCase) >= 0)
-                            replacement.SetFloat("_SurfaceContrast", 1.09f);
+                            replacement.SetFloat("_SurfaceContrast", 1.12f);
                         else if (source.name.StartsWith("roof_", StringComparison.OrdinalIgnoreCase))
                             replacement.SetFloat("_SurfaceContrast", 1.07f);
                         replacement = SavedMaterial("CampColor-" + key, replacement);
