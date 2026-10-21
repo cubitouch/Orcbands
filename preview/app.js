@@ -27,8 +27,10 @@ const controls=new OrbitControls(camera,canvas);
 controls.enableDamping=true;controls.dampingFactor=.075;
 controls.minDistance=2.5;controls.maxDistance=26;
 controls.maxPolarAngle=Math.PI*.495;controls.enablePan=true;
-scene.add(new THREE.HemisphereLight(0xe6f4e4,0x655f53,2.2));
-const sun=new THREE.DirectionalLight(0xffe8c3,2.35);
+// Cool canopy ambience separates the shadowed woodland from the hearth,
+// without touching the six-source visibility mask or animating distant lights.
+scene.add(new THREE.HemisphereLight(0xdce9e9,0x586b6c,2.05));
+const sun=new THREE.DirectionalLight(0xffedda,2.25);
 sun.position.set(-5,11,7);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13});
