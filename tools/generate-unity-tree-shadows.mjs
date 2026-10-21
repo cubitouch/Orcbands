@@ -114,8 +114,9 @@ export function addRootContactOcclusion(mask, trees, size = SHADOW_MAP_SIZE) {
     const centerX = (tree.x + SHADOW_HALF_EXTENT) / worldPerTexel;
     const centerY = (SHADOW_HALF_EXTENT - tree.z) / worldPerTexel;
     const scale = tree.scale ?? 1;
+    const crownScale = scale * (tree.width ?? 1);
     const rootSigma = Math.max(.30, .43 * scale);
-    const canopySigma = Math.max(.75, .94 * scale);
+    const canopySigma = Math.max(.75, .94 * crownScale);
     const radius = Math.ceil(3 * canopySigma / worldPerTexel);
     let peakAdded = 0;
     for (let row = Math.max(0, Math.floor(centerY - radius));
@@ -144,10 +145,11 @@ export function addRootContactOcclusion(mask, trees, size = SHADOW_MAP_SIZE) {
 function projectToPixels(vertex, placement, size) {
   const cosine = Math.cos(placement.angle), sine = Math.sin(placement.angle);
   const [x, y, z] = vertex;
+  const width = placement.scale * (placement.width ?? 1);
   const rx = x * cosine + z * sine, rz = -x * sine + z * cosine;
-  const height = y * placement.scale;
-  const worldX = placement.x + placement.scale * rx + (-sun.x / sun.y) * height;
-  const worldZ = placement.z + placement.scale * rz + (-sun.z / sun.y) * height;
+  const height = y * placement.scale * (placement.height ?? 1);
+  const worldX = placement.x + width * rx + (-sun.x / sun.y) * height;
+  const worldZ = placement.z + width * rz + (-sun.z / sun.y) * height;
   return [(worldX + SHADOW_HALF_EXTENT) * size / (2 * SHADOW_HALF_EXTENT),
           (SHADOW_HALF_EXTENT - worldZ) * size / (2 * SHADOW_HALF_EXTENT)];
 }
