@@ -1,6 +1,12 @@
 Shader "Hidden/Orcbands/FilmicGrade"
 {
-    Properties { _MainTex ("Source", 2D) = "white" {} }
+    Properties
+    {
+        _MainTex ("Source", 2D) = "white" {}
+        _Exposure ("Scene exposure", Range(.6, 1.2)) = .83
+        _Contrast ("Midtone contrast", Range(1, 1.35)) = 1.17
+        _Saturation ("Subtle saturation", Range(.85, 1.2)) = 1.07
+    }
     SubShader
     {
         Cull Off ZWrite Off ZTest Always
@@ -13,20 +19,23 @@ Shader "Hidden/Orcbands/FilmicGrade"
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
-            // The source browser renderer uses ACES filmic tone mapping.
-            // A lightweight equivalent for Built-in Unity/WebGL preserves
-            // bright fire/sun details without flat clipping or plastic whites.
+            float _Exposure, _Contrast, _Saturation;
+
             half4 frag(v2f_img i) : SV_Target
             {
                 float4 sampleColor = tex2D(_MainTex, i.uv);
                 float3 source = max(sampleColor.rgb, 0);
-                float3 exposed = source * .96;
+                // ACES-style highlight rolloff, followed by an intentionally
+                // restrained midtone toe. The old .96 exposure plus strong
+                // ambient fill made foliage and camp ground pastel/flat.
+                float3 exposed = source * _Exposure;
                 float3 mapped = saturate((exposed * (2.51 * exposed + .03)) /
                     (exposed * (2.43 * exposed + .59) + .14));
-                // Do not add a second contrast or saturation curve: that
-                // destroyed the dark foliage detail in the original art
-                // and made lit needles and grass look artificially vivid.
-                // One filmic mapping pass is the intended colour treatment.
+                mapped = saturate((mapped - .38) * _Contrast + .38);
+                // Retain natural greens and warm fire, not neon highlights.
+                float luminance = dot(mapped, float3(.2126, .7152, .0722));
+                mapped = saturate(lerp(float3(luminance, luminance, luminance),
+                                      mapped, _Saturation));
                 return float4(mapped, sampleColor.a);
             }
             ENDCG
