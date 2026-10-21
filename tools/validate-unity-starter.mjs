@@ -24,7 +24,8 @@ for (const path of [
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /void Build\(\)/);
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /GenerateScene\(\);/);
 assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'), /GetMouseButtonDown\(1\)/);
-assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /RenderSettings\\.fog = true/);
+assert(file('unity/Assets/Editor/OrcbandsSceneSetup.cs').includes('RenderSettings.fog = true;'),
+  'Original Three.js distance fog must remain enabled');
 assert.match(file('unity/Assets/Orcbands/Runtime/CampReveal.cs'), /RevealedAtmosphere/);
 console.log('Unity starter bridge validated: 4 copied mesh inputs, manifest, version, scene and CI.');
 
@@ -42,10 +43,10 @@ for (const brace of braces) {
 }
 assert.equal(balance, 0, 'CampReveal.cs has an unmatched opening brace');
 
-// Guard the meaning of fog: the six-source Warcraft-like visibility mask is
-// not a camera-distance atmospheric fog layer.
+// The original combines perspective-distance atmospheric fog with the
+// separate six-source Warcraft-like visibility mask.
 const sceneSource = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
-assert.match(sceneSource, /RenderSettings\.fog = false;/);
+assert.match(sceneSource, /RenderSettings\.fog = true;/);
 assert.match(sceneSource, /controller\.Reveal = reveal;/);
 for (const shader of ['WorldColorLit', 'VertexColorLit']) {
   const src = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
