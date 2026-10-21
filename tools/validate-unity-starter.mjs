@@ -97,3 +97,12 @@ assert.match(file('tools/smoke-unity-webgl.mjs'), /fire-motion-2\.png/);
 assert.match(revealSource, /Shader\.SetGlobalVector\("_CampAtmosphereOrigin"/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /fog-camera-pan\.png/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /fog-camera-zoom\.png/);
+
+// Stationary forest regression: animated fire geometry and smoke persist, but
+// point-light intensity/colour must not animate (PR #43 proved that caused
+// large grey/green terrain regions to pulse without any camera movement).
+const fireLight = file('unity/Assets/Orcbands/Runtime/CampFlame.cs');
+assert.match(fireLight, /Warmth\.intensity = BaseIntensity;/);
+assert.doesNotMatch(fireLight, /void Update\(/);
+assert.match(file('tools/smoke-unity-webgl.mjs'), /distantForestChangedFraction < \.012/);
+assert.match(file('tools/smoke-unity-webgl.mjs'), /stationary.*forest-t0\.png/s);

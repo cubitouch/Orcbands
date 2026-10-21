@@ -57,6 +57,55 @@ try {
   assert(box && box.width > 1050 && box.height > 390,
     'Unity should fill the approved wide landscape gallery');
   await page.screenshot({ path: screenshot, fullPage: true });
+  // Guard against the stationary-camera forest flicker reproduced by PR #43.
+  // This patch of distant pines used to change colour in ~20% of its pixels
+  // over 3 seconds while the player was completely untouched. The hearth,
+  // torches and their animated particles are deliberately outside the ROI.
+  const stationary = resolve(root, 'smoke-artifacts/unity-webgl/stationary');
+  await mkdir(stationary, { recursive: true });
+  const firstForest = await page.locator('#unity-canvas').screenshot({
+    path: resolve(stationary, 'forest-t0.png')
+  });
+  await page.waitForTimeout(2800);
+  const secondForest = await page.locator('#unity-canvas').screenshot({
+    path: resolve(stationary, 'forest-t3.png')
+  });
+  const distantForestChangedFraction = await page.evaluate(async (captures) => {
+    async function pixels(base64) {
+      const image = new Image();
+      image.src = 'data:image/png;base64,' + base64;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      context.drawImage(image, 0, 0);
+      return context.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    const before = await pixels(captures[0]);
+    const after = await pixels(captures[1]);
+    if (before.width !== after.width || before.height !== after.height)
+      throw new Error('Stationary scene changed canvas dimensions');
+    const width = before.width;
+    const height = before.height;
+    let changed = 0, total = 0;
+    for (let y = Math.floor(height * .06); y < Math.floor(height * .38); y += 2) {
+      for (let x = Math.floor(width * .20); x < Math.floor(width * .36); x += 2) {
+        const index = (y * width + x) * 4;
+        const rgbDifference = (Math.abs(before.data[index] - after.data[index])
+          + Math.abs(before.data[index + 1] - after.data[index + 1])
+          + Math.abs(before.data[index + 2] - after.data[index + 2])) / 3;
+        if (rgbDifference > 3.5) changed++;
+        total++;
+      }
+    }
+    return changed / total;
+  }, [firstForest.toString('base64'), secondForest.toString('base64')]);
+  assert(distantForestChangedFraction < .012,
+    'Distant forest changes while the camera is stationary: '
+      + (100 * distantForestChangedFraction).toFixed(2) + '% of sampled pixels');
+  console.log('Stationary background changed pixels: '
+    + (100 * distantForestChangedFraction).toFixed(3) + '%');
   // Additional screenshot isolates material/lighting quality from the
   // static Warcraft-style visibility mask. Keep the default screenshot on.
   await page.locator('#unity-canvas').click({position:{x:20,y:20}});
