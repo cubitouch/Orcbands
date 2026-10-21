@@ -52,6 +52,8 @@ for (const shader of ['WorldColorLit', 'VertexColorLit']) {
   const src = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
   assert.match(src, /_CampRevealSources\[6\]/);
   assert.match(src, /smoothstep\(-5\.0, 3\.0,/);
+  assert.match(src, /_CampAtmosphereColor/);
+  assert.match(src, /distanceToCamera - 85\.0/);
   assert(!src.includes('float3(.206, .253, .265)'),
     'Avoid the removed grey FOW overlay');
 }

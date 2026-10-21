@@ -44,12 +44,15 @@ namespace Orcbands
             Shader.SetGlobalFloat("_CampFogEnabled", FogOfWarVisible ? 1f : 0f);
             Color atmosphere = FogOfWarVisible ? HiddenAtmosphere : RevealedAtmosphere;
             RenderSettings.fogColor = atmosphere;
+            Shader.SetGlobalColor("_CampAtmosphereColor", atmosphere);
+            Shader.SetGlobalFloat("_CampAtmosphereEnabled", 1f);
             if (GameCamera != null) GameCamera.backgroundColor = atmosphere;
         }
 
         private void OnDisable()
         {
             Shader.SetGlobalFloat("_CampFogEnabled", 0f);
+            Shader.SetGlobalFloat("_CampAtmosphereEnabled", 0f);
         }
     }
 }

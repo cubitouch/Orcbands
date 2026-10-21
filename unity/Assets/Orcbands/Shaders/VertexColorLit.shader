@@ -23,6 +23,11 @@ Shader "Orcbands/VertexColorLit"
 
         float4 _CampRevealSources[6];
         float _CampFogEnabled;
+        // Distance fog from the original Three.js scene (85–135m).
+        // Unity's surface-shader finalcolor path does not reliably inherit
+        // built-in fog on WebGL, so apply it explicitly after camp visibility.
+        float3 _CampAtmosphereColor;
+        float _CampAtmosphereEnabled;
         float3 CampShade(float3 baseColor, float3 world)
         {
             float reveal = -10000.0;
@@ -65,6 +70,11 @@ Shader "Orcbands/VertexColorLit"
             float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
             color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
             color.rgb = CampShade(color.rgb, IN.worldPos);
+            float distanceToCamera = distance(_WorldSpaceCameraPos, IN.worldPos);
+            float atmosphericFog = saturate((distanceToCamera - 85.0) / 50.0)
+                                   * _CampAtmosphereEnabled;
+            color.rgb = lerp(color.rgb, _CampAtmosphereColor,
+                             atmosphericFog);
         }
         ENDCG
     }
