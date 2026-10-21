@@ -56,8 +56,8 @@ for (const shader of ['WorldColorLit', 'VertexColorLit']) {
   assert.match(src, /smoothstep\(-5\.0, 3\.0,/);
   assert.match(src, /_CampAtmosphereColor/);
   assert.match(src, /_CampAtmosphereOrigin/);
-  assert.match(src, /smoothstep\\(85\\.0, 135\\.0, worldDistance\\)/);
-  assert.doesNotMatch(src, /distance\\(_WorldSpaceCameraPos, IN\\.worldPos\\)/,
+  assert.match(src, /smoothstep\(85\.0, 135\.0, worldDistance\)/);
+  assert.doesNotMatch(src, /distance\(_WorldSpaceCameraPos, IN\.worldPos\)/,
     'World fog cannot depend on moving camera position');
   assert.match(src, /distance\(IN\.worldPos\.xz, _CampAtmosphereOrigin\.xy\)/);
   assert(!src.includes('float3(.206, .253, .265)'),
