@@ -31,13 +31,12 @@ Shader "Orcbands/WorldColorLit"
                          + sin(world.z * 2.1 + world.x * .6) * .10;
             float obscured = (1.0 - smoothstep(-5.0, 3.0, reveal + ripple)) * _CampFogEnabled;
             float luminance = dot(baseColor, float3(.2126, .7152, .0722));
-            // This is Warcraft-like fog OF WAR, not atmospheric mist.
-            // Darken the *existing* lit surface while retaining some local
-            // colour/shape detail. Avoid any uniform grey veil/tint.
-            float3 detail = lerp(float3(luminance, luminance, luminance),
-                                  baseColor, .38);
-            float3 hidden = detail * .41 + float3(.005, .012, .009);
-            return lerp(baseColor, hidden, obscured);
+            // Port the original Three.js visibility attenuation verbatim.
+            // Keep subdued tree and terrain detail outside the revealed camp.
+            float3 distant = lerp(float3(luminance, luminance, luminance),
+                                   baseColor, .38) * .24;
+            distant = lerp(distant, float3(.035, .052, .057), .38);
+            return lerp(baseColor, distant, obscured);
         }
 
         void surf(Input IN, inout SurfaceOutput o)
