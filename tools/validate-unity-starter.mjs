@@ -106,3 +106,10 @@ assert.match(fireLight, /Warmth\.intensity = BaseIntensity;/);
 assert.doesNotMatch(fireLight, /void Update\(/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /distantForestChangedFraction < \.012/);
 assert.match(file('tools/smoke-unity-webgl.mjs'), /stationary.*forest-t0\.png/s);
+
+// Unity-only terrain colour blend: smooth hard face-sized soil rectangles,
+// without changing Three.js scene art or terrain geometry topology.
+assert.match(file('preview/environment.js'), /smoothPathColors = false/);
+assert.match(file('preview/environment.js'), /smoothstep\(worn,\.09,\.88\)/);
+assert.match(file('tools/generate-unity-environment.mjs'),
+  /createTerrainGeometry\(\{smoothPathColors:true\}\)/);
