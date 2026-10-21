@@ -79,7 +79,9 @@ namespace Orcbands.Editor
             fireArt.SetFloat("_Unlit", 1f);
             fireArt = SavedMaterial("ApprovedFireGlow", fireArt);
             var ground = ColoredMesh("Ground", "terrain", terrainArt, true);
-            ColoredMesh("Tree roots and woodland ground patches", "forest-patches", art, false);
+            // Root patches sit above terrain and must receive the SAME baked
+            // canopy/root shadow mask, or they hide the grounding we added.
+            ColoredMesh("Tree roots and woodland ground patches", "forest-patches", terrainArt, false);
             ColoredMesh("Approved resources and storage", "resource-art", art, false);
             ColoredMesh("Approved rock geometry", "stone-props", art, false);
             ColoredMesh("Grass and woodland cover", "grass-props", art, false);
@@ -291,7 +293,7 @@ namespace Orcbands.Editor
                                 source.color.b * .75f, source.color.a);
                         else replacement.color = source.color;
                         if (source.name.IndexOf("needle", StringComparison.OrdinalIgnoreCase) >= 0)
-                            replacement.SetFloat("_SurfaceContrast", 1.19f);
+                            replacement.SetFloat("_SurfaceContrast", 1.23f);
                         else if (source.name.IndexOf("bark", StringComparison.OrdinalIgnoreCase) >= 0)
                             replacement.SetFloat("_SurfaceContrast", 1.09f);
                         else if (source.name.StartsWith("roof_", StringComparison.OrdinalIgnoreCase))

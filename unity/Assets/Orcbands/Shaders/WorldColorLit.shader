@@ -36,7 +36,7 @@ Shader "Orcbands/WorldColorLit"
             // colour/shape detail. Avoid any uniform grey veil/tint.
             float3 detail = lerp(float3(luminance, luminance, luminance),
                                   baseColor, .38);
-            float3 hidden = detail * .36 + float3(.005, .012, .009);
+            float3 hidden = detail * .41 + float3(.005, .012, .009);
             return lerp(baseColor, hidden, obscured);
         }
 

@@ -56,3 +56,6 @@ assert.match(file('tools/generate-unity-tree-shadows.mjs'),
   /addRootContactOcclusion\(soft, trees, size\)/);
 assert.match(file('unity/Assets/Orcbands/Runtime/OrcbandsController.cs'),
   /KeyCode\.F/);
+
+assert.match(sceneSource,
+  /"forest-patches", terrainArt, false/);
