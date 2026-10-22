@@ -21,8 +21,9 @@ assert(luma('roof_eave')<luma('roof_shadow')-.02 &&
   'Roof material weathering must graduate from rain-dark eaves to dry ridge');
 assert(luma('plank_damp')<luma('plank')-.055,
   'Lower wall boards should be visibly darker than aged upper timber');
-for(const name of ['entrance_binding_low_-0.97','entrance_binding_high_0.97'])
- assert(asset.obj.includes('o '+name),'The portal should have dark structural bindings');
+assert(asset.obj.includes('o doorway_bindings'),'The portal should have dark structural bindings');
+assert((asset.obj.match(/o doorway_bindings\\n/g)||[]).length===1,
+  'All doorway bindings should share one material batch');
 
 assert(asset.mtl.includes('newmtl plank_damp')&&asset.mtl.includes('newmtl roof_eave'),'Hut material ramps not exported');
 assert(asset.stats.triangles<3800,'Material weathering must stay within the browser geometry budget');
