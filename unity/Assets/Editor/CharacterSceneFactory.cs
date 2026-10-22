@@ -9,6 +9,10 @@ namespace Orcbands.Editor
     {
         public static GameObject Create(Vector3 feet)
         {
+            // Keep public PR builds and local clones usable without licensed art.
+            var licensed = LicensedCharacterFactory.TryCreate(feet);
+            if (licensed != null) return licensed;
+
             const string path = "Assets/Orcbands/CharacterPalette.asset";
             var palette = AssetDatabase.LoadAssetAtPath<CharacterMaterialProfile>(path);
             if (palette == null)
