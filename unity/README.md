@@ -233,3 +233,57 @@ world-scale rationale, visual/gameplay root contract, WebGL review captures and
 licensed-model replacement workflow. The starter uses original temporary geometry;
 no Synty assets are included. Keep the PR unmerged until its real Unity screenshots
 have been reviewed.
+
+
+## Licensed Synty mini-orcs — private source integration
+
+The purchased Synty files live exclusively in the private
+[cubitouch/Orcbands-PrivateAssets](https://github.com/cubitouch/Orcbands-PrivateAssets)
+repository at `Synty/`; they are intentionally absent from this public project.
+No Synty source FBX, prefab, atlas or derivative Unity import cache should be
+committed, uploaded as a CI artifact or included in the public PR review.
+
+To see the genuine mini-orcs locally, clone the private repo next to the public
+one, then from the public Orcbands repository root:
+
+```sh
+cp -R ../Orcbands-PrivateAssets/Synty unity/Assets/Synty
+# Complete the usual generated environment step; then:
+# Unity editor → Orcbands → Generate Starter Scene
+```
+
+The `unity/Assets/Synty/` path is ignored by the public git repository. Keep
+the existing vendor file and folder metadata unchanged: the model prefab
+references are maintained by Unity GUIDs. When private files are absent,
+normal local and pull-request builds continue to show the original faceted
+character proxy.
+
+With the purchased pack, the existing `CharacterSceneFactory` uses
+`SM_Chr_Dungeon_GoblinMale_01` as the worker, and loads the real warrior and
+shaman for the character review camera presets. These are the *original vendor
+prefabs*, fitted to the established 1.525-unit worker height under an independent
+gameplay root. Their own color atlases are adapted to `Orcbands/CharacterMatte`
+for camp lighting and fog without altering the original private materials.
+Motion remains placeholder direct click-to-move; no animation clips are added.
+
+### Trusted GitHub build
+
+The Actions secret `PRIVATE_ASSETS_TOKEN` belongs to the **public** Orcbands
+repository, but must be a fine-grained PAT with only `Contents: read` on
+`cubitouch/Orcbands-PrivateAssets`.
+
+- The published `main` WebGL workflow checks out the private repository
+  into an ephemeral workspace, copies `Synty/` to `unity/Assets/Synty/`, then
+  builds with `ORCBANDS_REQUIRE_PRIVATE_ASSETS=1`. Missing files or checkout
+  authentication cause a hard build failure, not a misleading proxy release.
+- A manually triggered Unity workflow on `main` can create a licensed WebGL
+  or macOS build. Normal pull-request jobs always use the public-only proxy
+  and never access the private token.
+- Both workflows **disable Unity Library caching** because cached imported
+  licensed art could otherwise be retrievable from public PR workflows.
+
+Only compiled game player artifacts may be published; do not upload raw source
+assets or the imported `unity/Library`. A PR preview with a proxy does not
+prove that licensed Synty art looks correct. Inspect the actual WebGL screenshots
+after the first trusted `main` build, specifically the worker's size, UV atlas,
+shadows, materials, foot alignment, right-click movement and selection.
