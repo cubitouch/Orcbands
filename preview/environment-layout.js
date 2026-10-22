@@ -21,6 +21,43 @@ export const RESOURCE_PLACEMENTS=[
  {kind:'food',state:'full',x:-8,z:1.6,angle:-.3,radius:1.15}
 ];
 export function nearResource(x,z,margin=0){return RESOURCE_PLACEMENTS.some(p=>Math.hypot(x-p.x,z-p.z)<p.radius+margin)}
+// Deliberately separated woodland compositions, not a uniform debris scatter.
+export const STORY_POCKETS=[[-7.2,-10.8],[-8.2,-1.5],[-8.6,5.1],[-5.8,11.7],
+ [1.5,12.6],[10.5,8.0],[10.0,1.1],[10.1,-10.2],[3.3,-12.4],[-1.5,-10.7]];
+export function storyClearance(x,z,radius,trees=[]){
+ return pathDistance(x,z)>radius+.35 && !inHutFootprint(x,z,radius+.25)
+  && !nearResource(x,z,radius+.35) && !nearTorch(x,z,radius+.25)
+  && !nearCampfire(x,z,radius+1.1) && Math.hypot(x/4.4,(z-.8)/3.7)>1+radius/4
+  && trees.every(t=>Math.hypot(t.x-x,t.z-z)>radius+.32);
+}
+export function createStoryLayout(seed,trees){
+ const random=seededRandom(seed+18001),props=[];
+ function place(kind,x,z,radius,scale,pocket){
+  if(!storyClearance(x,z,radius,trees))return false;
+  if(props.some(p=>Math.hypot(p.x-x,p.z-z)<(p.radius+radius)*.72))return false;
+  props.push({kind,x,z,radius,scale,pocket,angle:random()*Math.PI*2,variant:Math.floor(random()*3)});return true;
+ }
+ // Split wedges sit at the existing cutting station, never on the doorway or
+ // main trail. They share its occupation story, not a new collectible marker.
+ for(let i=0;i<7;i++){
+  const x=-7.0+random()*.8,z=7.0+random()*2.1;
+  place('chips',x,z,.26,.8+random()*.3,-1);
+ }
+ STORY_POCKETS.forEach(([cx,cz],pocket)=>{
+  // The longer silhouettes anchor only alternate pockets. Short crooked limbs
+  // and low vegetation carry the quieter spaces between them.
+  if(pocket%2===0)for(let attempt=0;attempt<18;attempt++){
+   if(place('deadLog',cx+(random()-.5)*2.5,cz+(random()-.5)*2.0,1.65,1,pocket))break;
+  }
+  for(const [kind,count,baseRadius] of [['mossRock',2,.72],['branch',3,.64],['mushrooms',2,.36],['fern',4,.52]]){
+   for(let i=0;i<count;i++)for(let attempt=0;attempt<14;attempt++){
+    const a=random()*Math.PI*2,r=Math.sqrt(random())*2.35,scale=.78+random()*.35;
+    if(place(kind,cx+Math.cos(a)*r,cz+Math.sin(a)*r,baseRadius*scale,scale,pocket))break;
+   }
+  }
+ });
+ return props;
+}
 export const GROVE_SEED = 2302;
 export const CAMPFIRE_PLACEMENT={x:.1,z:.15};
 export function nearCampfire(x,z,margin=0){return Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)<1.15+margin;}
@@ -179,6 +216,6 @@ export function createLayout(seed = GROVE_SEED) {
     const clearance=(pathDistance(tree.x,tree.z)-.33)/(1.36*tree.scale);
     return {...tree,width:Math.max(.78,Math.min(widthTarget,clearance)),height};
   });
-  return {seed,trees:shapedTrees,rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
+  return {seed,trees:shapedTrees,story:createStoryLayout(seed,shapedTrees),rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
    plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearTorch(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearResource(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT},resources:RESOURCE_PLACEMENTS.map(p=>({...p}))};
 }

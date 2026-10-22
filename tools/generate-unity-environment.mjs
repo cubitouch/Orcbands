@@ -9,6 +9,7 @@ import {
 } from '../preview/environment-layout.js';
 import { groundVariation, noise } from '../preview/ground-surface.js';
 import { createGrassGeometry, createRockGeometry, createForestFloorPatches, createTerrainGeometry } from '../preview/environment.js';
+import { createStoryGeometry } from '../preview/forest-story.js';
 import { buildCampfire } from '../preview/campfire.js';
 import { buildTorches } from '../preview/torches.js';
 import { resourceGeometry } from '../preview/resources.js';
@@ -33,6 +34,7 @@ writeFileSync(resolve(root, 'grove-layout.json'), JSON.stringify({
   campfire: { ...layout.campfire, x: -layout.campfire.x },
   torches: TORCH_PLACEMENTS.map(p => ({ ...p, x: -p.x })),
   resourceCount: layout.resources.length,
+  story: layout.story.map(p => ({...p,x:-p.x,angle:-p.angle})),
 }, null, 2) + '\n');
 
 // A compact non-indexed triangle stream, authored in metres, Y up:
@@ -113,6 +115,7 @@ const torches = buildTorches(torchesScene);
 torches.update(0);
 exportAuthoredGroup('torches-art', torches.root, false);
 exportAuthoredGroup('torches-flames', torches.root, true);
+exportMesh('woodland-story', [{geom:createStoryGeometry(layout)}]);
 exportMesh('forest-patches', [{geom: createForestFloorPatches(layout)}]);
 
 const resources = layout.resources.map(p => ({

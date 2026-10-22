@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createLayout, seededRandom, groundHeight, wornGround, CAMPFIRE_PLACEMENT} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 
+import {buildForestStory,woodlandMulch} from './forest-story.js?v=__ORCBANDS_REVISION__';
 import {noise,groundVariation} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 
 const earth = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
@@ -59,6 +60,9 @@ export function createTerrainGeometry() {
     const broken=Math.max(0,Math.min(1,edge+(grain-.5)*.40+(coarse-.5)*.20));
     const rut=worn*Math.max(0,.52-noise(x*1.15+7,z*.91-13));
     const ground=grass.lerp(soil,broken).multiplyScalar(.96+variation*.075-rut*.16);
+    // Damp leaf mould ties each composition to its soil. Wear suppresses it
+    // on routes and work aprons, so the existing hearth ramp stays dominant.
+    ground.lerp(new THREE.Color(0x655e43),woodlandMulch(x,z)*.46*(1-worn));
     return hearthBounceColor(ground,x,z);
   };
   const face=(a,b,c)=>{
@@ -190,7 +194,7 @@ export function createForestFloorPatches(layout) {
 }
 export function buildEnvironment(parent,sourceTree) {
   const layout=createLayout();
-  buildTerrain(parent);instanceAsset(parent,sourceTree,layout.trees,-.035);
+  buildTerrain(parent);buildForestStory(parent,layout);instanceAsset(parent,sourceTree,layout.trees,-.035);
   surface(parent,createForestFloorPatches(layout));
   for(let type=0;type<3;type++) {
     instances(parent,createGrassGeometry(type),leaves,layout.plants.filter(p=>p.type===type));
