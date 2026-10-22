@@ -126,6 +126,9 @@ try {
     path: resolve(root, 'smoke-artifacts/unity-webgl/fire-motion-2.png')
   });
   assert(!baseline.equals(later), 'Unity fire scene did not change across frames');
+  // The actual player frame-change assertion and both fire screenshots always
+  // run. Keep the additional video frames for optional full art review only.
+  if (process.env.ORCBANDS_CAPTURE_FIRE_VIDEO === '1') {
   // Make the moving effects reviewable without installing Unity: a short
   // capture from the real WebGL canvas, not a synthetic art animation.
   const frames = resolve(root, 'smoke-artifacts/unity-webgl/fire-frames');
@@ -144,6 +147,7 @@ try {
   ], { encoding: 'utf8', timeout: 30000 });
   if (encoded.status !== 0)
     console.warn('Could not encode optional fire motion review clip:', encoded.stderr);
+  }
   // Regression captures for the fog patch reported during RTS navigation.
   // The camera moves, but the six-source visibility and distant atmospheric
   // fade must remain attached to stable world-space positions.

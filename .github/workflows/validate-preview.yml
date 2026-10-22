@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Keep the latest iteration's expensive WebGL captures, not superseded PR runs.
+concurrency:
+  group: orcbands-forest-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -73,12 +78,33 @@ jobs:
           node tools/validate-campfire.mjs
           node tools/validate-camp-visibility.mjs
           node tools/validate-fire-atmosphere.mjs
-          ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
-          ORCBANDS_LOCAL_THREE=1 node tools/smoke-camp-ui.mjs
+          ORCBANDS_LOCAL_THREE=1 ORCBANDS_ESSENTIAL_CAPTURE=1 node tools/smoke-preview.mjs
       - name: Attach browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: orcbands-forest-webgl-smoke
           path: smoke-artifacts/
+          if-no-files-found: ignore
+
+  camp-ui:
+    # Independent runner: HUD interaction checks no longer extend the long
+    # forest/art-preview critical path. These are real WebGL browser tests.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run real camp HUD desktop and mobile smoke
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1 three@0.166.1
+          npx playwright install --with-deps chromium
+          ORCBANDS_LOCAL_THREE=1 ORCBANDS_ESSENTIAL_CAPTURE=1 node tools/smoke-camp-ui.mjs
+      - name: Attach camp interaction screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-camp-ui-smoke
+          path: smoke-artifacts/camp-ui/
           if-no-files-found: ignore

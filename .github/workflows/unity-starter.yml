@@ -30,6 +30,12 @@ on:
 permissions:
   contents: read
 
+# A later push makes an older PR screenshot/build obsolete. Retain explicit
+# workflow_dispatch runs, and never cancel unrelated PRs.
+concurrency:
+  group: orcbands-unity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   validate-bridge:
     runs-on: ubuntu-latest
@@ -78,6 +84,14 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
+      - name: Restore Unity WebGL Library cache
+        id: unity-library-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: unity/Library
+          key: Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-${{ hashFiles('unity/Assets/**', 'unity/Packages/**', 'unity/ProjectSettings/**', 'preview/**', 'tools/generate-unity-*.mjs') }}
+          restore-keys: |
+            Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-
       - name: Build Orcbands for browser
         uses: game-ci/unity-builder@v4
         env:
@@ -89,6 +103,14 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
+      - name: Save Unity WebGL Library cache
+        if: steps.unity-library-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        timeout-minutes: 4
+        continue-on-error: true
+        with:
+          path: unity/Library
+          key: ${{ steps.unity-library-cache.outputs.cache-primary-key }}
       - name: Install headless Chromium smoke dependencies
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
