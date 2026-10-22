@@ -22,7 +22,7 @@ assert(luma('roof_eave')<luma('roof_shadow')-.02 &&
 assert(luma('plank_damp')<luma('plank')-.055,
   'Lower wall boards should be visibly darker than aged upper timber');
 assert(asset.obj.includes('o doorway_bindings'),'The portal should have dark structural bindings');
-assert((asset.obj.match(/o doorway_bindings\\n/g)||[]).length===1,
+assert((asset.obj.match(/o doorway_bindings\n/g)||[]).length===1,
   'All doorway bindings should share one material batch');
 
 assert(asset.mtl.includes('newmtl plank_damp')&&asset.mtl.includes('newmtl roof_eave'),'Hut material ramps not exported');
