@@ -28,11 +28,11 @@ try{
  await page.keyboard.press('f'); await page.waitForTimeout(350);
  await canvas.screenshot({path:resolve(output,'fog-off.png')});
  await page.keyboard.press('f');
- await canvas.hover(); await page.mouse.wheel(0,-120);
+ await canvas.hover(); await page.mouse.wheel(0,-2400);
  await page.waitForTimeout(500);
  await canvas.screenshot({path:resolve(output,'close.png')});
  await page.keyboard.press('r'); await page.waitForTimeout(200);
- await page.mouse.wheel(0,120); await page.waitForTimeout(500);
+ await page.mouse.wheel(0,3200); await page.waitForTimeout(500);
  await canvas.screenshot({path:resolve(output,'out.png')});
  console.log('Captured matched Unity views:',output);
 }finally{await browser.close();server.close()}

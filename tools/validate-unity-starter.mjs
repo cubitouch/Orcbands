@@ -50,7 +50,7 @@ assert.equal(balance, 0, 'CampReveal.cs has an unmatched opening brace');
 const sceneSource = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
 assert.match(sceneSource, /RenderSettings\.fog = false;/);
 assert.match(sceneSource, /controller\.Reveal = reveal;/);
-for (const shader of ['WorldColorLit', 'VertexColorLit']) {
+for (const shader of ['WorldColorLit', 'VertexColorLit', 'CharacterMatte']) {
   const src = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
   assert.match(src, /_CampRevealSources\[6\]/);
   assert.match(src, /smoothstep\(-5\.0, 3\.0,/);
@@ -122,7 +122,7 @@ assert.match(file('tools/smoke-unity-webgl.mjs'), /stationary.*forest-t0\.png/s)
 // Unity's ForwardAdd executes finalcolor again for every extra point light;
 // adding the constant in those passes created rectangular light tiles even
 // in reveal-mask-only and baked-shadow-only diagnostic modes (PR #48).
-for (const shader of ['WorldColorLit', 'VertexColorLit']) {
+for (const shader of ['WorldColorLit', 'VertexColorLit', 'CharacterMatte']) {
   const source = file('unity/Assets/Orcbands/Shaders/' + shader + '.shader');
   assert.match(source, /#if !defined\(UNITY_PASS_FORWARDADD\)[\s\S]*distant \+= float3\(\.12, \.15, \.13\) \* \.29;/);
   assert.match(source, /#if defined\(UNITY_PASS_FORWARDADD\)[\s\S]*color\.rgb \*= 1\.0 - atmosphericFog;/);
