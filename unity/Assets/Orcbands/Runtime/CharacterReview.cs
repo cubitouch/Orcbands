@@ -11,11 +11,13 @@ namespace Orcbands
         public CampReveal Reveal;
         public Vector3 CampfireFeet;
         private Vector3 originalFeet;
-        private void Start() { originalFeet = Character.transform.position; }
+        private void Awake() { originalFeet = Character.transform.position; }
         [System.Serializable] private class ReportData
         {
             public Vector3 feet, unitScreen, destinationScreen, camera;
             public bool selected;
+            public int frame;
+            public string rayTarget, lastSelectionHit;
             public float groundError;
         }
         public void Report(string unused)
@@ -26,10 +28,13 @@ namespace Orcbands
                 destination = target.point;
             Ground.Raycast(new Ray(feet + Vector3.up * 45f,Vector3.down), out RaycastHit surface,100f);
             var controller = GetComponent<OrcbandsController>();
+            Physics.Raycast(View.ScreenPointToRay(View.WorldToScreenPoint(feet + Vector3.up * .8f)), out RaycastHit pick, 300f);
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
                 feet = feet, unitScreen = View.WorldToViewportPoint(feet + Vector3.up * .8f),
                 destinationScreen = View.WorldToViewportPoint(destination),
                 camera = View.transform.position, selected = controller.IsWorkerSelected,
+                frame = Time.frameCount, rayTarget = pick.collider == null ? "none" : pick.collider.name,
+                lastSelectionHit = controller.LastSelectionHit,
                 groundError = Mathf.Abs(feet.y - surface.point.y) }));
         }
         public void Capture(string preset)

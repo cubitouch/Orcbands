@@ -9,6 +9,7 @@ namespace Orcbands
         public Vector3 ModelScale = Vector3.one;
         public Vector3 ModelEuler;
         public Vector3 PivotOffset;
+        [Min(.1f)] public float TargetHeight = 1.525f;
         public Transform[] ReviewRoles;
 
         private void Awake() { Apply(); }
@@ -19,6 +20,16 @@ namespace Orcbands
             ModelMount.localScale = ModelScale;
             ModelMount.localRotation = Quaternion.Euler(ModelEuler);
             ModelMount.localPosition = PivotOffset;
+        }
+
+        [ContextMenu("Fit rest pose to target height")]
+        public void FitConfiguredRestPose()
+        {
+#if UNITY_EDITOR
+            UnityEditor.Undo.RecordObject(this, "Fit character rest pose");
+            if (ModelMount != null) UnityEditor.Undo.RecordObject(ModelMount, "Fit character mount");
+#endif
+            FitRestPose(TargetHeight);
         }
 
         // Explicit rest-pose fitting, never per-frame bounds fitting on an animated rig.

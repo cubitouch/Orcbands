@@ -32,9 +32,9 @@ Generation reads it without replacing it and creates six shared materials:
 | Surface | RGB defaults (0–1) | Intended role |
 | --- | --- | --- |
 | Skin | .46, .51, .24 | Olive, readable under cool fill |
-| Cloth | .40, .18, .15 | Desaturated red major area |
-| Leather | .25, .19, .12 | Muted earth brown |
-| Metal | .25, .28, .28 | Weathered charcoal armor |
+| Cloth | .52, .29, .23 | Desaturated red major area |
+| Leather | .34, .27, .18 | Muted earth brown |
+| Metal | .31, .33, .32 | Weathered charcoal armor |
 | Bone | .73, .68, .49 | Warm cream tusks/staff detail |
 | Faction | .56, .36, .19 | Small ochre sash; not an outline |
 
@@ -95,13 +95,15 @@ The approved normal camera position/FOV, dolly limits and controls are unchanged
 3. Leave imported model scale/import settings intact initially. Confirm +Y up and
    +Z facing; correct rig facing with `ModelEuler` rather than movement code.
    Assign ModelMount on `CharacterPresentation`, then call `Apply()`.
-4. In a neutral/rest pose, call `FitRestPose(targetHeight)` once (via an editor
-   helper/debug Inspector or code). It applies orientation before measuring
+4. In a neutral/rest pose, set `TargetHeight` in the presentation Inspector and
+   use its **Fit rest pose to target height** context menu once (or call
+   `FitRestPose(targetHeight)` from code). It applies orientation before measuring
    active renderer bounds, fits the requested height, centers XZ and lifts the
    lowest renderer bound to the feet. Check feet visually: weapons, capes and
    unusual rig bounds can require a manual `PivotOffset`/`ModelScale` correction.
    Never fit animated bounds every frame. Parent/root must have unit scale.
-5. Disable root motion on the Animator. Keep rig/Animator on the visual child;
+5. The built-in Animation module is enabled for future rigs; no animation pack
+   or controller is bundled. Disable root motion on the Animator. Keep rig/Animator on the visual child;
    do not put animation translations on the gameplay root. Remove child physics
    colliders so selection still hits the dedicated root collider. Enable receive
    shadows and shadow casting on the model renderers.
@@ -125,7 +127,9 @@ The approved normal camera position/FOV, dolly limits and controls are unchanged
 Chromium. It captures camp/normal/close/distant, fog on/off, warmer hearth and
 cooler forest positions, plus worker/warrior/shaman silhouettes. Its real pointer
 inputs verify normal and distant selection, right-click displacement and terrain
-height alignment; screenshots preserve the selected and moved results.
+height alignment, then camera orbit/reset/pan/dolly; screenshots preserve the
+selected and moved results. Browser pointer buttons are held across measured
+Unity frames rather than clicked down/up between two engine polls.
 
 For deterministic art views, the WebGL console exposes
 `orcbandsReview('normal')`, `'close'`, `'out'`, `'normal-off'`, `'warm'`, `'cool'`,

@@ -13,6 +13,7 @@ namespace Orcbands
 
         private bool selected;
         public bool IsWorkerSelected => selected;
+        public string LastSelectionHit { get; private set; } = "no click";
         private bool hasDestination;
         private Vector3 destination;
         private Vector3 focus = new Vector3(0f, 0f, -1f);
@@ -31,6 +32,7 @@ namespace Orcbands
                 Ray ray = GameCamera.ScreenPointToRay(Input.mousePosition);
                 selected = Physics.Raycast(ray, out RaycastHit hit, 300f) &&
                            hit.collider != null && hit.collider.transform == Worker;
+                LastSelectionHit = hit.collider == null ? "none" : hit.collider.name;
             }
 
             if (selected && Input.GetMouseButtonDown(1))

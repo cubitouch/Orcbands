@@ -98,6 +98,7 @@ jobs:
           restore-keys: |
             Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-
       - name: Build Orcbands for browser
+        id: player-build
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -136,6 +137,7 @@ jobs:
           path: smoke-artifacts/unity-webgl/
           if-no-files-found: ignore
       - name: Upload WebGL player
+        if: always() && steps.player-build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: orcbands-unity-webgl
