@@ -9,12 +9,12 @@ export function makeHut(){
  let part='foundation';
  const palette={
   timber:[.40,.275,.16],timber_light:[.50,.355,.215],timber_dark:[.265,.17,.095],
-  plank:[.37,.255,.155],plank_warm:[.42,.29,.175],plank_shadow:[.295,.195,.115],plank_damp:[.245,.177,.122],plank_dry:[.455,.315,.198],
+  plank:[.37,.255,.155],plank_warm:[.42,.29,.175],plank_shadow:[.295,.195,.115],plank_damp:[.245,.177,.122],
   roof_red:[.56,.235,.19],roof_light:[.62,.275,.22],roof_warm:[.59,.25,.195],
-  roof_shadow:[.48,.19,.16],roof_dark:[.335,.125,.105],roof_eave:[.405,.157,.134],roof_ridge:[.62,.295,.235],
+  roof_shadow:[.48,.19,.16],roof_dark:[.335,.125,.105],roof_eave:[.405,.157,.134],
   stone:[.41,.405,.36],stone_light:[.50,.48,.425],stone_shadow:[.32,.33,.30],
-  bone:[.72,.625,.42],bone_shadow:[.51,.42,.265],bone_root:[.475,.41,.28],iron:[.115,.128,.12],
-  interior:[.087,.062,.041],cloth:[.36,.061,.054],cloth_light:[.46,.082,.063],cloth_hem:[.245,.054,.052]
+  bone:[.72,.625,.42],bone_shadow:[.51,.42,.265],iron:[.115,.128,.12],
+  interior:[.087,.062,.041],cloth:[.36,.061,.054],cloth_light:[.46,.082,.063]
  };
  const v=p=>(vertices.push(p.map(n=>+n.toFixed(6))),vertices.length);
  const face=(material,points)=>faces.push({part,material,indices:points.map(v)});
@@ -38,7 +38,7 @@ export function makeHut(){
    // Two bands preserve the Asset Lab's triangle budget.
    box(name,x,y-h*.31,z,w,h*.38,d,'plank_damp',false);
    const sunExposed=/_([048])$/.test(name);
-   box(name,x,y+h*.19,z,w,h*.62,d,sunExposed?'plank_dry':material,false);
+   box(name,x,y+h*.19,z,w,h*.62,d,sunExposed?'plank_warm':material,false);
    return;
   }
   part=name;
@@ -58,7 +58,7 @@ export function makeHut(){
  function tusk(name,x,y,z,side){
   part=name;const rings=[[[x,y,z],.19,.23],[[x+side*.035,y+.28,z+.018],.14,.16],[[x+side*.09,y+.53,z+.035],.075,.09]];
   const points=rings.map(([p,w,d])=>[[p[0]-w/2,p[1],p[2]-d/2],[p[0]+w/2,p[1],p[2]-d/2],[p[0]+w/2,p[1],p[2]+d/2],[p[0]-w/2,p[1],p[2]+d/2]]);
-  for(let j=0;j<2;j++)for(let i=0;i<4;i++)face(j===0?'bone_root':i===0?'bone_shadow':'bone',[points[j][i],points[j+1][i],points[j+1][(i+1)%4],points[j][(i+1)%4]]);
+  for(let j=0;j<2;j++)for(let i=0;i<4;i++)face(j===0?'bone_shadow':i===0?'bone_shadow':'bone',[points[j][i],points[j+1][i],points[j+1][(i+1)%4],points[j][(i+1)%4]]);
   const tip=[x+side*.155,y+.72,z+.075];
   for(let i=0;i<4;i++)face(i===0?'bone_shadow':'bone',[points[2][i],tip,points[2][(i+1)%4]]);
  }
@@ -142,7 +142,7 @@ export function makeHut(){
    for(let j=0;j<points.length;j++){
     const next=(j+1)%points.length,tri=[points[j],points[next],center];
     const swatch=roofColors[(col*3+row*2+(side>0?2:0))%roofColors.length];
-     const roofMaterial=row===0?'roof_eave':row===4?'roof_ridge':swatch;
+     const roofMaterial=row===0?'roof_eave':row===4?'roof_light':swatch;
      face(roofMaterial,side>0?tri.reverse():tri);
    }
    // A thin, dark chipped edge gives the lowest row visible thickness without heavy gutters.
@@ -187,7 +187,7 @@ export function makeHut(){
  part='tribe_banner';
  const cloth=[[2.66,2.94,-.52],[3.60,2.94,-.51],[3.63,1.84,-.46],[3.28,1.72,-.43],[3.14,1.90,-.44],[2.69,1.78,-.49]];
  const mid=[3.16,2.43,-.40];
- for(let i=0;i<cloth.length;i++)face(Math.min(cloth[i][1],cloth[(i+1)%cloth.length][1])<2?'cloth_hem':i%3?'cloth':'cloth_light',[cloth[(i+1)%cloth.length],cloth[i],mid]);
+ for(let i=0;i<cloth.length;i++)face(Math.min(cloth[i][1],cloth[(i+1)%cloth.length][1])<2?'cloth':i%3?'cloth':'cloth_light',[cloth[(i+1)%cloth.length],cloth[i],mid]);
  // Rear face makes the cloth readable from both orbit directions.
  for(let i=0;i<cloth.length;i++)face('cloth',[cloth[i],cloth[(i+1)%cloth.length],mid.map((n,j)=>n-(j===2?.014:0))]);
  part='banner_emblem';
