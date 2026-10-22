@@ -12,6 +12,7 @@ namespace Orcbands
         public CampReveal Reveal;
 
         private bool selected;
+        public bool IsWorkerSelected => selected;
         private bool hasDestination;
         private Vector3 destination;
         private Vector3 focus = new Vector3(0f, 0f, -1f);

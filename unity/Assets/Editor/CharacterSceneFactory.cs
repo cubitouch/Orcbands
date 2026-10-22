@@ -54,6 +54,8 @@ namespace Orcbands.Editor
                 Part(model, "Belt", new Vector3(0,.61f,.01f), new Vector3(.70f,.10f,.45f), materials[2]);
                 Part(model, "Head", new Vector3(0,1.27f,.025f), new Vector3(.61f,.51f,.49f), materials[0]);
                 Part(model, "Muzzle", new Vector3(0,1.17f,.26f), new Vector3(.36f,.18f,.16f), materials[0]);
+                Part(model, "Eye L", new Vector3(-.14f,1.34f,.272f), new Vector3(.075f,.055f,.025f), materials[2]);
+                Part(model, "Eye R", new Vector3(.14f,1.34f,.272f), new Vector3(.075f,.055f,.025f), materials[2]);
                 for (int side = -1; side <= 1; side += 2)
                 {
                     var ear = Part(model, "Ear", new Vector3(side*.35f,1.30f,0), new Vector3(.21f,.20f,.17f), materials[0]);
