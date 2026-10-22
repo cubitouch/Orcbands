@@ -46,9 +46,9 @@ namespace Orcbands.Editor
             // Slightly cooler forest fill keeps shadows blue-green without
             // sacrificing foliage visibility or changing fog/visibility shaders.
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.32f, .40f, .42f);
-            RenderSettings.ambientEquatorColor = new Color(.23f, .29f, .30f);
-            RenderSettings.ambientGroundColor = new Color(.16f, .19f, .20f);
+            RenderSettings.ambientSkyColor = new Color(.26f, .35f, .39f);
+            RenderSettings.ambientEquatorColor = new Color(.18f, .25f, .28f);
+            RenderSettings.ambientGroundColor = new Color(.13f, .17f, .19f);
             // Our two world-space shaders own the woodland atmosphere and
             // six-source fog of war. Built-in camera-distance fog applies a
             // second, moving grey band on top when zooming/orbiting in WebGL.
@@ -128,13 +128,13 @@ namespace Orcbands.Editor
             // Three.js; only the lightweight animated point lights are Unity-native.
             AddFlicker("Hearth firelight",
                 Surface(ground, layout.campfire.x, layout.campfire.z) + Vector3.up * .76f,
-                5.7f, 4.7f, .8f, new Color(1f, .55f, .27f));
+                7.2f, 6.7f, .8f, new Color(1f, .48f, .22f));
             for (int i = 0; i < layout.torches.Length; i++)
             {
                 P loc = layout.torches[i];
                 AddFlicker("Torch firelight " + (i + 1),
                     Surface(ground, loc.x, loc.z) + Vector3.up * 2f,
-                    4.7f, 2.65f, i * 2.3f, new Color(1f, .68f, .39f));
+                    4.5f, 2.45f, i * 2.3f, new Color(1f, .66f, .36f));
             }
 
             GameObject worker = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -178,8 +178,8 @@ namespace Orcbands.Editor
             GameObject sunObject = new GameObject("Warm sun");
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
-            sun.color = new Color(1f, .96f, .90f);
-            sun.intensity = 1.03f;
+            sun.color = new Color(.94f, .97f, 1f);
+            sun.intensity = .91f;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .83f;
             // Source Three.js sun sits at (-22, 36, 18); Unity mirrors X.
