@@ -106,11 +106,10 @@ jobs:
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
       - name: Build Orcbands for browser
-        env:
-          ORCBANDS_REQUIRE_PRIVATE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && '1' || '0' }}
         id: player-build
         uses: game-ci/unity-builder@v4
         env:
+          ORCBANDS_REQUIRE_PRIVATE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && '1' || '0' }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
@@ -174,10 +173,9 @@ jobs:
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
       - name: Build Orcbands for macOS
-        env:
-          ORCBANDS_REQUIRE_PRIVATE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && '1' || '0' }}
         uses: game-ci/unity-builder@v4
         env:
+          ORCBANDS_REQUIRE_PRIVATE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && '1' || '0' }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
