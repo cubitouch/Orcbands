@@ -32,11 +32,13 @@ export function makeHut(){
   face(material,[...low].reverse());face(material,high);
  }
  function box(name,x,y,z,w,h,d,material='plank'){
-  // Three broad weathering bands keep slats dirty at their bases, dry above.
+  // Broad weathering bands keep slats dirty at their bases, dry above.
   if(h>1.15&&/^(side_slat_|back_slat_|front_slat_)/.test(name)){
-   for(let band=0;band<3;band++)
-    box(name,x,y+(band-1)*h/3,z,w,h/3,d,
-      band===0?'plank_damp':band===2?'plank_dry':material);
+   // Low damp section plus the original varied slat tone above.
+   // Two bands preserve the Asset Lab's triangle budget.
+   box(name,x,y-h*.31,z,w,h*.38,d,'plank_damp');
+   const sunExposed=/_([048])$/.test(name);
+   box(name,x,y+h*.19,z,w,h*.62,d,sunExposed?'plank_dry':material);
    return;
   }
   part=name;
