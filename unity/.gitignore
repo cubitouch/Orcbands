@@ -21,3 +21,7 @@
 # node tools/generate-unity-environment.mjs; do not commit generated geometry.
 /Assets/Orcbands/Generated/
 /Assets/Orcbands/Generated.meta
+
+# Commercial Synty assets, restored only from the private repository.
+/Assets/Synty/
+/Assets/Synty.meta
