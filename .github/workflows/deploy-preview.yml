@@ -52,10 +52,9 @@ jobs:
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
       - name: Build Unity browser player
-        env:
-          ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"
         uses: game-ci/unity-builder@v4
         env:
+          ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
