@@ -1,12 +1,22 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {createLayout, seededRandom, groundHeight, wornGround} from './environment-layout.js?v=__ORCBANDS_REVISION__';
+import {createLayout, seededRandom, groundHeight, wornGround, CAMPFIRE_PLACEMENT} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 
 import {noise,groundVariation} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 
 const earth = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,flatShading:true});
 const leaves = new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide});
 const matrix = new THREE.Object3D();
+// Bake very soft amber bounce into the existing authored ground colour.
+// This is in WORLD coordinates and exports unchanged to Unity: no new lights,
+// translucent quads or shader pass that can cause fog rectangles or flicker.
+const hearthBounceTint = new THREE.Color(0xd18b43);
+export function hearthBounceColor(color,x,z) {
+  const distance=Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z);
+  const fade=Math.max(0,1-distance/6.8);
+  const smooth=fade*fade*(3-2*fade);
+  return color.lerp(hearthBounceTint,.38*smooth);
+}
 function geometry(vertices, colors) {
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
@@ -48,7 +58,8 @@ export function createTerrainGeometry() {
     const edge=Math.max(0,Math.min(1,(worn-.10)/.78));
     const broken=Math.max(0,Math.min(1,edge+(grain-.5)*.40+(coarse-.5)*.20));
     const rut=worn*Math.max(0,.52-noise(x*1.15+7,z*.91-13));
-    return grass.lerp(soil,broken).multiplyScalar(.96+variation*.075-rut*.16);
+    const ground=grass.lerp(soil,broken).multiplyScalar(.96+variation*.075-rut*.16);
+    return hearthBounceColor(ground,x,z);
   };
   const face=(a,b,c)=>{
     vertices.push(...points[a],...points[b],...points[c]);
