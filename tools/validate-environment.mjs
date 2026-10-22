@@ -42,7 +42,16 @@ const THREE=await import('three');
 const {readFile}=await import('node:fs/promises');
 const {OBJLoader}=await import('three/addons/loaders/OBJLoader.js');
 const {MTLLoader}=await import('three/addons/loaders/MTLLoader.js');
-const {buildEnvironment}=await import('../preview/environment.js');
+const {buildEnvironment,hearthBounceColor}=await import('../preview/environment.js');
+// The stronger warm pool is baked in the same terrain vertices for both
+// browser and Unity. It stays spatially bounded, without a spotlight decal.
+const neutralGround=new THREE.Color(0x687958);
+const fireCenter=hearthBounceColor(neutralGround.clone(),.1,.15);
+const fireEdge=hearthBounceColor(neutralGround.clone(),3.5,.15);
+const distantGround=hearthBounceColor(neutralGround.clone(),9,.15);
+assert(fireCenter.r>neutralGround.r+.12,'Firelight bounce should have a noticeable amber lift');
+assert(fireCenter.r>fireEdge.r&&fireEdge.r>distantGround.r,'Hearth bounce should fade smoothly');
+assert(distantGround.equals(neutralGround),'No firelight tint beyond the local clearing');
 const materials=new MTLLoader().parse(await readFile('preview/assets/low-poly-pine-01.mtl','utf8'));
 const source=new OBJLoader().setMaterials(materials).parse(await readFile('preview/assets/low-poly-pine-01.obj','utf8'));
 source.traverse(o=>{if(o.isMesh)o.geometry.computeVertexNormals()});

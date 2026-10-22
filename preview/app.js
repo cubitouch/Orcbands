@@ -27,8 +27,11 @@ const controls=new OrbitControls(camera,canvas);
 controls.enableDamping=true;controls.dampingFactor=.075;
 controls.minDistance=2.5;controls.maxDistance=26;
 controls.maxPolarAngle=Math.PI*.495;controls.enablePan=true;
-scene.add(new THREE.HemisphereLight(0xe6f4e4,0x655f53,2.2));
-const sun=new THREE.DirectionalLight(0xffe8c3,2.35);
+// Cool canopy ambience separates the shadowed woodland from the hearth,
+// without touching the six-source visibility mask or animating distant lights.
+const skyFill=new THREE.HemisphereLight(0xdce9e9,0x586b6c,2.05);
+scene.add(skyFill);
+const sun=new THREE.DirectionalLight(0xffedda,2.25);
 sun.position.set(-5,11,7);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-13,right:13,top:13,bottom:-13});
@@ -66,6 +69,13 @@ function resetCamera(){
 function setMode(next){
  if(next!=='grove'&&campUI?.isActive())campUI.setActive(false,false);
  mode=next;
+ // Deliberate dusk contrast only in the settlement: keep bright neutral
+ // inspection lighting in the tree, hut and resource studios.
+ skyFill.color.setHex(next==='grove'?0xc8dce2:0xdce9e9);
+ skyFill.groundColor.setHex(next==='grove'?0x475f67:0x586b6c);
+ skyFill.intensity=next==='grove'?1.72:2.05;
+ sun.color.setHex(next==='grove'?0xe7f0ff:0xffedda);
+ sun.intensity=next==='grove'?1.95:2.25;
  scene.background=next==='grove'?new THREE.Color(fogEnabled?0x40534f:0x9da98c):null;
  scene.fog=next==='grove'?new THREE.Fog(fogEnabled?0x40534f:0x9da98c,85,135):null;
  sun.position.set(...(next==='grove'?[-22,36,18]:[-5,11,7]));

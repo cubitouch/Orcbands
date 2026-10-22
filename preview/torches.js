@@ -33,7 +33,8 @@ export function buildTorches(parent){
  });
  function update(time){
   flames.forEach(f=>f.animate(time));
-  lights.forEach((light,i)=>{const pulse=fireSignal(time,i*2.3);light.intensity=4.5+pulse*.9;light.color.setHSL(.082+pulse*.012,1,.65)});
+  // Torch pools stay smaller than the central hearth's warmer glow.
+  lights.forEach((light,i)=>{const pulse=fireSignal(time,i*2.3);light.intensity=3.45+pulse*.65;light.color.setHSL(.082+pulse*.012,1,.65)});
  }
  update(0);return {root,update,metrics(){return {count:TORCH_PLACEMENTS.length,scales:flames.map(f=>f.mesh.scale.y),lightIntensities:lights.map(l=>l.intensity),lightColors:lights.map(l=>l.color.getHex())}}};
 }

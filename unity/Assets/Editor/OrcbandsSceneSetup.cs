@@ -43,10 +43,12 @@ namespace Orcbands.Editor
             // Restrained ambient fill lets the low sun and fire distinguish
             // lit forest edges from the deep woodland. Excessive hemispheric
             // illumination previously washed out the original pine palette.
+            // Slightly cooler forest fill keeps shadows blue-green without
+            // sacrificing foliage visibility or changing fog/visibility shaders.
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.35f, .43f, .38f);
-            RenderSettings.ambientEquatorColor = new Color(.25f, .30f, .26f);
-            RenderSettings.ambientGroundColor = new Color(.17f, .19f, .18f);
+            RenderSettings.ambientSkyColor = new Color(.26f, .35f, .39f);
+            RenderSettings.ambientEquatorColor = new Color(.18f, .25f, .28f);
+            RenderSettings.ambientGroundColor = new Color(.13f, .17f, .19f);
             // Our two world-space shaders own the woodland atmosphere and
             // six-source fog of war. Built-in camera-distance fog applies a
             // second, moving grey band on top when zooming/orbiting in WebGL.
@@ -119,17 +121,20 @@ namespace Orcbands.Editor
                 }
             }
 
+            // Keep firelights localized and steady (no animated intensities):
+            // the hearth is warmer/brighter than the four supporting torches.
+            // This intentionally avoids the stationary-camera tile regression.
             // The real art above is exported from buildCampfire/buildTorches in
             // Three.js; only the lightweight animated point lights are Unity-native.
             AddFlicker("Hearth firelight",
                 Surface(ground, layout.campfire.x, layout.campfire.z) + Vector3.up * .76f,
-                5.5f, 4.2f, .8f);
+                7.2f, 6.7f, .8f, new Color(1f, .48f, .22f));
             for (int i = 0; i < layout.torches.Length; i++)
             {
                 P loc = layout.torches[i];
                 AddFlicker("Torch firelight " + (i + 1),
                     Surface(ground, loc.x, loc.z) + Vector3.up * 2f,
-                    5.2f, 2.9f, i * 2.3f);
+                    4.5f, 2.45f, i * 2.3f, new Color(1f, .66f, .36f));
             }
 
             GameObject worker = GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -173,8 +178,8 @@ namespace Orcbands.Editor
             GameObject sunObject = new GameObject("Warm sun");
             Light sun = sunObject.AddComponent<Light>();
             sun.type = LightType.Directional;
-            sun.color = new Color(1f, .92f, .83f);
-            sun.intensity = 1.08f;
+            sun.color = new Color(.94f, .97f, 1f);
+            sun.intensity = .91f;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = .83f;
             // Source Three.js sun sits at (-22, 36, 18); Unity mirrors X.
@@ -358,19 +363,20 @@ namespace Orcbands.Editor
         }
 
         private static void AddFlicker(string name, Vector3 position,
-            float radius, float intensity, float phase)
+            float radius, float intensity, float phase, Color warmthColor)
         {
             var flame = new GameObject(name);
             flame.transform.position = position;
             var light = flame.AddComponent<Light>();
             light.type = LightType.Point;
-            light.color = new Color(1f, .63f, .34f);
+            light.color = warmthColor;
             light.range = radius;
             light.intensity = intensity;
             light.shadows = LightShadows.None;
             var motion = flame.AddComponent<CampFlame>();
             motion.Warmth = light;
             motion.BaseIntensity = intensity;
+            motion.LightColor = warmthColor;
             motion.Phase = phase;
         }
 
