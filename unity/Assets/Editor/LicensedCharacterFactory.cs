@@ -64,8 +64,12 @@ namespace Orcbands.Editor
                     animator.applyRootMotion = false;
                 foreach (var childCollider in model.GetComponentsInChildren<Collider>(true))
                     UnityEngine.Object.DestroyImmediate(childCollider);
-                foreach (var renderer in model.GetComponentsInChildren<Renderer>(true))
+                // The Synty FBX contains many inactive characters. Only adapt
+                // the renderer(s) of this prefab's visible character; preserve
+                // inactive shared meshes without introducing extra dependencies.
+                foreach (var renderer in model.GetComponentsInChildren<Renderer>())
                 {
+                    if (!renderer.enabled) continue;
                     var originals = renderer.sharedMaterials;
                     var replacements = new Material[originals.Length];
                     for (int i = 0; i < originals.Length; i++)
