@@ -8,10 +8,10 @@ export function makeHut(){
  const vertices=[],faces=[];
  let part='foundation';
  const palette={
-  timber:[.40,.275,.16],timber_light:[.50,.355,.215],timber_dark:[.265,.17,.095],
-  plank:[.37,.255,.155],plank_warm:[.42,.29,.175],plank_shadow:[.295,.195,.115],plank_damp:[.245,.177,.122],
-  roof_red:[.56,.235,.19],roof_light:[.62,.275,.22],roof_warm:[.59,.25,.195],
-  roof_shadow:[.48,.19,.16],roof_dark:[.335,.125,.105],roof_eave:[.405,.157,.134],
+  timber:[.365,.26,.165],timber_light:[.53,.385,.248],timber_dark:[.21,.144,.096],
+  plank:[.37,.255,.155],plank_warm:[.42,.29,.175],plank_shadow:[.295,.195,.115],plank_damp:[.205,.152,.112],
+  roof_red:[.51,.205,.175],roof_light:[.61,.295,.238],roof_warm:[.55,.232,.181],
+  roof_shadow:[.39,.144,.135],roof_dark:[.30,.106,.101],roof_eave:[.275,.112,.105],
   stone:[.41,.405,.36],stone_light:[.50,.48,.425],stone_shadow:[.32,.33,.30],
   bone:[.72,.625,.42],bone_shadow:[.51,.42,.265],iron:[.115,.128,.12],
   interior:[.087,.062,.041],cloth:[.36,.061,.054],cloth_light:[.46,.082,.063]
@@ -27,7 +27,12 @@ export function makeHut(){
   const ring=p=>outline.map(([x,z])=>add(p,add(mul(u,x*w),mul(q,z*d))));
   const low=ring(a),high=ring(b);
   for(let i=0;i<8;i++){
-   const j=(i+1)%8;face(material,[low[i],low[j],high[j],high[i]]);
+   const j=(i+1)%8;
+   // Aged, roughly hewn supports: shaded bevels and worn exposed edges.
+   // Original face count and silhouette are unchanged.
+   const exposed=/^(entrance_(left|right)|corner_post_|side_mid_post_|side_eave_beam_|curved_fascia_)/.test(name);
+   const wood=exposed&&i===1?'timber_dark':exposed&&i===5?'timber_light':material;
+   face(wood,[low[i],low[j],high[j],high[i]]);
   }
   face(material,[...low].reverse());face(material,high);
  }
@@ -91,6 +96,12 @@ export function makeHut(){
  beam('entrance_left',[-.94,.20,2.04],[-.99,2.42,2.04],.28,.30,'timber_light');
  beam('entrance_right',[.94,.20,2.04],[.99,2.42,2.04],.28,.30,'timber_light');
  beam('entrance_lintel',[-1.17,2.34,2.07],[1.17,2.34,2.07],.29,.34,'timber_dark');
+ // Dark bound joints give the otherwise clean portal a rough tribal character.
+ // These remain outside the door opening and use existing materials.
+ for(const x of [-.97,.97]){
+  beam('entrance_binding_low_'+x,[x,.42,2.05],[x,.58,2.05],.33,.35,'timber_dark');
+  beam('entrance_binding_high_'+x,[x,2.06,2.05],[x,2.22,2.05],.33,.35,'timber_dark');
+ }
  // The entrance is physically open: walls, roof and a dark back wall form its recess.
  box('shadowed_back_wall',0,1.24,-1.70,3.82,2.1,.035,'interior');
  // Curved low-poly roof profile: full ridge, broad slopes, low slightly sagging eaves.
@@ -141,8 +152,13 @@ export function makeHut(){
    const center=[side*((outerX+innerX)/2),roofY((outerX+innerX)/2,(z0+z1)/2)+.045+row*.008,(z0+z1)/2];
    for(let j=0;j<points.length;j++){
     const next=(j+1)%points.length,tri=[points[j],points[next],center];
-    const swatch=roofColors[(col*3+row*2+(side>0?2:0))%roofColors.length];
-     const roofMaterial=row===0?'roof_eave':row===4?'roof_light':swatch;
+    // Coherent weathering: wet, smoke-dark eaves give way to aged clay-red
+     // mid-slope and a drier mineral-worn ridge; small staggered variation.
+     const roofMaterial=row===0?'roof_eave':
+      row===1?(col%5===0?'roof_red':'roof_shadow'):
+      row===2?(col%4===0?'roof_shadow':'roof_red'):
+      row===3?(col%4===1?'roof_warm':'roof_red'):
+      (col%4===2?'roof_warm':'roof_light');
      face(roofMaterial,side>0?tri.reverse():tri);
    }
    // A thin, dark chipped edge gives the lowest row visible thickness without heavy gutters.
@@ -159,7 +175,7 @@ export function makeHut(){
   part='ridge_cap_'+i;
   const a=[-.13,roofY(.13,z)+.09,z],b=[.13,roofY(.13,z)+.09,z],c=[0,roofY(0,z)+.16,z];
   const d=[-.13,roofY(.13,z1)+.09,z1],e=[.13,roofY(.13,z1)+.09,z1],f=[0,roofY(0,z1)+.16,z1];
-  face(i%3?'roof_red':'roof_light',[a,d,f,c]);face('roof_warm',[c,f,e,b]);
+  face(i%3?'roof_warm':'roof_light',[a,d,f,c]);face('roof_light',[c,f,e,b]);
   face('roof_shadow',[a,c,b]);face('roof_shadow',[d,e,f]);
  }
  // Barrel staves and hoops; small original dressing pieces belong to this hut asset.
