@@ -128,3 +128,22 @@ for (const shader of ['WorldColorLit', 'VertexColorLit', 'CharacterMatte']) {
   assert.match(source, /#if defined\(UNITY_PASS_FORWARDADD\)[\s\S]*color\.rgb \*= 1\.0 - atmosphericFog;/);
   assert.match(source, /#else[\s\S]*color\.rgb = lerp\(color\.rgb, _CampAtmosphereColor,/);
 }
+
+
+// Licensed art never belongs to the public git tree or public PR artifacts.
+const licensedFactory = file('unity/Assets/Editor/LicensedCharacterFactory.cs');
+assert.match(licensedFactory, /Assets\/Synty\/PolygonMiniFantasyCharacters\/Prefabs\/Characters\//);
+assert.match(licensedFactory, /ORCBANDS_REQUIRE_PRIVATE_ASSETS/);
+assert.match(licensedFactory, /_Albedo_Map/);
+assert.match(licensedFactory, /FitRestPose\(presentation.TargetHeight\)/);
+assert.match(file('unity/Assets/Editor/CharacterSceneFactory.cs'), /LicensedCharacterFactory\.TryCreate\(feet\)/);
+assert.match(file('unity/.gitignore'), /\/Assets\/Synty\//);
+const trustedDeploy = file('.github/workflows/deploy-preview.yml');
+const publicPrCi = file('.github/workflows/unity-starter.yml');
+assert.match(trustedDeploy, /secrets\.PRIVATE_ASSETS_TOKEN/);
+assert.match(trustedDeploy, /ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"/);
+assert.match(trustedDeploy, /github\.ref == 'refs\/heads\/main'/);
+assert.match(publicPrCi, /github\.event_name == 'workflow_dispatch' && github\.ref == 'refs\/heads\/main'/);
+assert(!trustedDeploy.includes('actions/cache'), 'Never cache private Unity imports in public CI');
+assert(!publicPrCi.includes('actions/cache'), 'Never cache private Unity imports in public CI');
+assert.match(file('unity/Assets/Orcbands/Shaders/CharacterMatte.shader'), /clip\(atlas\.a - \.5\)/);
