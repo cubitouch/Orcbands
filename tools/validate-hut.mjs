@@ -9,6 +9,21 @@ import {HUT_PLACEMENT,inHutFootprint,createLayout,pathDistance} from '../preview
 const asset=makeHut();
 assert(asset.obj.includes('usemtl plank_damp'),'Hut wall slats must have a darker damp base');
 assert(asset.obj.includes('usemtl roof_eave'),'Low roof boards need weathered eaves');
+const swatch=name=>{
+ const match=asset.mtl.match(new RegExp('newmtl '+name+'\\n[^]*?Kd ([^\\n]+)'));
+ assert(match,'Missing '+name+' exported swatch');
+ return match[1].split(' ').map(Number);
+};
+const luma=name=>{const c=swatch(name);return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+assert(luma('roof_eave')<luma('roof_shadow')-.02 &&
+       luma('roof_shadow')<luma('roof_red') &&
+       luma('roof_red')<luma('roof_light'),
+  'Roof material weathering must graduate from rain-dark eaves to dry ridge');
+assert(luma('plank_damp')<luma('plank')-.055,
+  'Lower wall boards should be visibly darker than aged upper timber');
+for(const name of ['entrance_binding_low_-0.97','entrance_binding_high_0.97'])
+ assert(asset.obj.includes('o '+name),'The portal should have dark structural bindings');
+
 assert(asset.mtl.includes('newmtl plank_damp')&&asset.mtl.includes('newmtl roof_eave'),'Hut material ramps not exported');
 assert(asset.stats.triangles<3800,'Material weathering must stay within the browser geometry budget');
 assert.deepEqual(asset,makeHut(),'Hut export must be deterministic');
