@@ -85,19 +85,29 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+      - name: Check out private character pack
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+        with:
+          repository: cubitouch/Orcbands-PrivateAssets
+          ref: main
+          token: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
+          path: .licensed-source
+          persist-credentials: false
+      - name: Restore private character pack
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        run: |
+          test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Prefabs/Characters/SM_Chr_Dungeon_GoblinMale_01.prefab
+          test ! -e unity/Assets/Synty
+          cp -a .licensed-source/Synty unity/Assets/Synty
+          rm -rf .licensed-source
       - name: Export approved forest layout and 3D props
         run: |
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
-      - name: Restore Unity WebGL Library cache
-        id: unity-library-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: unity/Library
-          key: Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-${{ hashFiles('unity/Assets/**', 'unity/Packages/**', 'unity/ProjectSettings/**', 'preview/**', 'tools/generate-unity-*.mjs') }}
-          restore-keys: |
-            Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-
       - name: Build Orcbands for browser
+        env:
+          ORCBANDS_REQUIRE_PRIVATE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && '1' || '0' }}
         id: player-build
         uses: game-ci/unity-builder@v4
         env:
@@ -109,14 +119,6 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
-      - name: Save Unity WebGL Library cache
-        if: steps.unity-library-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        timeout-minutes: 4
-        continue-on-error: true
-        with:
-          path: unity/Library
-          key: ${{ steps.unity-library-cache.outputs.cache-primary-key }}
       - name: Install headless Chromium smoke dependencies
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
@@ -151,11 +153,29 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      - name: Check out private character pack
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+        with:
+          repository: cubitouch/Orcbands-PrivateAssets
+          ref: main
+          token: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
+          path: .licensed-source
+          persist-credentials: false
+      - name: Restore private character pack
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        run: |
+          test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Prefabs/Characters/SM_Chr_Dungeon_GoblinMale_01.prefab
+          test ! -e unity/Assets/Synty
+          cp -a .licensed-source/Synty unity/Assets/Synty
+          rm -rf .licensed-source
       - name: Export approved forest layout and 3D props
         run: |
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
       - name: Build Orcbands for macOS
+        env:
+          ORCBANDS_REQUIRE_PRIVATE_ASSETS: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && '1' || '0' }}
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
