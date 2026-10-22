@@ -5,16 +5,50 @@ import {storageResourceGeometry} from './storage-resources.js?v=__ORCBANDS_REVIS
 // Aged timber and muted iron-red roofing match the main hut's imported MTL.
 // Keep individual slat variation, but reduce the lean-to's orange cast.
 const TIMBER=0x59432f,END=0x987853,ROOF=[0x76312d,0x83372f,0x702c29,0x7e352d];
-function box(parts,x,y,z,w,h,d,color=TIMBER,seed=1){const g=paint(new THREE.BoxGeometry(w,h,d),color,seed);g.translate(x,y+h/2,z);parts.push(g)}
+// Restrained height-aware vertex ramps on assembled structures, not generic
+// paint(): moisture collects at bases; rafters and eaves weather differently.
+const dampWood=new THREE.Color(0x302922),dryWood=new THREE.Color(0xb18d61);
+const roofEave=new THREE.Color(0x452524),roofRidge=new THREE.Color(0x975246);
+const stoneMoss=new THREE.Color(0x505e50),stoneTop=new THREE.Color(0x9e9d90);
+function grade(g,shade){
+ const p=g.getAttribute('position'),c=g.getAttribute('color'),base=new THREE.Color();
+ for(let i=0;i<p.count;i++){
+  base.fromBufferAttribute(c,i);shade(base,p.getX(i),p.getY(i),p.getZ(i));
+  c.setXYZ(i,base.r,base.g,base.b);
+ }
+ c.needsUpdate=true;return g;
+}
+export function weatherTimber(g){
+ return grade(g,(c,x,y,z)=>{
+  const wet=1-THREE.MathUtils.smoothstep(y,.15,1.6);
+  const dry=THREE.MathUtils.smoothstep(y,1.25,2.9);
+  c.lerp(dampWood,.38*wet).lerp(dryWood,.15*dry);
+ });
+}
+export function weatherRoof(g){
+ g.computeBoundingBox();const low=g.boundingBox.min.y,span=Math.max(.001,g.boundingBox.max.y-low);
+ return grade(g,(c,x,y,z)=>{
+  const high=THREE.MathUtils.smoothstep((y-low)/span,.12,.95);
+  c.lerp(roofEave,.34*(1-high)).lerp(roofRidge,.13*high);
+ });
+}
+function weatherFooting(g){
+ return grade(g,(c,x,y,z)=>{
+  const low=1-THREE.MathUtils.smoothstep(y,.01,.18);
+  c.lerp(stoneMoss,.22*low).lerp(stoneTop,.10*(1-low));
+ });
+}
+
+function box(parts,x,y,z,w,h,d,color=TIMBER,seed=1){const g=paint(new THREE.BoxGeometry(w,h,d),color,seed);g.translate(x,y+h/2,z);parts.push(weatherTimber(g))}
 function timber(parts,a,b,width=.16,color=TIMBER){
  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
  const g=paint(new THREE.BoxGeometry(width,delta.length(),width),color,Math.round((a[0]+a[2]+8)*100));
- g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize()));g.translate(...start.add(end).multiplyScalar(.5).toArray());parts.push(g);
+ g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize()));g.translate(...start.add(end).multiplyScalar(.5).toArray());parts.push(weatherTimber(g));
 }
-function pad(parts,x,z){const g=paint(new THREE.CylinderGeometry(.28,.33,.16,6),0x85867a,41);g.rotateY(x+z);g.translate(x,.08,z);parts.push(g)}
+function pad(parts,x,z){const g=paint(new THREE.CylinderGeometry(.28,.33,.16,6),0x85867a,41);g.rotateY(x+z);g.translate(x,.08,z);parts.push(weatherFooting(g))}
 function roofBoard(parts,x1,x2,z1,z2,height,index){
  const points=[];for(const drop of [0,.075])for(const[x,z]of [[x1,z1],[x2,z1],[x2,z2],[x1,z2]])points.push([x,height(x,z)-drop,z]);
- parts.push(triangles(points,[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,4],[1,5,4],[1,2,5],[2,6,5],[2,3,6],[3,7,6],[3,0,7],[0,4,7]],ROOF[index%4],800+index));
+ parts.push(weatherRoof(triangles(points,[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,4],[1,5,4],[1,2,5],[2,6,5],[2,3,6],[3,7,6],[3,0,7],[0,4,7]],ROOF[index%4],800+index)));
 }
 function post(parts,x,z,height){pad(parts,x,z);box(parts,x,.1,z,.20,height-.1,.20);box(parts,x-.001,height,z,.23,.07,.23,END,3);}
 function leanToShell(){
