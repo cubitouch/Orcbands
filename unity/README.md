@@ -16,7 +16,7 @@ The historical Three.js Asset Lab remains intact in `preview/`.
    materials stay ignored. GitHub Actions does this automatically before each build.
 4. Let Unity import the assets. Choose **Orcbands → Generate Starter Scene**.
 5. Open `Assets/Scenes/OrcbandsStarter.unity` and press **Play**.
-6. Click the green capsule (worker) and right-click the ground to move it.
+6. Click the original miniature worker proxy and right-click the ground to move it.
    Pan with WASD/arrows, dolly with the mouse wheel, Q/E to orbit and R to reset.
 
 The generated scene is intentionally **gitignored**. Its inputs (meshes, generator
@@ -36,7 +36,7 @@ Run the menu command after a clean clone or when source assets change.
 - Forest-edge tree shading, camp torches and animated firelight, directional
   shadows, low-lying terrain and a perspective RTS camera matching the
   reference Three.js angle.
-- A green **placeholder** worker capsule with selection and direct click-to-move.
+- An original faceted **temporary worker proxy** with selection and direct click-to-move.
   There is no pathfinding, obstacle avoidance, resource harvesting, storage
   economy, construction simulation or persistent game state.
 
@@ -225,3 +225,11 @@ against PR #48's original and mask-isolation captures. Check the exact ground
 rectangle, then fire/spark visibility and dark forest readability. This is a
 lighting-composition correction, not a change to the underlying terrain or
 visibility layout.
+
+## Miniature character presentation (ART-CHAR-01)
+
+See [the character presentation guide](../docs/art/ART-CHAR-01.md) for the palette,
+world-scale rationale, visual/gameplay root contract, WebGL review captures and
+licensed-model replacement workflow. The starter uses original temporary geometry;
+no Synty assets are included. Keep the PR unmerged until its real Unity screenshots
+have been reviewed.

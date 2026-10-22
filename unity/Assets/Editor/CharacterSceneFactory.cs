@@ -25,7 +25,7 @@ namespace Orcbands.Editor
             for (int i = 0; i < colors.Length; i++)
             {
                 string materialPath = "Assets/Orcbands/Generated/Character-" + names[i] + ".mat";
-                var material = new Material(shader) { color = colors[i] };
+                var material = new Material(shader) { name = "Character-" + names[i], color = colors[i] };
                 material.SetFloat("_SurfaceContrast", palette.TonalDepth);
                 AssetDatabase.DeleteAsset(materialPath);
                 AssetDatabase.CreateAsset(material, materialPath);
