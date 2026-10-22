@@ -9,6 +9,8 @@ on:
       - "tools/generate-unity-tree-shadows.mjs"
       - "preview/environment-layout.js"
       - "preview/environment.js"
+      - "preview/forest-story.js"
+      - "tools/validate-forest-story.mjs"
       - "preview/ground-surface.js"
       - "preview/resources.js"
       - "preview/resource-geometry.js"
@@ -51,7 +53,9 @@ jobs:
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
       - name: Check exported approved Unity content
-        run: node tools/validate-unity-environment.mjs
+        run: |
+          node tools/validate-unity-environment.mjs
+          node tools/validate-forest-story.mjs
 
   license-check:
     runs-on: ubuntu-latest

@@ -92,6 +92,7 @@ namespace Orcbands.Editor
             ColoredMesh("Approved resources and storage", "resource-art", art, false);
             ColoredMesh("Approved rock geometry", "stone-props", art, false);
             ColoredMesh("Grass and woodland cover", "grass-props", art, false);
+            ColoredMesh("Woodland deadwood, moss and undergrowth", "woodland-story", art, false);
             ColoredMesh("Approved hearth and cut firewood", "hearth-art", art, false);
             ColoredMesh("Approved hearth flames and embers", "hearth-flames", fireArt, false);
             ColoredMesh("Approved torch stakes and baskets", "torches-art", art, false);

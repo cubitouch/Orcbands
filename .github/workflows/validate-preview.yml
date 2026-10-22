@@ -48,6 +48,7 @@ jobs:
           node --check tools/validate-fire-atmosphere.mjs
           node --check preview/campfire.js
           node --check tools/validate-campfire.mjs
+          node --check preview/forest-story.js
           node --check preview/environment.js
           node --check preview/environment-layout.js
           node --check preview/ground-surface.js

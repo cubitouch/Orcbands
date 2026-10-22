@@ -1,0 +1,40 @@
+name: Environmental Storytelling Comparison
+on:
+  pull_request:
+    paths:
+      - "preview/**"
+      - "tools/capture-environment-story.mjs"
+      - ".github/workflows/environment-review.yml"
+permissions:
+  contents: read
+concurrency:
+  group: orcbands-environment-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: comparison-base
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned real WebGL capture dependencies
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1 three@0.166.1
+          npx playwright install --with-deps chromium
+      - name: Capture base and candidate with identical views and fire time
+        run: |
+          node tools/capture-environment-story.mjs comparison-base smoke-artifacts/environment-review/before
+          node tools/capture-environment-story.mjs . smoke-artifacts/environment-review/after
+      - name: Attach real before and after renders and performance measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-environment-before-after
+          path: smoke-artifacts/environment-review/
+          if-no-files-found: error
