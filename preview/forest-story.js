@@ -25,7 +25,7 @@ function deadLog(variant){
  for(let ring=0;ring<2;ring++)for(let j=0;j<n;j++){
   const a=ring*n+j,b=ring*n+(j+1)%n,c=b+n,d=a+n;
   const color=[0x514435,0x63513a,0x453b2e,0x6b5a42][(j+variant)%4];
-  parts.push(triangles(points,[[a,b,d],[b,c,d]],color,50+j));
+  parts.push(triangles(points,[[a,d,b],[b,d,c]],color,50+j));
  }
  for(const offset of [0,14]){
   const center=[offset===0?-length/2:length/2,.24,0],end=[center,...points.slice(offset,offset+n)];
@@ -89,11 +89,12 @@ function chips(variant){
  return join(parts);
 }
 const factories={deadLog,branch:fallenBranch,mossRock,mushrooms:mushroomCluster,fern,chips};
+export function createStoryPropGeometry(kind,variant){return factories[kind](variant)}
 export function createStoryGeometry(layout){
  const cache=new Map(),parts=[];
  for(const p of layout.story){
   const key=p.kind+'/'+p.variant;
-  if(!cache.has(key))cache.set(key,factories[p.kind](p.variant));
+  if(!cache.has(key))cache.set(key,createStoryPropGeometry(p.kind,p.variant));
   const g=cache.get(key).clone();g.scale(p.scale,p.scale,p.scale);g.rotateY(p.angle);
   g.translate(p.x,groundHeight(p.x,p.z),p.z);parts.push(g);
  }
