@@ -1,8 +1,15 @@
 import * as THREE from 'three';
-import {beam,triangles,paint,join,leaf} from './resource-geometry.js?v=__ORCBANDS_REVISION__';
+import {triangles,paint,join,leaf} from './resource-geometry.js?v=__ORCBANDS_REVISION__';
 import {groundHeight,seededRandom,STORY_POCKETS} from './environment-layout.js?v=__ORCBANDS_REVISION__';
 import {noise} from './ground-surface.js?v=__ORCBANDS_REVISION__';
 
+// Small deadwood and stems need only triangular cross sections at RTS scale.
+function beam(a,b,r1,r2,color,seed=1){
+ const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
+ const g=paint(new THREE.CylinderGeometry(r2,r1,delta.length(),3),color,seed);
+ g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize()));
+ g.translate(...start.add(end).multiplyScalar(.5).toArray());return g;
+}
 // Broad organic stains are baked into the existing terrain, without extra
 // coplanar discs, decals, material passes or an abrupt perimeter ring.
 export function woodlandMulch(x,z){
@@ -46,7 +53,7 @@ function fallenBranch(variant){
   beam([-.1,.10,.02],[.12,.09,-.38],.035,.01,color)]);
 }
 function mossRock(variant){
- const g=paint(new THREE.DodecahedronGeometry(1,0),0x7e8070,91+variant);
+ const g=paint(new THREE.IcosahedronGeometry(1,0),0x7e8070,91+variant);
  g.scale(.66,.49,.47);g.rotateY(variant*.8);g.translate(.04,.26,-.02);
  const p=g.attributes.position,c=g.attributes.color;
  for(let i=0;i<p.count;i+=3){
@@ -64,16 +71,14 @@ function mushroomCluster(variant){
  for(let i=0;i<4;i++){
   const x=(random()-.5)*.40,z=(random()-.5)*.38,h=.12+random()*.16,r=.085+random()*.07;
   parts.push(beam([x,0,z],[x+.012,h,z],.022,.018,0xb7aa83,50+i));
-  const cap=paint(new THREE.ConeGeometry(r,r*.62,7,1),[0xae8052,0x9b6f49,0xb39464][variant],100+i);
+  const cap=paint(new THREE.ConeGeometry(r,r*.62,5,1),[0xae8052,0x9b6f49,0xb39464][variant],100+i);
   cap.translate(x+.012,h,z);parts.push(cap);
-  const rim=paint(new THREE.CylinderGeometry(r,r*.9,.028,7),0x9b8056,110+i);
-  rim.translate(x+.012,h-r*.30,z);parts.push(rim);
  }
  return join(parts);
 }
 function fern(variant){
  const parts=[];
- for(let i=0;i<7;i++){
+ for(let i=0;i<5;i++){
   const g=leaf(.12,.39+(i%3)*.07,[0x4e693f,0x617547,0x6b794b][variant],71+i);
   g.rotateX(-.36);g.rotateY(i*2.399);parts.push(g);
  }

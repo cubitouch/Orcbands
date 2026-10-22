@@ -28,7 +28,7 @@ for(let i=0;i<84;i+=3){
 }
 const digest=mesh=>createHash('sha256').update(Buffer.from(mesh.attributes.position.array.buffer)).update(Buffer.from(mesh.attributes.color.array.buffer)).digest('hex');
 assert.equal(digest(g),digest(createStoryGeometry(layout)),'Geometry must reproduce bit for bit');
-assert(g.attributes.position.count/3<11000,'Story geometry budget');
+assert(g.attributes.position.count/3<5000,'Story geometry budget');
 // Full binary parity: every vertex and palette entry must come from the browser
 // geometry, with X reflection, reversed winding, and the existing sRGB bridge.
 const file=readFileSync('unity/Assets/Orcbands/Generated/woodland-story.bytes');
