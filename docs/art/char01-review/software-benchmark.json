@@ -1,0 +1,19 @@
+{
+  "method": "Same local host, Chromium SwiftShader, 1280x800 viewport, unchanged default camera; 2 x 20 browser frames after warmup. Software diagnostic only; not native GPU FPS.",
+  "samples": [
+    {
+      "build": "deployed-main",
+      "twentyBrowserFramesMs": [
+        26881.199999999255,
+        39142.40000000037
+      ]
+    },
+    {
+      "build": "candidate-6b2e50b",
+      "twentyBrowserFramesMs": [
+        13722.5,
+        24828
+      ]
+    }
+  ]
+}

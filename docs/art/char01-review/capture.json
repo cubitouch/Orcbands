@@ -1,0 +1,133 @@
+{
+  "source": "Unity WebGL",
+  "viewport": [
+    1280,
+    800
+  ],
+  "views": [
+    "overall",
+    "close",
+    "normal",
+    "out",
+    "normal-off",
+    "warm",
+    "cool",
+    "warrior",
+    "shaman",
+    "warrior-normal",
+    "shaman-normal"
+  ],
+  "sixtyBrowserFramesMs": 55769.5,
+  "interaction": {
+    "initial": {
+      "feet": {
+        "x": 1.7000000476837158,
+        "y": 0.06877462565898895,
+        "z": 2.799999952316284
+      },
+      "unitScreen": {
+        "x": 0.4348464012145996,
+        "y": 0.4850299656391144,
+        "z": 37.97820281982422
+      },
+      "destinationScreen": {
+        "x": 0.4034327566623688,
+        "y": 0.4766048789024353,
+        "z": 39.07675552368164
+      },
+      "camera": {
+        "x": -20,
+        "y": 22,
+        "z": 26
+      },
+      "selected": false,
+      "frame": 236,
+      "rayTarget": "Worker",
+      "lastSelectionHit": "no click",
+      "groundError": 0
+    },
+    "selected": {
+      "feet": {
+        "x": 1.7000000476837158,
+        "y": 0.06877462565898895,
+        "z": 2.799999952316284
+      },
+      "unitScreen": {
+        "x": 0.4348464012145996,
+        "y": 0.4850299656391144,
+        "z": 37.97820281982422
+      },
+      "destinationScreen": {
+        "x": 0.4034327566623688,
+        "y": 0.4766048789024353,
+        "z": 39.07675552368164
+      },
+      "camera": {
+        "x": -20,
+        "y": 22,
+        "z": 26
+      },
+      "selected": true,
+      "frame": 241,
+      "rayTarget": "Worker",
+      "lastSelectionHit": "Worker",
+      "groundError": 0
+    },
+    "moved": {
+      "feet": {
+        "x": 3.6544675827026367,
+        "y": 0.06851702183485031,
+        "z": 3.3677544593811035
+      },
+      "unitScreen": {
+        "x": 0.4020977020263672,
+        "y": 0.4998347759246826,
+        "z": 38.5699462890625
+      },
+      "destinationScreen": {
+        "x": 0.3720906972885132,
+        "y": 0.4905877411365509,
+        "z": 39.678157806396484
+      },
+      "camera": {
+        "x": -20,
+        "y": 22,
+        "z": 26
+      },
+      "selected": true,
+      "frame": 262,
+      "rayTarget": "Worker",
+      "lastSelectionHit": "Worker",
+      "groundError": 0
+    },
+    "zoomedOutSelectable": true,
+    "camera": {
+      "cameraInitial": {
+        "x": -20,
+        "y": 22,
+        "z": 26
+      },
+      "orbit": {
+        "x": 10.645577430725098,
+        "y": 22,
+        "z": 30.869604110717773
+      },
+      "reset": {
+        "x": -20,
+        "y": 22,
+        "z": 26
+      },
+      "pan": {
+        "x": -12.857267379760742,
+        "y": 22,
+        "z": 16.357311248779297
+      },
+      "zoom": {
+        "x": -11.512718200683594,
+        "y": 20.52099609375,
+        "z": 14.542171478271484
+      }
+    }
+  },
+  "errors": []
+}

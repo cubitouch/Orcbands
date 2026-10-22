@@ -1,0 +1,11 @@
+{
+  "source": "https://cubitouch.github.io/Orcbands/unity/",
+  "repositoryBase": "901eb3633331b53ca37feed68ed66f7e290dbfe0",
+  "note": "Downloaded deployed main player before character changes. Captures use identical input sequence with candidate; fire/smoke remain live.",
+  "sha256": {
+    "Orcbands.framework.js": "ed9bf1b56d090e84752b2a10fe78ac13b01f34000cb12f7c92086315ab9ac9bd",
+    "Orcbands.wasm": "9784d06c6459d5cada22c5a797b367955504109a9a80c0dc6461af2045471024",
+    "Orcbands.loader.js": "4b156f5e1d09dc2af7063705d9a0b182e36b227a3963c5b5d1cc3a63b4249b73",
+    "Orcbands.data": "8e68de382010ac55ca775adf9529a4af5e2253f60b41a4f6edfed18d9ab976fd"
+  }
+}

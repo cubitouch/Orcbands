@@ -1,0 +1,15 @@
+{
+  "implementationCommit": "6b2e50b8403ba45c04480475a3b2074add1aa8b9",
+  "baseCommit": "901eb3633331b53ca37feed68ed66f7e290dbfe0",
+  "unityWorkflow": 39810701376,
+  "assetLabWorkflow": 39810701269,
+  "screenshotArtifact": 12441440156,
+  "playerArtifact": 12440607861,
+  "stationaryForestChangedPercent": 0.0,
+  "beforeAfterDistantForestChangedPercent": 0.0,
+  "rightClickDisplacement": 2.0352612917596975,
+  "movedGroundError": 0,
+  "browserErrors": [],
+  "desktopLiveValidation": "not executed",
+  "hardwareGpuPerformance": "not measured; Chromium SwiftShader timing is software-only"
+}
