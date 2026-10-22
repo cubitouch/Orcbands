@@ -147,3 +147,14 @@ assert.match(publicPrCi, /github\.event_name == 'workflow_dispatch' && github\.r
 assert(!trustedDeploy.includes('actions/cache'), 'Never cache private Unity imports in public CI');
 assert(!publicPrCi.includes('actions/cache'), 'Never cache private Unity imports in public CI');
 assert.match(file('unity/Assets/Orcbands/Shaders/CharacterMatte.shader'), /clip\(atlas\.a - \.5\)/);
+
+
+// Private licensed-character presentation: prove the pack's real prop is used,
+// while preserving public PR builds that intentionally have no vendor art.
+const licensed = file('unity/Assets/Editor/LicensedCharacterFactory.cs');
+assert.match(licensed, /presentation\.TargetHeight = 2\.0f;/);
+assert.match(licensed, /collider\.height = 2\.10f;/);
+assert.match(licensed, /SM_Prop_Axe_01\.prefab/);
+assert.match(licensed, /bone\.name == "hand_r"/);
+assert.match(licensed, /presentation\.FitRestPose\(presentation\.TargetHeight\);[\s\S]*AttachWorkerAxe/);
+assert.match(file('README.md'), /polygon-mini-fantasy-character-pack-art-by-synty-122084/);

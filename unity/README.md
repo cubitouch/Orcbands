@@ -287,3 +287,11 @@ assets or the imported `unity/Library`. A PR preview with a proxy does not
 prove that licensed Synty art looks correct. Inspect the actual WebGL screenshots
 after the first trusted `main` build, specifically the worker's size, UV atlas,
 shadows, materials, foot alignment, right-click movement and selection.
+
+### Pack reference and character dimensions
+
+- [**POLYGON MINI – Fantasy Character Pack – Art by Synty**](https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/polygon-mini-fantasy-character-pack-art-by-synty-122084), Unity Asset Store ID 122084, purchased Synty Studios models and props.
+- Worker: `SM_Chr_Dungeon_GoblinMale_01.prefab`, fitted to **2.0 world units** for RTS readability (the previous target was 1.525).
+- Tool: `SM_Prop_Axe_01.prefab` from the **same pack**, attached to the original `hand_r` bone with a grip-aware offset. The axe is excluded from the initial rest-pose height fit.
+- Gameplay root, independent capsule selection collider and navigation remain unchanged. The axe is presentation only; chopping animation and actual harvesting are not implemented yet.
+- Purchased art remains exclusively in the private asset repository, not in the public git tree.

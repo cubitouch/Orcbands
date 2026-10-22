@@ -38,14 +38,14 @@ namespace Orcbands.Editor
             var root = new GameObject("Worker");
             root.transform.position = feet;
             var collider = root.AddComponent<CapsuleCollider>();
-            collider.height = 1.65f;
-            collider.radius = .48f;
-            collider.center = new Vector3(0f, .825f, 0f);
+            collider.height = 2.10f;
+            collider.radius = .54f;
+            collider.center = new Vector3(0f, 1.05f, 0f);
             var presentation = root.AddComponent<CharacterPresentation>();
             var mount = new GameObject("Model mount — Synty mini-orcs").transform;
             mount.SetParent(root.transform, false);
             presentation.ModelMount = mount;
-            presentation.TargetHeight = 1.525f;
+            presentation.TargetHeight = 2.0f;
             presentation.ReviewRoles = new Transform[Roles.Length];
             var sharedMaterials = new Dictionary<Material, Material>();
 
@@ -92,8 +92,89 @@ namespace Orcbands.Editor
             }
             presentation.Apply();
             presentation.FitRestPose(presentation.TargetHeight);
+            // Add the tool after fitting, so the axe cannot distort character height/feet.
+            AttachWorkerAxe(presentation.ReviewRoles[0], shader, sharedMaterials);
             Debug.Log("Orcbands: using licensed Synty mini-orc with original gameplay root.");
             return root;
+        }
+
+
+        /// <summary>Attach the actual POLYGON MINI axe prefab to the goblin hand_r bone.</summary>
+        private static void AttachWorkerAxe(Transform worker, Shader shader,
+            Dictionary<Material, Material> sharedMaterials)
+        {
+            const string axePath =
+                "Assets/Synty/PolygonMiniFantasyCharacters/Prefabs/Props/SM_Prop_Axe_01.prefab";
+            GameObject axePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(axePath);
+            if (axePrefab == null)
+                throw new InvalidOperationException("Purchased Synty axe prefab missing: " + axePath);
+
+            Transform hand = null;
+            foreach (Transform bone in worker.GetComponentsInChildren<Transform>(true))
+            {
+                if (bone.name == "hand_r")
+                {
+                    hand = bone;
+                    break;
+                }
+            }
+            if (hand == null)
+                throw new InvalidOperationException("Synty goblin has no hand_r attachment bone");
+
+            var axe = (GameObject)PrefabUtility.InstantiatePrefab(axePrefab, hand);
+            axe.name = "Worker hand axe (Synty)";
+            var meshFilter = axe.GetComponentInChildren<MeshFilter>(true);
+            if (meshFilter == null || meshFilter.sharedMesh == null)
+                throw new InvalidOperationException("The licensed axe has no usable mesh");
+
+            // Normalize the purchased model to a short, readable 0.85m hand axe.
+            // Choose its longest principal mesh axis, independent of Synty's import
+            // scale, then position the lower shaft within the grip.
+            Bounds b = meshFilter.sharedMesh.bounds;
+            Vector3 axis = Vector3.up;
+            float length = b.size.y;
+            if (b.size.x > length) { axis = Vector3.right; length = b.size.x; }
+            if (b.size.z > length) { axis = Vector3.forward; length = b.size.z; }
+            if (length < .001f)
+                throw new InvalidOperationException("Synty axe mesh bounds are empty");
+            var originalLocalScale = axe.transform.localScale;
+            var parentScale = hand.lossyScale;
+            float inheritedScale = Mathf.Max(.001f,
+                Mathf.Max(Mathf.Abs(parentScale.x),
+                          Mathf.Max(Mathf.Abs(parentScale.y), Mathf.Abs(parentScale.z))));
+            float scale = .85f / (length * inheritedScale);
+            axe.transform.localScale = originalLocalScale * scale;
+            // Keep the haft roughly vertical in the idle/T-pose until we
+            // introduce the character's real rigged idle and working motions.
+            axe.transform.localRotation = Quaternion.FromToRotation(
+                axis, hand.InverseTransformDirection(Vector3.up));
+            Vector3 grip = b.center - axis * (length * .28f);
+            axe.transform.localPosition = new Vector3(.01f, .0f, .01f)
+                - axe.transform.localRotation * Vector3.Scale(grip, axe.transform.localScale);
+
+            foreach (var collider in axe.GetComponentsInChildren<Collider>(true))
+                UnityEngine.Object.DestroyImmediate(collider);
+            foreach (var animator in axe.GetComponentsInChildren<Animator>(true))
+                UnityEngine.Object.DestroyImmediate(animator);
+            foreach (var renderer in axe.GetComponentsInChildren<Renderer>(true))
+            {
+                var originals = renderer.sharedMaterials;
+                var replacements = new Material[originals.Length];
+                for (int i = 0; i < originals.Length; i++)
+                {
+                    if (originals[i] == null)
+                        throw new InvalidOperationException("Synty axe has a missing material");
+                    if (!sharedMaterials.TryGetValue(originals[i], out var mapped))
+                    {
+                        mapped = AdaptAtlas(originals[i], shader);
+                        sharedMaterials.Add(originals[i], mapped);
+                    }
+                    replacements[i] = mapped;
+                }
+                renderer.sharedMaterials = replacements;
+                renderer.shadowCastingMode = ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
         }
 
         private static Material AdaptAtlas(Material original, Shader shader)
