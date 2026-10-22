@@ -1,0 +1,26 @@
+{
+  "base_commit": "2f9ae870adac451b7a99652e060fb60d4aa20ce6",
+  "art_commit": "be36765147cb9dfa0b515a482d26f9f0d497cb35",
+  "asset_lab_comparison_run": "https://github.com/cubitouch/Orcbands/actions/runs/39795383088",
+  "asset_lab_smoke_run": "https://github.com/cubitouch/Orcbands/actions/runs/39795383117",
+  "unity_build_and_smoke_run": "https://github.com/cubitouch/Orcbands/actions/runs/39795383164",
+  "comparison_artifact_id": 12433662700,
+  "unity_smoke_artifact_id": 12433957528,
+  "unity_before": "Local real WebGL capture of main deployment build, run 39766423064, artifact 12419979212; default camera, viewport 1280x800; canvas-only capture.",
+  "unity_after": {
+    "source": "orcbands-unity-browser-smoke/starter.png",
+    "viewport": [
+      1280,
+      800
+    ],
+    "canvas_crop": [
+      46,
+      69,
+      1234,
+      627
+    ],
+    "rescaled": false
+  },
+  "asset_lab": "Real WebGL captures with matching review cameras and fire time 0, viewport 1280x800; mobile 390x844. Local software capture loop throttled to reduce screenshot starvation.",
+  "notes": "Unity fire/smoke remains animated; small differences at the hearth across captures are expected. No geometry or palettes were edited in the screenshots."
+}

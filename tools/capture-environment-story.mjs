@@ -30,7 +30,7 @@ try{
  const page=await context.newPage(),errors=[];page.setDefaultTimeout(120000);
  page.on('pageerror',e=>errors.push(e.message));
  console.log('Loading',root);await page.goto('http://127.0.0.1:'+server.address().port);
- await page.waitForFunction(()=>window.__orcbandsTreeLoaded,{timeout:60000});
+ await page.waitForFunction(()=>window.__orcbandsTreeLoaded,null,{timeout:60000});
  console.log('Tree ready');await page.getByRole('button',{name:'Forest grove',exact:true}).click();console.log('Grove selected');
  await page.evaluate(()=>window.__orcbandsReview.setFireTime(0));
  const metrics={};
