@@ -17,6 +17,7 @@ on:
       - "preview/storage-resources.js"
       - "preview/settlement-resources.js"
       - "tools/smoke-unity-webgl.mjs"
+      - "tools/capture-unity-characters.mjs"
       - ".github/workflows/unity-starter.yml"
   workflow_dispatch:
     inputs:
@@ -97,6 +98,7 @@ jobs:
           restore-keys: |
             Library-Orcbands-${{ runner.os }}-WebGL-6000.3.24f1-
       - name: Build Orcbands for browser
+        id: player-build
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -121,6 +123,12 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify WebGL actually boots in Chromium
         run: node tools/smoke-unity-webgl.mjs
+      - name: Capture character art review in actual Unity WebGL
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          node tools/capture-unity-characters.mjs
       - name: Upload WebGL smoke screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -129,6 +137,7 @@ jobs:
           path: smoke-artifacts/unity-webgl/
           if-no-files-found: ignore
       - name: Upload WebGL player
+        if: always() && steps.player-build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: orcbands-unity-webgl
