@@ -138,16 +138,19 @@ namespace Orcbands.Editor
                     4.5f, 2.45f, i * 2.3f, new Color(1f, .66f, .36f));
             }
 
-            GameObject worker = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            worker.name = "Worker";
-            worker.transform.position = Surface(ground, 1.7f, 2.8f) + Vector3.up;
-            worker.transform.localScale = new Vector3(.72f, 1f, .72f);
-            SetColor(worker, new Color(.29f, .53f, .22f));
-            var ringObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            ringObject.name = "Worker selection ring";
-            UnityEngine.Object.DestroyImmediate(ringObject.GetComponent<Collider>());
-            ringObject.transform.localScale = new Vector3(.60f, .02f, .60f);
-            SetColor(ringObject, new Color(.89f, .71f, .34f));
+            GameObject worker = CharacterSceneFactory.Create(Surface(ground, 1.7f, 2.8f));
+            var ringObject = new GameObject("Worker selection ring");
+            var ring = ringObject.AddComponent<LineRenderer>();
+            ring.useWorldSpace = false; ring.loop = true; ring.positionCount = 40;
+            ring.widthMultiplier = .035f;
+            ring.sharedMaterial = SavedMaterial("CharacterSelection", new Material(Shader.Find("Sprites/Default")));
+            ring.startColor = ring.endColor = new Color(.68f, .57f, .30f, .85f);
+            ring.shadowCastingMode = ShadowCastingMode.Off; ring.receiveShadows = false;
+            for (int i = 0; i < 40; i++)
+            {
+                float angle = i * Mathf.PI * 2f / 40;
+                ring.SetPosition(i, new Vector3(Mathf.Cos(angle) * .58f, 0f, Mathf.Sin(angle) * .58f));
+            }
             ringObject.SetActive(false);
 
             GameObject cameraObject = new GameObject("Perspective RTS Camera");
@@ -226,6 +229,10 @@ namespace Orcbands.Editor
             controller.GameCamera = camera;
             controller.Ground = ground.GetComponent<Collider>();
             controller.Reveal = reveal;
+            var review = controllerObject.AddComponent<CharacterReview>();
+            review.Character = worker.GetComponent<CharacterPresentation>();
+            review.View = camera; review.Ground = controller.Ground; review.Reveal = reveal;
+            review.CampfireFeet = fireGround + new Vector3(1.3f, 0f, 1.1f);
             Directory.CreateDirectory("Assets/Scenes");
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new InvalidOperationException("Unable to save Unity forest scene");

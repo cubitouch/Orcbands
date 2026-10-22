@@ -37,7 +37,7 @@ namespace Orcbands
                 Ray ray = GameCamera.ScreenPointToRay(Input.mousePosition);
                 if (Ground.Raycast(ray, out RaycastHit hit, 300f))
                 {
-                    destination = new Vector3(hit.point.x, hit.point.y + 1f, hit.point.z);
+                    destination = new Vector3(hit.point.x, hit.point.y, hit.point.z);
                     hasDestination = true;
                 }
             }
@@ -53,15 +53,16 @@ namespace Orcbands
                         Mathf.Min(flat.magnitude, MoveSpeed * Time.deltaTime);
                     if (Ground.Raycast(new Ray(new Vector3(next.x, 45f, next.z),
                         Vector3.down), out RaycastHit elevation, 100f))
-                        next.y = elevation.point.y + 1f;
+                        next.y = elevation.point.y;
                     Worker.position = next;
+                    Worker.rotation = Quaternion.LookRotation(flat.normalized, Vector3.up);
                 }
             }
 
             if (SelectionRing != null)
             {
                 SelectionRing.gameObject.SetActive(selected);
-                SelectionRing.position = Worker.position - new Vector3(0f, .96f, 0f);
+                SelectionRing.position = Worker.position + new Vector3(0f, .045f, 0f);
             }
 
             Vector3 forward = Vector3.ProjectOnPlane(GameCamera.transform.forward,

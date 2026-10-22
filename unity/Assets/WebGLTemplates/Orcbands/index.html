@@ -74,6 +74,7 @@
         progress.style.width = Math.round(amount * 100) + '%';
       }).then(instance => {
         loading.style.display = 'none';
+        window.orcbandsReview = preset => instance.SendMessage('Orcbands Controller', 'Capture', preset);
         // Click the canvas to direct keyboard controls to the game.
       }).catch(message => {
         warning.textContent = String(message);
