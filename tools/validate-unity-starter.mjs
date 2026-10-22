@@ -82,13 +82,13 @@ assert.match(file('preview/environment.js'), /p\.scale\*\(p\.width\?\?1\)/);
 // narrower four torches; cool woodland fill must not alter fog shaders.
 const sceneCode = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
 assert.match(sceneCode, /QualitySettings\.pixelLightCount = 6;/);
-assert.match(sceneCode, /5\.7f, 4\.7f, \.8f, new Color\(1f, \.55f, \.27f\)\);/);
-assert.match(sceneCode, /4\.7f, 2\.65f, i \* 2\.3f, new Color\(1f, \.68f, \.39f\)\);/);
-assert.match(sceneCode, /RenderSettings\.ambientSkyColor = new Color\(\.32f, \.40f, \.42f\);/);
+assert.match(sceneCode, /7\.2f, 6\.7f, \.8f, new Color\(1f, \.48f, \.22f\)\);/);
+assert.match(sceneCode, /4\.5f, 2\.45f, i \* 2\.3f, new Color\(1f, \.66f, \.36f\)\);/);
+assert.match(sceneCode, /RenderSettings\.ambientSkyColor = new Color\(\.26f, \.35f, \.39f\);/);
 assert.match(sceneCode, /motion\.LightColor = warmthColor;/);
 assert.match(file('unity/Assets/Orcbands/Runtime/CampFlame.cs'),
   /Warmth\.color = LightColor;/);
-assert.match(file('preview/app.js'), /HemisphereLight\(0xdce9e9,0x586b6c,2\.05\)/);
+assert.match(file('preview/app.js'), /skyFill\.intensity=next==='grove'\?1\.72:2\.05/);
 
 // Fire visual parity: source mesh deformation, smoke and sparks must all be
 // present in the built scene (not just an intensity-flickering point light).
