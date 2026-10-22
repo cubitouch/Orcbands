@@ -8,10 +8,10 @@ export function makeHut(){
  const vertices=[],faces=[];
  let part='foundation';
  const palette={
-  timber:[.40,.275,.16],timber_light:[.50,.355,.215],timber_dark:[.265,.17,.095],
-  plank:[.37,.255,.155],plank_warm:[.42,.29,.175],plank_shadow:[.295,.195,.115],
-  roof_red:[.56,.235,.19],roof_light:[.62,.275,.22],roof_warm:[.59,.25,.195],
-  roof_shadow:[.48,.19,.16],roof_dark:[.335,.125,.105],
+  timber:[.365,.26,.165],timber_light:[.53,.385,.248],timber_dark:[.21,.144,.096],
+  plank:[.37,.255,.155],plank_warm:[.42,.29,.175],plank_shadow:[.295,.195,.115],plank_damp:[.205,.152,.112],
+  roof_red:[.51,.205,.175],roof_light:[.61,.295,.238],roof_warm:[.55,.232,.181],
+  roof_shadow:[.39,.144,.135],roof_dark:[.30,.106,.101],roof_eave:[.275,.112,.105],
   stone:[.41,.405,.36],stone_light:[.50,.48,.425],stone_shadow:[.32,.33,.30],
   bone:[.72,.625,.42],bone_shadow:[.51,.42,.265],iron:[.115,.128,.12],
   interior:[.087,.062,.041],cloth:[.36,.061,.054],cloth_light:[.46,.082,.063]
@@ -27,11 +27,23 @@ export function makeHut(){
   const ring=p=>outline.map(([x,z])=>add(p,add(mul(u,x*w),mul(q,z*d))));
   const low=ring(a),high=ring(b);
   for(let i=0;i<8;i++){
+   // A single material per timber beam is important for draw-call budgets.
+   // Place wear at whole structural joints and through existing swatches,
+   // never as per-face material switches on hundreds of beams.
    const j=(i+1)%8;face(material,[low[i],low[j],high[j],high[i]]);
   }
   face(material,[...low].reverse());face(material,high);
  }
- function box(name,x,y,z,w,h,d,material='plank'){
+ function box(name,x,y,z,w,h,d,material='plank',weather=true){
+  // Broad weathering bands keep slats dirty at their bases, dry above.
+  if(weather&&h>1.15&&/^(side_slat_|back_slat_|front_slat_)/.test(name)){
+   // Low damp section plus the original varied slat tone above.
+   // Two bands preserve the Asset Lab's triangle budget.
+   box(name,x,y-h*.31,z,w,h*.38,d,'plank_damp',false);
+   const sunExposed=/_([048])$/.test(name);
+   box(name,x,y+h*.19,z,w,h*.62,d,sunExposed?'plank_warm':material,false);
+   return;
+  }
   part=name;
   const points=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]
    .map(([a,b,c])=>[x+a*w/2,y+b*h/2,z+c*d/2]);
@@ -49,7 +61,7 @@ export function makeHut(){
  function tusk(name,x,y,z,side){
   part=name;const rings=[[[x,y,z],.19,.23],[[x+side*.035,y+.28,z+.018],.14,.16],[[x+side*.09,y+.53,z+.035],.075,.09]];
   const points=rings.map(([p,w,d])=>[[p[0]-w/2,p[1],p[2]-d/2],[p[0]+w/2,p[1],p[2]-d/2],[p[0]+w/2,p[1],p[2]+d/2],[p[0]-w/2,p[1],p[2]+d/2]]);
-  for(let j=0;j<2;j++)for(let i=0;i<4;i++)face(i===0?'bone_shadow':'bone',[points[j][i],points[j+1][i],points[j+1][(i+1)%4],points[j][(i+1)%4]]);
+  for(let j=0;j<2;j++)for(let i=0;i<4;i++)face(j===0?'bone_shadow':i===0?'bone_shadow':'bone',[points[j][i],points[j+1][i],points[j+1][(i+1)%4],points[j][(i+1)%4]]);
   const tip=[x+side*.155,y+.72,z+.075];
   for(let i=0;i<4;i++)face(i===0?'bone_shadow':'bone',[points[2][i],tip,points[2][(i+1)%4]]);
  }
@@ -82,6 +94,12 @@ export function makeHut(){
  beam('entrance_left',[-.94,.20,2.04],[-.99,2.42,2.04],.28,.30,'timber_light');
  beam('entrance_right',[.94,.20,2.04],[.99,2.42,2.04],.28,.30,'timber_light');
  beam('entrance_lintel',[-1.17,2.34,2.07],[1.17,2.34,2.07],.29,.34,'timber_dark');
+ // Dark bound joints give the otherwise clean portal a rough tribal character.
+ // These remain outside the door opening and use existing materials.
+ for(const x of [-.97,.97]){
+  beam('doorway_bindings',[x,.42,2.05],[x,.58,2.05],.33,.35,'timber_dark');
+  beam('doorway_bindings',[x,2.06,2.05],[x,2.22,2.05],.33,.35,'timber_dark');
+ }
  // The entrance is physically open: walls, roof and a dark back wall form its recess.
  box('shadowed_back_wall',0,1.24,-1.70,3.82,2.1,.035,'interior');
  // Curved low-poly roof profile: full ridge, broad slopes, low slightly sagging eaves.
@@ -117,7 +135,6 @@ export function makeHut(){
   const upper=side>0?[...quad].reverse():quad;
   face('roof_dark',upper);face('roof_dark',[...upper].reverse());
  }
- const roofColors=['roof_red','roof_warm','roof_red','roof_shadow','roof_light','roof_red','roof_warm'];
  // Staggered, chipped panels. Independent outlines and front hems break the eave silhouette.
  for(const side of [-1,1])for(let row=0;row<5;row++){
   const outer=2.76-row*.55,inner=Math.max(.015,outer-.65);
@@ -132,7 +149,14 @@ export function makeHut(){
    const center=[side*((outerX+innerX)/2),roofY((outerX+innerX)/2,(z0+z1)/2)+.045+row*.008,(z0+z1)/2];
    for(let j=0;j<points.length;j++){
     const next=(j+1)%points.length,tri=[points[j],points[next],center];
-    face(roofColors[(col*3+row*2+(side>0?2:0))%roofColors.length],side>0?tri.reverse():tri);
+    // Coherent weathering: wet, smoke-dark eaves give way to aged clay-red
+     // mid-slope and a drier mineral-worn ridge; small staggered variation.
+     const roofMaterial=row===0?'roof_eave':
+      row===1?(col%5===0?'roof_red':'roof_shadow'):
+      row===2?(col%4===0?'roof_shadow':'roof_red'):
+      row===3?(col%4===1?'roof_warm':'roof_red'):
+      (col%4===2?'roof_warm':'roof_light');
+     face(roofMaterial,side>0?tri.reverse():tri);
    }
    // A thin, dark chipped edge gives the lowest row visible thickness without heavy gutters.
    if(row===0){
@@ -148,7 +172,7 @@ export function makeHut(){
   part='ridge_cap_'+i;
   const a=[-.13,roofY(.13,z)+.09,z],b=[.13,roofY(.13,z)+.09,z],c=[0,roofY(0,z)+.16,z];
   const d=[-.13,roofY(.13,z1)+.09,z1],e=[.13,roofY(.13,z1)+.09,z1],f=[0,roofY(0,z1)+.16,z1];
-  face(i%3?'roof_red':'roof_light',[a,d,f,c]);face('roof_warm',[c,f,e,b]);
+  face(i%3?'roof_warm':'roof_light',[a,d,f,c]);face('roof_light',[c,f,e,b]);
   face('roof_shadow',[a,c,b]);face('roof_shadow',[d,e,f]);
  }
  // Barrel staves and hoops; small original dressing pieces belong to this hut asset.
@@ -176,7 +200,7 @@ export function makeHut(){
  part='tribe_banner';
  const cloth=[[2.66,2.94,-.52],[3.60,2.94,-.51],[3.63,1.84,-.46],[3.28,1.72,-.43],[3.14,1.90,-.44],[2.69,1.78,-.49]];
  const mid=[3.16,2.43,-.40];
- for(let i=0;i<cloth.length;i++)face(i%3?'cloth':'cloth_light',[cloth[(i+1)%cloth.length],cloth[i],mid]);
+ for(let i=0;i<cloth.length;i++)face(Math.min(cloth[i][1],cloth[(i+1)%cloth.length][1])<2?'cloth':i%3?'cloth':'cloth_light',[cloth[(i+1)%cloth.length],cloth[i],mid]);
  // Rear face makes the cloth readable from both orbit directions.
  for(let i=0;i<cloth.length;i++)face('cloth',[cloth[i],cloth[(i+1)%cloth.length],mid.map((n,j)=>n-(j===2?.014:0))]);
  part='banner_emblem';

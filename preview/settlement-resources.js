@@ -5,18 +5,59 @@ import {storageResourceGeometry} from './storage-resources.js?v=__ORCBANDS_REVIS
 // Aged timber and muted iron-red roofing match the main hut's imported MTL.
 // Keep individual slat variation, but reduce the lean-to's orange cast.
 const TIMBER=0x59432f,END=0x987853,ROOF=[0x76312d,0x83372f,0x702c29,0x7e352d];
-function box(parts,x,y,z,w,h,d,color=TIMBER,seed=1){const g=paint(new THREE.BoxGeometry(w,h,d),color,seed);g.translate(x,y+h/2,z);parts.push(g)}
+// Restrained height-aware vertex ramps on assembled structures, not generic
+// paint(): moisture collects at bases; rafters and eaves weather differently.
+const dampWood=new THREE.Color(0x28221c),dryWood=new THREE.Color(0xc09a6a);
+const roofEave=new THREE.Color(0x2e191c),roofRidge=new THREE.Color(0xb16c52);
+const stoneMoss=new THREE.Color(0x425247),stoneTop=new THREE.Color(0xa7a498);
+function grade(g,shade){
+ const p=g.getAttribute('position'),c=g.getAttribute('color'),base=new THREE.Color();
+ for(let i=0;i<p.count;i++){
+  base.fromBufferAttribute(c,i);shade(base,p.getX(i),p.getY(i),p.getZ(i));
+  c.setXYZ(i,base.r,base.g,base.b);
+ }
+ c.needsUpdate=true;return g;
+}
+export function weatherTimber(g){
+ return grade(g,(c,x,y,z)=>{
+  const wet=1-THREE.MathUtils.smoothstep(y,.15,1.6);
+  const dry=THREE.MathUtils.smoothstep(y,1.25,2.9);
+  c.lerp(dampWood,.59*wet).lerp(dryWood,.31*dry);
+ });
+}
+export function weatherRoof(g){
+ g.computeBoundingBox();const low=g.boundingBox.min.y,span=Math.max(.001,g.boundingBox.max.y-low);
+ return grade(g,(c,x,y,z)=>{
+  const high=THREE.MathUtils.smoothstep((y-low)/span,.12,.95);
+  c.lerp(roofEave,.66*(1-high)).lerp(roofRidge,.28*high);
+ });
+}
+function weatherFooting(g){
+ return grade(g,(c,x,y,z)=>{
+  const low=1-THREE.MathUtils.smoothstep(y,.01,.18);
+  c.lerp(stoneMoss,.46*low).lerp(stoneTop,.15*(1-low));
+ });
+}
+
+function box(parts,x,y,z,w,h,d,color=TIMBER,seed=1){const g=paint(new THREE.BoxGeometry(w,h,d),color,seed);g.translate(x,y+h/2,z);parts.push(weatherTimber(g))}
 function timber(parts,a,b,width=.16,color=TIMBER){
  const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start);
  const g=paint(new THREE.BoxGeometry(width,delta.length(),width),color,Math.round((a[0]+a[2]+8)*100));
- g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize()));g.translate(...start.add(end).multiplyScalar(.5).toArray());parts.push(g);
+ g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize()));g.translate(...start.add(end).multiplyScalar(.5).toArray());parts.push(weatherTimber(g));
 }
-function pad(parts,x,z){const g=paint(new THREE.CylinderGeometry(.28,.33,.16,6),0x85867a,41);g.rotateY(x+z);g.translate(x,.08,z);parts.push(g)}
+function pad(parts,x,z){const g=paint(new THREE.CylinderGeometry(.28,.33,.16,6),0x85867a,41);g.rotateY(x+z);g.translate(x,.08,z);parts.push(weatherFooting(g))}
 function roofBoard(parts,x1,x2,z1,z2,height,index){
  const points=[];for(const drop of [0,.075])for(const[x,z]of [[x1,z1],[x2,z1],[x2,z2],[x1,z2]])points.push([x,height(x,z)-drop,z]);
- parts.push(triangles(points,[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,4],[1,5,4],[1,2,5],[2,6,5],[2,3,6],[3,7,6],[3,0,7],[0,4,7]],ROOF[index%4],800+index));
+ parts.push(weatherRoof(triangles(points,[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,4],[1,5,4],[1,2,5],[2,6,5],[2,3,6],[3,7,6],[3,0,7],[0,4,7]],ROOF[index%4],800+index)));
 }
-function post(parts,x,z,height){pad(parts,x,z);box(parts,x,.1,z,.20,height-.1,.20);box(parts,x-.001,height,z,.23,.07,.23,END,3);}
+function post(parts,x,z,height){
+ pad(parts,x,z);
+ box(parts,x,.1,z,.20,height-.1,.20);
+ // Bind each upright with the same dark timber used at the hut door.
+ // Positioned at the cap/joint so it reads as construction, not noise.
+ box(parts,x,height-.29,z,.245,.12,.245,0x30251f,31);
+ box(parts,x-.001,height,z,.23,.07,.23,END,3);
+}
 function leanToShell(){
  const parts=[];
  for(const x of [-1.6,1.6])for(const z of [-1,1])post(parts,x,z,z<0?2.62:2.10);
@@ -33,7 +74,12 @@ function leanToShell(){
  for(let i=0;i<14;i++){const x=-1.98+i*.283;roofBoard(parts,x,x+.287,-1.43,1.48,(x,z)=>2.85-(z+1.43)*.25,i);}
  // Heavy edge boards and a small red trade pennant match the hut's materials.
  timber(parts,[-2.02,2.85,-1.45],[2.02,2.85,-1.45],.12,0x623f30);timber(parts,[-2.02,2.12,1.49],[2.02,2.12,1.49],.13,0x623f30);
- parts.push(triangles([[1.62,1.90,1.03],[1.62,1.28,1.03],[1.20,1.43,1.03]],[[0,2,1],[0,1,2]],0x814037,51));
+ const pennant=triangles([[1.62,1.90,1.03],[1.62,1.28,1.03],[1.20,1.43,1.03]],[[0,2,1],[0,1,2]],0x814037,51);
+ parts.push(grade(pennant,(c,x,y,z)=>{
+  const faded=THREE.MathUtils.smoothstep(y,1.3,1.90);
+  c.lerp(new THREE.Color(0x442127),.52*(1-faded));
+  c.lerp(new THREE.Color(0xa35d49),.19*faded);
+ }));
  return parts;
 }
 function shelter(state){
