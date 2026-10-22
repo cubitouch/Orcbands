@@ -8,11 +8,11 @@ Shader "Orcbands/CharacterMatte"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="TransparentCutout" "Queue"="AlphaTest" }
         LOD 200
         Cull Back
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows finalcolor:FinalizeColor
+        #pragma surface surf Lambert fullforwardshadows addshadow finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Color;
         sampler2D _MainTex;
@@ -68,7 +68,9 @@ Shader "Orcbands/CharacterMatte"
         {
             // Expand the tonal separation already present in the original
             // pine OBJ/MTL needle-light and needle-shadow material swatches.
-            o.Albedo = saturate((tex2D(_MainTex, IN.uv_MainTex).rgb * _Color.rgb - .25) * _SurfaceContrast + .25);
+            fixed4 atlas = tex2D(_MainTex, IN.uv_MainTex);
+            clip(atlas.a - .5);
+            o.Albedo = saturate((atlas.rgb * _Color.rgb - .25) * _SurfaceContrast + .25);
             o.Alpha = 1;
         }
         // Three.js applies visibility to the already-lit pixel. Applying
