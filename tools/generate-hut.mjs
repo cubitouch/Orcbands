@@ -27,12 +27,10 @@ export function makeHut(){
   const ring=p=>outline.map(([x,z])=>add(p,add(mul(u,x*w),mul(q,z*d))));
   const low=ring(a),high=ring(b);
   for(let i=0;i<8;i++){
-   const j=(i+1)%8;
-   // Aged, roughly hewn supports: shaded bevels and worn exposed edges.
-   // Original face count and silhouette are unchanged.
-   const exposed=/^(entrance_(left|right)|corner_post_|side_mid_post_|side_eave_beam_|curved_fascia_)/.test(name);
-   const wood=exposed&&i===1?'timber_dark':exposed&&i===5?'timber_light':material;
-   face(wood,[low[i],low[j],high[j],high[i]]);
+   // A single material per timber beam is important for draw-call budgets.
+   // Place wear at whole structural joints and through existing swatches,
+   // never as per-face material switches on hundreds of beams.
+   const j=(i+1)%8;face(material,[low[i],low[j],high[j],high[i]]);
   }
   face(material,[...low].reverse());face(material,high);
  }
@@ -99,8 +97,8 @@ export function makeHut(){
  // Dark bound joints give the otherwise clean portal a rough tribal character.
  // These remain outside the door opening and use existing materials.
  for(const x of [-.97,.97]){
-  beam('entrance_binding_low_'+x,[x,.42,2.05],[x,.58,2.05],.33,.35,'timber_dark');
-  beam('entrance_binding_high_'+x,[x,2.06,2.05],[x,2.22,2.05],.33,.35,'timber_dark');
+  beam('doorway_bindings',[x,.42,2.05],[x,.58,2.05],.33,.35,'timber_dark');
+  beam('doorway_bindings',[x,2.06,2.05],[x,2.22,2.05],.33,.35,'timber_dark');
  }
  // The entrance is physically open: walls, roof and a dark back wall form its recess.
  box('shadowed_back_wall',0,1.24,-1.70,3.82,2.1,.035,'interior');
@@ -137,7 +135,6 @@ export function makeHut(){
   const upper=side>0?[...quad].reverse():quad;
   face('roof_dark',upper);face('roof_dark',[...upper].reverse());
  }
- const roofColors=['roof_red','roof_warm','roof_red','roof_shadow','roof_light','roof_red','roof_warm'];
  // Staggered, chipped panels. Independent outlines and front hems break the eave silhouette.
  for(const side of [-1,1])for(let row=0;row<5;row++){
   const outer=2.76-row*.55,inner=Math.max(.015,outer-.65);
