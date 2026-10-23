@@ -40,7 +40,7 @@ namespace Orcbands
         public void Capture(string preset)
         {
             Vector3 feet = originalFeet;
-            if (preset == "warm") feet = CampfireFeet;
+            if (preset == "warm" || preset == "worker-three-quarter") feet = CampfireFeet;
             if (preset == "cool") feet = new Vector3(5.5f, 0f, 4.5f);
             if (Ground.Raycast(new Ray(new Vector3(feet.x,45f,feet.z),Vector3.down), out RaycastHit hit,100f))
                 feet.y = hit.point.y;
@@ -55,6 +55,14 @@ namespace Orcbands
             {
                 target = feet + Vector3.up * .75f;
                 offset = new Vector3(-3.2f,2.1f,4.1f);
+            }
+            if (preset == "worker-front" || preset == "worker-side" || preset == "worker-three-quarter")
+            {
+                target = feet + Vector3.up * 1.05f;
+                Vector3 localOffset = preset == "worker-front" ? new Vector3(0f, .1f, 3.8f)
+                    : preset == "worker-side" ? new Vector3(3.8f, .1f, 0f)
+                    : new Vector3(2.8f, 1.3f, 3.5f);
+                offset = Character.transform.rotation * localOffset;
             }
             View.transform.position = target + offset;
             View.transform.LookAt(target);

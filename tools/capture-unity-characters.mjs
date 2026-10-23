@@ -34,7 +34,7 @@ try {
   await waitFrames(2);
  };
  await page.locator('#unity-canvas').focus();
- const views=['overall','close','normal','out','normal-off','warm','cool','warrior','shaman','warrior-normal','shaman-normal'];
+ const views=['worker-front','worker-side','worker-three-quarter','overall','close','normal','out','normal-off','warm','cool','warrior','shaman','warrior-normal','shaman-normal'];
  for(const view of views){
   await page.evaluate(v=>window.orcbandsReview(v),view);
   await page.waitForTimeout(650);
