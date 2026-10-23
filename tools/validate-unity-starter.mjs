@@ -161,3 +161,20 @@ assert(!licensed.includes('sharedMesh.bounds'), 'Final grip must use explicit ca
 assert.match(workerRest, /animator.enabled = false/);
 assert.match(licensed, /presentation\.FitRestPose\(presentation\.TargetHeight\);[\s\S]*AttachWorkerAxe/);
 assert.match(file('README.md'), /polygon-mini-fantasy-character-pack-art-by-synty-122084/);
+
+// Publishing must not wait for the exhaustive art capture and animation video.
+// Licensed review is a maintainer-labelled, same-repository PR operation.
+assert(trustedDeploy.includes('node tools/smoke-unity-webgl.mjs'));
+assert(!trustedDeploy.includes('node tools/capture-unity-characters.mjs'));
+assert(!trustedDeploy.includes('node tools/capture-worker-animations.mjs'));
+const visualReview = file('.github/workflows/worker-art-review.yml');
+assert.match(visualReview, /on:\s*pull_request:/);
+assert.match(visualReview, /head\.repo\.full_name == github\.repository/);
+assert.match(visualReview, /base\.ref == 'main'/);
+assert.match(visualReview, /pull_request\.state == 'open'/);
+assert.match(visualReview, /contains\(github\.event\.pull_request\.labels\.\*\.name, 'unity-visual-review'\)/);
+assert(!/^  pull_request_target:/m.test(visualReview));
+assert(!/^  push:/m.test(visualReview));
+assert(visualReview.includes('node tools/capture-unity-characters.mjs'));
+assert(visualReview.includes('node tools/capture-worker-animations.mjs'));
+assert.match(publicPrCi, /name: Capture character art review[^\n]*\n        if: github\.event_name == 'pull_request'/);
