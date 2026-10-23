@@ -9,6 +9,7 @@ namespace Orcbands
         public Camera GameCamera;
         public Collider Ground;
         public Transform SelectionRing;
+        public Transform TreeTargetRing;
         public CampReveal Reveal;
 
         private bool selected;
@@ -27,8 +28,19 @@ namespace Orcbands
         public void CancelWorkerCommand()
         {
             hasDestination = false;
-            chopTarget = null;
+            SetChoppingTarget(null);
             if (animationDriver != null) animationDriver.Request(WorkerAnimation.Mode.Idle);
+        }
+
+        private void SetChoppingTarget(WoodcuttingTarget tree)
+        {
+            chopTarget = tree;
+            if (TreeTargetRing == null) return;
+            TreeTargetRing.gameObject.SetActive(tree != null);
+            if (tree == null) return;
+            if (Ground.Raycast(new Ray(tree.transform.position + Vector3.up * 45f, Vector3.down),
+                out RaycastHit surface, 100f))
+                TreeTargetRing.position = surface.point + Vector3.up * .055f;
         }
 
         private void Update()
@@ -54,7 +66,7 @@ namespace Orcbands
                 if (Physics.Raycast(ray, out RaycastHit targetHit, 300f) &&
                     targetHit.collider.GetComponentInParent<WoodcuttingTarget>() is WoodcuttingTarget tree)
                 {
-                    chopTarget = tree;
+                    SetChoppingTarget(tree);
                     destination = tree.ApproachPoint(Worker.position);
                     if (Ground.Raycast(new Ray(destination + Vector3.up * 45f, Vector3.down),
                         out RaycastHit surface, 100f)) destination.y = surface.point.y;
@@ -62,7 +74,7 @@ namespace Orcbands
                 }
                 else if (Ground.Raycast(ray, out RaycastHit hit, 300f))
                 {
-                    chopTarget = null;
+                    SetChoppingTarget(null);
                     destination = hit.point;
                     hasDestination = true;
                 }

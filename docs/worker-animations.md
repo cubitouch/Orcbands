@@ -1,6 +1,6 @@
 # Worker animations — supplied Mixamo clips
 
-The worker uses the user's Idle, Walking and Standing Melee Attack Downward
+The worker uses the user's Idle, replacement Walking (1), and Standing Melee Attack Downward
 FBXs. Their original bytes are stored privately in `Orcbands-PrivateAssets`, under
 `Mixamo/Worker/` (the last file is named `Chopping.fbx`). No source FBXs, imported
 animation curves, avatars or controllers are committed to the public repository.
@@ -11,8 +11,11 @@ and their vendor content are never uploaded as public workflow artifacts.
 
 - Left-click the worker to select him.
 - Right-click ground to walk there; he returns to idle on arrival.
-- Right-click a tree trunk to approach it, face it and repeat the chopping motion.
-- Right-click ground again to stop chopping and move.
+- Right-click any visible part of a tree (trunk or canopy) to command it. An amber
+  ring marks the tree while the worker walks to its work position, faces the
+  trunk, and repeats the chopping motion only after arrival.
+- Right-click another tree to retarget, or ground to cancel the tree command and
+  move. The tree marker clears on a ground command.
 
 This is an animation interaction. Trees remain standing and no wood is awarded;
 resource harvesting, tree health and pathfinding are separate gameplay features.
@@ -62,7 +65,7 @@ commands. The ordinary controller never enters these review overrides on its own
 The static rest profile remains the fallback when licensed model assets are
 available locally without the optional animation pack.
 
-## Inspected result — 23 October 2026
+## Previous animation integration evidence — 23 October 2026
 
 Tested implementation: `0d4929745d0cb96fe57bb3fa4a9bf49e5f0cb0ca`.
 The final evidence/documentation commit does not change that implementation.
