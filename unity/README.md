@@ -248,6 +248,7 @@ one, then from the public Orcbands repository root:
 
 ```sh
 cp -R ../Orcbands-PrivateAssets/Synty unity/Assets/Synty
+cp -R ../Orcbands-PrivateAssets/Mixamo unity/Assets/Mixamo
 # Complete the usual generated environment step; then:
 # Unity editor → Orcbands → Generate Starter Scene
 ```
@@ -264,7 +265,10 @@ shaman for the character review camera presets. These are the *original vendor
 prefabs*, fitted to the established 2.0-unit worker height under an independent
 gameplay root. Their own color atlases are adapted to `Orcbands/CharacterMatte`
 for camp lighting and fog without altering the original private materials.
-Motion remains placeholder direct click-to-move; no animation clips are added.
+Direct click-to-move uses the supplied Mixamo idle/walking clips when the private
+animation pack is restored. Right-clicking a tree trunk approaches it and plays
+the supplied chopping motion; a ground command interrupts chopping. See
+[worker animations and controls](../docs/worker-animations.md).
 
 ### Trusted GitHub build
 
@@ -293,7 +297,7 @@ shadows, materials, foot alignment, right-click movement and selection.
 - [**POLYGON MINI – Fantasy Character Pack – Art by Synty**](https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/polygon-mini-fantasy-character-pack-art-by-synty-122084), Unity Asset Store ID 122084, purchased Synty Studios models and props.
 - Worker: `SM_Chr_Dungeon_GoblinMale_01.prefab`, fitted to **2.0 world units** for RTS readability (the previous target was 1.525).
 - Tool: `SM_Prop_Axe_01.prefab` from the **same pack**, attached to the original `hand_r` bone with a grip-aware offset. The axe is excluded from the initial rest-pose height fit.
-- Gameplay root, independent capsule selection collider and navigation remain unchanged. The axe is presentation only; chopping animation and actual harvesting are not implemented yet.
+- Gameplay root, independent capsule selection collider and navigation remain unchanged. The axe follows the animated right hand. Chopping animation is available with the private Mixamo pack; resource harvesting and tree felling are not implemented.
 - Purchased art remains exclusively in the private asset repository, not in the public git tree.
 
 ### Worker resting pose and axe grip

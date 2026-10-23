@@ -62,5 +62,53 @@ commands. The ordinary controller never enters these review overrides on its own
 The static rest profile remains the fallback when licensed model assets are
 available locally without the optional animation pack.
 
-Rendered acceptance and any remaining retargeting limitations are recorded below
-once the actual Unity build has been inspected.
+## Inspected result — 23 October 2026
+
+Tested implementation: `0d4929745d0cb96fe57bb3fa4a9bf49e5f0cb0ca`.
+The final evidence/documentation commit does not change that implementation.
+
+| Check | Result |
+| --- | --- |
+| [Licensed Unity WebGL build and interaction regression](https://github.com/cubitouch/Orcbands/actions/runs/39948595606) | Passed |
+| [Public proxy Unity WebGL build and smoke/capture tests](https://github.com/cubitouch/Orcbands/actions/runs/39948603184) | Passed; private checkout skipped |
+| [Forest Asset Lab validation](https://github.com/cubitouch/Orcbands/actions/runs/39948603185) | Passed |
+| Local execution of the animation regression against the same compiled player | Passed |
+| Original uploaded FBX bytes versus private repository Git blob hashes | Identical for all three files |
+
+Idle (16.633 seconds), Walking (1.033 seconds) and Chopping (2.267 seconds) all
+import as humanoid clips. The actual Unity renderer and sampled skeleton reports
+show live movement for each motion, a stationary gameplay root during clip-only
+previews, root motion off, and unchanged hand-local grip position/rotation. The
+pointer-driven run records Walking to Pine 017, Chopping there, Walking after a
+new ground command, and Idle on arrival. Root-to-terrain error is zero in the
+recorded interaction reports. No browser errors were recorded.
+
+| Motion | Real Unity capture | Inspected frame |
+| --- | --- | --- |
+| Idle | [Short MP4](reviews/worker-animations/idle.mp4) | [Frame](reviews/worker-animations/idle.png) |
+| Walking | [Short MP4](reviews/worker-animations/walking.mp4) | [Frame](reviews/worker-animations/walking.png) |
+| Chopping | [Short MP4](reviews/worker-animations/chopping.mp4) | [Frame](reviews/worker-animations/chopping.png) |
+
+The short MP4s are cropped, unmodified-motion segments from a recording of the
+actual compiled WebGL player, previewing each state in place beside the campfire.
+They use no AI imagery or alternative renderer. The complete CI artifact also
+contains the full interaction recording, per-motion frames and
+[the sampled regression report](reviews/worker-animations/animation-report.json).
+Software-rendered capture timing is not a native GPU performance measurement.
+
+The [actual tree interaction](reviews/worker-animations/tree-chopping.png) and
+[return to idle](reviews/worker-animations/returned-idle.png) were inspected.
+Body motion is retargeted to the original proportions, the axe stays in the
+right hand, feet contact the terrain and existing camp light/shadows, fog,
+smoke and sparks remain present without rectangular lighting artifacts.
+
+### Limits
+
+- Chopping is the supplied full-body downward melee motion, repeated as a work
+  action. There is no tree damage, felling, wood reward or synchronized impact FX.
+- The vendor hand retains its coarse mitten-like shape and controlled shaft
+  overlap. No new mesh sculpting or two-hand weapon IK is introduced.
+- Close views at a tree can be obscured by the existing low pine canopy; the
+  clearing previews make the full motion visible for review.
+- Desktop execution was not tested; WebGL builds exercise the shared animation
+  and controller code. The PR remains a draft for human visual approval.
