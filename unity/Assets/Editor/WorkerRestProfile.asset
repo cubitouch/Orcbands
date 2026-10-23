@@ -13,13 +13,11 @@ MonoBehaviour:
   - Bone: hand_r
     LocalEuler: {x: -1.097, y: 11.497, z: -0.845}
   - Bone: middle_01_r
-    LocalEuler: {x: -65, y: 0, z: 0}
+    LocalEuler: {x: -30, y: 2.5, z: -10}
   - Bone: middle_02_r
-    LocalEuler: {x: -65, y: 0, z: 0}
-  - Bone: thumb_01_r
-    LocalEuler: {x: -25, y: -40, z: 0}
+    LocalEuler: {x: -35, y: 3, z: 0}
   - Bone: thumb_02_r
-    LocalEuler: {x: -25, y: 0, z: 0}
+    LocalEuler: {x: -25, y: -10, z: -3}
   - Bone: upperarm_l
     LocalEuler: {x: -77.740, y: -37.398, z: 15.927}
   - Bone: lowerarm_l

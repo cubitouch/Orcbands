@@ -34,7 +34,8 @@ try {
   await waitFrames(2);
  };
  await page.locator('#unity-canvas').focus();
- const views=['worker-front','worker-side','worker-three-quarter','overall','close','normal','out','normal-off','warm','cool','warrior','shaman','warrior-normal','shaman-normal'];
+ const focused=process.env.ORCBANDS_WORKER_REVIEW==='1';
+ const views=focused?['worker-front','worker-side','worker-three-quarter','normal','cool']:['worker-front','worker-side','worker-three-quarter','overall','close','normal','out','normal-off','warm','cool','warrior','shaman','warrior-normal','shaman-normal'];
  for(const view of views){
   await page.evaluate(v=>window.orcbandsReview(v),view);
   await page.waitForTimeout(650);
@@ -43,7 +44,7 @@ try {
  await page.evaluate(()=>window.orcbandsReview('normal'));
  await page.waitForTimeout(500);
  // 60 frames measures this software-rendered browser only, not native GPU performance.
- const elapsed=await page.evaluate(()=>new Promise(done=>{
+ const elapsed=focused?null:await page.evaluate(()=>new Promise(done=>{
   let n=0,start=performance.now(); function frame(){if(++n===60)done(performance.now()-start);else requestAnimationFrame(frame)}requestAnimationFrame(frame);
  }));
  const initial=await report();

@@ -51,6 +51,12 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
+      - name: Store Unity browser build
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-unity-published-build
+          path: build/WebGL/Orcbands/
+          if-no-files-found: error
       - name: Check static hosting asset format
         shell: bash
         run: |
@@ -67,7 +73,7 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
-          node tools/capture-unity-characters.mjs
+          ORCBANDS_WORKER_REVIEW=1 node tools/capture-unity-characters.mjs
       - name: Upload licensed WebGL visual review captures
         if: always()
         uses: actions/upload-artifact@v4
@@ -75,10 +81,5 @@ jobs:
           name: orcbands-licensed-character-review
           path: smoke-artifacts/unity-webgl/
           if-no-files-found: ignore
-      - name: Store Unity browser build
-        uses: actions/upload-artifact@v4
-        with:
-          name: orcbands-unity-published-build
-          path: build/WebGL/Orcbands/
-          if-no-files-found: error
+
 

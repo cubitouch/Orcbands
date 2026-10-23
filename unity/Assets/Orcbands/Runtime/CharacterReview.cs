@@ -45,6 +45,31 @@ namespace Orcbands
                 lastSelectionHit = controller.LastSelectionHit,
                 groundError = Mathf.Abs(feet.y - surface.point.y) }));
         }
+        [System.Serializable] private class TuningBone { public string name; public Vector3 euler; }
+        [System.Serializable] private class WorkerTuning
+        {
+            public Vector3 gripPosition, gripEuler;
+            public TuningBone[] bones;
+        }
+        // Explicit art-review action only, never a gameplay Update or pose owner.
+        // After calibration, copy values back into the owned editor profile.
+        public void TuneWorker(string json)
+        {
+            var tuning = JsonUtility.FromJson<WorkerTuning>(json);
+            if (tuning == null) return;
+            foreach (Transform child in Character.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == "Worker axe grip")
+                {
+                    child.localPosition = tuning.gripPosition;
+                    child.localRotation = Quaternion.Euler(tuning.gripEuler);
+                }
+                if (tuning.bones == null) continue;
+                foreach (var bone in tuning.bones)
+                    if (child.name == bone.name) child.localRotation = Quaternion.Euler(bone.euler);
+            }
+        }
+
         public void Capture(string preset)
         {
             bool preserveFacing = preset == "worker-moved";
