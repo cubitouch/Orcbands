@@ -49,7 +49,7 @@ namespace Orcbands.Editor
                         rotation = t.localRotation, scale = t.localScale }).ToArray();
                 var avatar = AvatarBuilder.BuildHumanAvatar(reference, new HumanDescription {
                     human = human.ToArray(), skeleton = skeleton,
-                    armTwist = .5f, foreArmTwist = .5f, upperLegTwist = .5f, legTwist = .5f,
+                    upperArmTwist = .5f, lowerArmTwist = .5f, upperLegTwist = .5f, lowerLegTwist = .5f,
                     armStretch = .05f, legStretch = .05f, feetSpacing = 0f });
                 if (avatar == null || !avatar.isValid || !avatar.isHuman)
                     throw new InvalidOperationException("Cannot build the worker's mapped humanoid avatar");

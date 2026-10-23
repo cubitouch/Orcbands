@@ -152,7 +152,7 @@ namespace Orcbands
             GUI.color = Color.white;
             GUI.Label(new Rect(28, 22, 330, 24), "Orcbands  ·  Unity forest preview");
             GUI.Label(new Rect(28, 47, 330, 20),
-                "Select worker: click    Move: right-click");
+                "Select worker: click    Move/chop: right-click");
             GUI.Label(new Rect(28, 67, 330, 20),
                 "WASD pan · Wheel zoom · Q/E rotate · R reset · F: fog of war");
             GUI.color = previous;

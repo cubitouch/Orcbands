@@ -56,7 +56,7 @@ try{
  }
  await page.evaluate(()=>window.orcbandsAnimationPreview('Gameplay'));
  await page.evaluate(()=>window.orcbandsReview('normal'));await frames();
- let r=await report();await pointer(r.unitScreen);
+ let r=await report();const startingFeet=r.feet;await pointer(r.unitScreen);
  assert((await report()).selected,'Worker selection failed');
  await pointer(r.chopScreen,'right');
  result.interaction.approach=await until(r=>r.chopTarget!==''&&r.animation==='Walking','walk to tree');
@@ -68,7 +68,7 @@ try{
  r=await report();await pointer(r.returnScreen,'right');
  result.interaction.interrupted=await until(r=>r.chopTarget===''&&r.animation==='Walking','move interrupts chopping');
  result.interaction.returned=await until(r=>r.animation==='Idle'&&r.animatorState==='Idle','idle on arrival');
- assert(distance(result.interaction.returned.feet,result.previews.Idle[0].feet)>0.1,'Expected campfire preview and starting location to differ');
+ assert(distance(result.interaction.returned.feet,startingFeet)<.15,'Worker did not return to the commanded camp position');
  assert(result.interaction.returned.groundError<.025,'Returning worker left terrain');
  await page.evaluate(()=>window.orcbandsReview('worker-moved'));await frames();
  await screenshot('returned-idle');
