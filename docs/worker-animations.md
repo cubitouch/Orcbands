@@ -72,6 +72,51 @@ commands. The ordinary controller never enters these review overrides on its own
 The static rest profile remains the fallback when licensed model assets are
 available locally without the optional animation pack.
 
+## Tree command update — 23 October 2026
+
+Tested implementation: `c13b2e1c95134e352c4fc33e95e0ab3be8a7b420`.
+Private source revision: `64f757cb32c0f62bb066890e1f90577a008e6010`.
+The licensed workflow verifies the replacement walking blob before building.
+
+Trees use static colliders from their actual mesh rather than a narrow capsule
+around the trunk. Clicking foliage therefore commands the visible tree instead
+of accidentally issuing a ground move behind it. A reusable amber command ring
+marks the tree throughout the approach and chopping. Changing to another tree
+replaces the pending target; a ground command or review reset clears it. Ring
+position is projected to terrain when a command changes, without a per-frame
+bounds fit or raycast. The worker selection ring and collider are unchanged.
+
+[The licensed Unity build and real-pointer regression passed](https://github.com/cubitouch/Orcbands/actions/runs/39993207200).
+[The public proxy WebGL build/capture suite also passed](https://github.com/cubitouch/Orcbands/actions/runs/39993213310)
+with private checkout skipped, alongside [Forest Asset Lab validation](https://github.com/cubitouch/Orcbands/actions/runs/39993213318).
+The evidence-only follow-up commit does not change the tested implementation.
+The recorded command targets Pine 017 through its visible canopy. The worker is
+Walking at 5.826 units away, stops at the configured 1.25-unit work distance, and
+then enters Chopping with movement stopped and the marker still active. A ground
+command changes to Walking, clears both the tree target and marker, and reaches
+Idle on arrival. Terrain error is zero throughout; the report records no browser
+errors. Live skeleton motion, disabled root motion, stationary chopping and the
+unchanged hand-local axe socket all pass. An additional local pointer check on
+the same compiled player offsets the canopy click by eight pixels away from the
+trunk, then retargets Pine 017 to Pine 030 before issuing a ground cancellation;
+the target and marker update correctly ([trace](reviews/worker-tree-command/edge-retarget-report.json)).
+
+| Evidence from the actual compiled Unity WebGL player | Capture |
+| --- | --- |
+| Supplied replacement walking file | [MP4](reviews/worker-tree-command/walking.mp4), [frame](reviews/worker-tree-command/walking.png) |
+| Pointer command, approach and chopping at RTS distance | [MP4](reviews/worker-tree-command/tree-command.mp4), [approach](reviews/worker-tree-command/tree-approach.png), [arrival](reviews/worker-tree-command/tree-arrived.png) |
+| Chopping beside the targeted tree | [MP4](reviews/worker-tree-command/tree-chopping.mp4), [close frame](reviews/worker-tree-command/tree-chopping.png) |
+| CI interaction and motion measurements | [JSON](reviews/worker-tree-command/animation-report.json) |
+
+The recordings and sampled frames were visually inspected. The amber marker is
+visible at RTS distance, the worker faces the tree on arrival, and the axe stays
+in the right hand. Low pine branches still partly obscure the tool and body in
+close views; foliage and tree geometry have not been redesigned. These are
+unmodified-motion excerpts of the real WebGL recording, cropped to the canvas.
+There is no new harvesting economy, tree damage/felling, synchronized hit effect,
+or obstacle pathfinding. The supplied replacement has the same motion curves as
+the previous walking file, as documented above. Desktop execution is untested.
+
 ## Previous animation integration evidence — 23 October 2026
 
 Tested implementation: `0d4929745d0cb96fe57bb3fa4a9bf49e5f0cb0ca`.
