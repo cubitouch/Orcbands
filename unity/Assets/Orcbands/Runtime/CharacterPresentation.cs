@@ -42,13 +42,28 @@ namespace Orcbands
             Apply();
             var renderers = ModelMount.GetComponentsInChildren<Renderer>();
             if (renderers.Length == 0) return;
-            Bounds bounds = renderers[0].bounds;
-            foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            Bounds bounds = PosedBounds(renderers[0]);
+            foreach (var renderer in renderers) bounds.Encapsulate(PosedBounds(renderer));
             float scale = height / Mathf.Max(.001f, bounds.size.y);
             ModelScale = Vector3.one * scale;
             Vector3 feet = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
             PivotOffset = -transform.InverseTransformPoint(feet) * scale;
             Apply();
+        }
+
+        // Renderer.bounds may still contain the imported T-pose envelope. Bake
+        // only during explicit fitting, then discard the temporary mesh.
+        private static Bounds PosedBounds(Renderer renderer)
+        {
+            if (!(renderer is SkinnedMeshRenderer skinned)) return renderer.bounds;
+            var mesh = new Mesh();
+            skinned.BakeMesh(mesh);
+            var vertices = mesh.vertices;
+            if (vertices.Length == 0) { DestroyImmediate(mesh); return renderer.bounds; }
+            var bounds = new Bounds(skinned.transform.TransformPoint(vertices[0]), Vector3.zero);
+            foreach (var vertex in vertices) bounds.Encapsulate(skinned.transform.TransformPoint(vertex));
+            DestroyImmediate(mesh);
+            return bounds;
         }
 
         // Review silhouettes on the same selectable root, not three gameplay classes.

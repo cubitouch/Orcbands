@@ -261,7 +261,7 @@ character proxy.
 With the purchased pack, the existing `CharacterSceneFactory` uses
 `SM_Chr_Dungeon_GoblinMale_01` as the worker, and loads the real warrior and
 shaman for the character review camera presets. These are the *original vendor
-prefabs*, fitted to the established 1.525-unit worker height under an independent
+prefabs*, fitted to the established 2.0-unit worker height under an independent
 gameplay root. Their own color atlases are adapted to `Orcbands/CharacterMatte`
 for camp lighting and fog without altering the original private materials.
 Motion remains placeholder direct click-to-move; no animation clips are added.
@@ -295,3 +295,10 @@ shadows, materials, foot alignment, right-click movement and selection.
 - Tool: `SM_Prop_Axe_01.prefab` from the **same pack**, attached to the original `hand_r` bone with a grip-aware offset. The axe is excluded from the initial rest-pose height fit.
 - Gameplay root, independent capsule selection collider and navigation remain unchanged. The axe is presentation only; chopping animation and actual harvesting are not implemented yet.
 - Purchased art remains exclusively in the private asset repository, not in the public git tree.
+
+### Worker resting pose and axe grip
+
+See [ART-CHAR-04 pose, grip and animation handoff](../docs/worker-rest-pose.md).
+The owned editor profile applies the worker rest stance once and retains a
+hand-local socket for future clips. Licensed draft review uses a dedicated
+branch-scoped build; ordinary public PR builds still use the original proxy.

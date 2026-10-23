@@ -1,0 +1,83 @@
+name: Worker Axe and Rest Pose Licensed Review
+
+on:
+  push:
+    branches: [feat/art-char04-worker-grip]
+    paths: ["unity/**", "tools/capture-unity-characters.mjs", ".github/workflows/worker-art-review.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-art-review
+  cancel-in-progress: true
+
+jobs:
+  unity-build:
+    # Explicit same-repository integration review; never runs on pull_request.
+    if: github.repository == 'cubitouch/Orcbands' && github.ref == 'refs/heads/feat/art-char04-worker-grip'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out privately licensed Synty assets
+        uses: actions/checkout@v4
+        with:
+          repository: cubitouch/Orcbands-PrivateAssets
+          ref: main
+          token: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
+          path: .licensed-source
+          persist-credentials: false
+      - name: Restore licensed assets to ignored Unity path
+        run: |
+          test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Prefabs/Characters/SM_Chr_Dungeon_GoblinMale_01.prefab
+          test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Models/Characters.fbx
+          test ! -e unity/Assets/Synty
+          cp -a .licensed-source/Synty unity/Assets/Synty
+          rm -rf .licensed-source
+      - name: Export approved forest layout and 3D props
+        run: |
+          npm install --no-save --ignore-scripts three@0.166.1
+          node tools/generate-unity-environment.mjs
+      - name: Build Unity browser player
+        uses: game-ci/unity-builder@v4
+        env:
+          ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity
+          targetPlatform: WebGL
+          buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
+          versioning: None
+      - name: Store Unity browser build
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-unity-published-build
+          path: build/WebGL/Orcbands/
+          if-no-files-found: error
+      - name: Check static hosting asset format
+        shell: bash
+        run: |
+          test -f build/WebGL/Orcbands/index.html
+          if find build/WebGL/Orcbands/Build -name '*.gz' -o -name '*.br' | grep -q .; then
+            echo "::error::Unity WebGL payload requires compression headers unsupported by GitHub Pages."
+            exit 1
+          fi
+      - name: Validate real licensed character in WebGL
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tools/smoke-unity-webgl.mjs
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          ORCBANDS_WORKER_REVIEW=1 node tools/capture-unity-characters.mjs
+      - name: Upload licensed WebGL visual review captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-licensed-character-review
+          path: smoke-artifacts/unity-webgl/
+          if-no-files-found: ignore

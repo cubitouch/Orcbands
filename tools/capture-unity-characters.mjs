@@ -34,7 +34,8 @@ try {
   await waitFrames(2);
  };
  await page.locator('#unity-canvas').focus();
- const views=['overall','close','normal','out','normal-off','warm','cool','warrior','shaman','warrior-normal','shaman-normal'];
+ const focused=process.env.ORCBANDS_WORKER_REVIEW==='1';
+ const views=focused?['worker-front','worker-side','worker-three-quarter','normal','cool']:['worker-front','worker-side','worker-three-quarter','overall','close','normal','out','normal-off','warm','cool','warrior','shaman','warrior-normal','shaman-normal'];
  for(const view of views){
   await page.evaluate(v=>window.orcbandsReview(v),view);
   await page.waitForTimeout(650);
@@ -43,7 +44,7 @@ try {
  await page.evaluate(()=>window.orcbandsReview('normal'));
  await page.waitForTimeout(500);
  // 60 frames measures this software-rendered browser only, not native GPU performance.
- const elapsed=await page.evaluate(()=>new Promise(done=>{
+ const elapsed=focused?null:await page.evaluate(()=>new Promise(done=>{
   let n=0,start=performance.now(); function frame(){if(++n===60)done(performance.now()-start);else requestAnimationFrame(frame)}requestAnimationFrame(frame);
  }));
  const initial=await report();
@@ -62,7 +63,20 @@ try {
  const moved=await report();
  assert(Math.hypot(moved.feet.x-initial.feet.x,moved.feet.z-initial.feet.z)>1,'Right-click did not move worker');
  assert(moved.groundError<.025,'Worker root no longer follows terrain');
+ if(initial.licensedGrip){
+  assert(moved.licensedGrip,'Licensed hand socket disappeared after movement');
+  assert.deepEqual(moved.gripInHand,initial.gripInHand,'Grip moved relative to hand');
+  const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+  const cross=(a,b)=>a.x*b.z-a.z*b.x;
+  assert(dot(initial.facing,moved.facing)<.99,'Movement did not change worker facing');
+  const c=dot(initial.facing,moved.facing),s=cross(initial.facing,moved.facing);
+  const expected={x:c*initial.axeUp.x-s*initial.axeUp.z,y:initial.axeUp.y,z:s*initial.axeUp.x+c*initial.axeUp.z};
+  assert(Math.hypot(expected.x-moved.axeUp.x,expected.y-moved.axeUp.y,expected.z-moved.axeUp.z)<.01,'Axe did not follow worker facing');
+ }
  await page.locator('#unity-canvas').screenshot({path:resolve(output,'moved.png')});
+ await page.evaluate(()=>window.orcbandsReview('worker-moved'));
+ await waitFrames(3);
+ await page.locator('#unity-canvas').screenshot({path:resolve(output,'worker-moved.png')});
  await page.evaluate(()=>window.orcbandsReview('out'));
  await page.waitForTimeout(200);
  const out=await report();

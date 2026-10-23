@@ -90,17 +90,21 @@ namespace Orcbands.Editor
                 presentation.ReviewRoles[role] = model.transform;
                 model.SetActive(role == 0);
             }
+            var rest = AssetDatabase.LoadAssetAtPath<WorkerRestProfile>(
+                "Assets/Editor/WorkerRestProfile.asset");
+            if (rest == null) throw new InvalidOperationException("Missing owned worker rest profile");
+            rest.Apply(presentation.ReviewRoles[0]);
             presentation.Apply();
             presentation.FitRestPose(presentation.TargetHeight);
             // Add the tool after fitting, so the axe cannot distort character height/feet.
-            AttachWorkerAxe(presentation.ReviewRoles[0], shader, sharedMaterials);
+            AttachWorkerAxe(presentation.ReviewRoles[0], rest, shader, sharedMaterials);
             Debug.Log("Orcbands: using licensed Synty mini-orc with original gameplay root.");
             return root;
         }
 
 
         /// <summary>Attach the actual POLYGON MINI axe prefab to the goblin hand_r bone.</summary>
-        private static void AttachWorkerAxe(Transform worker, Shader shader,
+        private static void AttachWorkerAxe(Transform worker, WorkerRestProfile rest, Shader shader,
             Dictionary<Material, Material> sharedMaterials)
         {
             const string axePath =
@@ -109,48 +113,18 @@ namespace Orcbands.Editor
             if (axePrefab == null)
                 throw new InvalidOperationException("Purchased Synty axe prefab missing: " + axePath);
 
-            Transform hand = null;
-            foreach (Transform bone in worker.GetComponentsInChildren<Transform>(true))
-            {
-                if (bone.name == "hand_r")
-                {
-                    hand = bone;
-                    break;
-                }
-            }
-            if (hand == null)
-                throw new InvalidOperationException("Synty goblin has no hand_r attachment bone");
-
-            var axe = (GameObject)PrefabUtility.InstantiatePrefab(axePrefab, hand);
+            Transform grip = rest.CreateGrip(worker);
+            var axe = (GameObject)PrefabUtility.InstantiatePrefab(axePrefab, grip);
             axe.name = "Worker hand axe (Synty)";
-            var meshFilter = axe.GetComponentInChildren<MeshFilter>(true);
-            if (meshFilter == null || meshFilter.sharedMesh == null)
-                throw new InvalidOperationException("The licensed axe has no usable mesh");
-
-            // Normalize the purchased model to a short, readable 0.85m hand axe.
-            // Choose its longest principal mesh axis, independent of Synty's import
-            // scale, then position the lower shaft within the grip.
-            Bounds b = meshFilter.sharedMesh.bounds;
-            Vector3 axis = Vector3.up;
-            float length = b.size.y;
-            if (b.size.x > length) { axis = Vector3.right; length = b.size.x; }
-            if (b.size.z > length) { axis = Vector3.forward; length = b.size.z; }
-            if (length < .001f)
-                throw new InvalidOperationException("Synty axe mesh bounds are empty");
-            var originalLocalScale = axe.transform.localScale;
-            var parentScale = hand.lossyScale;
-            float inheritedScale = Mathf.Max(.001f,
-                Mathf.Max(Mathf.Abs(parentScale.x),
-                          Mathf.Max(Mathf.Abs(parentScale.y), Mathf.Abs(parentScale.z))));
-            float scale = .85f / (length * inheritedScale);
-            axe.transform.localScale = originalLocalScale * scale;
-            // Keep the haft roughly vertical in the idle/T-pose until we
-            // introduce the character's real rigged idle and working motions.
-            axe.transform.localRotation = Quaternion.FromToRotation(
-                axis, hand.InverseTransformDirection(Vector3.up));
-            Vector3 grip = b.center - axis * (length * .28f);
-            axe.transform.localPosition = new Vector3(.01f, .0f, .01f)
-                - axe.transform.localRotation * Vector3.Scale(grip, axe.transform.localScale);
+            // Fixed calibration from the actual Prop_Axe_01 shaft. Socket pose
+            // and grip point are editable, independent of bounds and world facing.
+            if (rest.AxeAuthoredLength <= 0f || rest.AxeWorldLength <= 0f)
+                throw new InvalidOperationException("Invalid axe length calibration");
+            float inheritedScale = Mathf.Abs(grip.lossyScale.x);
+            float scale = rest.AxeWorldLength / (rest.AxeAuthoredLength * inheritedScale);
+            axe.transform.localScale = Vector3.one * scale;
+            axe.transform.localRotation = Quaternion.identity;
+            axe.transform.localPosition = -rest.AxeGripPoint * scale;
 
             foreach (var collider in axe.GetComponentsInChildren<Collider>(true))
                 UnityEngine.Object.DestroyImmediate(collider);
