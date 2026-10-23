@@ -56,8 +56,10 @@ namespace Orcbands
         public void TuneWorker(string json)
         {
             var tuning = JsonUtility.FromJson<WorkerTuning>(json);
-            if (tuning == null) return;
-            foreach (Transform child in Character.GetComponentsInChildren<Transform>(true))
+            if (tuning == null || Character.ReviewRoles == null || Character.ReviewRoles.Length == 0) return;
+            Transform worker = Character.ReviewRoles[0];
+            if (worker == null) return;
+            foreach (Transform child in worker.GetComponentsInChildren<Transform>(true))
             {
                 if (child.name == "Worker axe grip")
                 {
