@@ -401,8 +401,8 @@ namespace Orcbands.Editor
             motion.Warmth = light;
             motion.BaseIntensity = intensity;
             motion.LightColor = warmthColor;
-            return light;
             motion.Phase = phase;
+            return light;
         }
 
         /// <summary>GameCI custom build method, invoked separately for each target.</summary>
