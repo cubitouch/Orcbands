@@ -7,6 +7,13 @@ animation curves, avatars or controllers are committed to the public repository.
 Generated Unity assets remain in the ignored Generated directory. Source files
 and their vendor content are never uploaded as public workflow artifacts.
 
+The replacement upload is stored at the existing `Walking.fbx` path with its
+original GUID retained. Its Git blob is `a7231786bc6cc578b85a06f7013bf93e9c0eb359`
+and SHA-256 is `f4f1e827ce7dbc825417e432cb394cceb601adc35227ec42358fe94e4a107437`.
+The replacement has different FBX metadata, but all 1,575 parsed animation-key
+arrays (times, values and tangent attributes) match the previous upload. It is
+the requested new file; it does not provide a visibly different gait.
+
 ## Controls
 
 - Left-click the worker to select him.

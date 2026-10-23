@@ -158,7 +158,7 @@ namespace Orcbands.Editor
             }
             ringObject.SetActive(false);
 
-            var targetRing = Object.Instantiate(ringObject);
+            var targetRing = UnityEngine.Object.Instantiate(ringObject);
             targetRing.name = "Commanded tree marker";
             var targetLine = targetRing.GetComponent<LineRenderer>();
             targetLine.startColor = targetLine.endColor = new Color(1f, .64f, .16f, .95f);
