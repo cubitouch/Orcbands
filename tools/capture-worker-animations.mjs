@@ -45,6 +45,9 @@ try{
   for(let i=0;i<5;i++){
    await frames(i%2===0?2:3);
    const r=await report();samples.push(r);
+   assert.equal(r.animationRate,mode==='Chopping'?1.5:1,'Unexpected animation playback rate');
+   assert.equal(r.activeSkinCount,1,'Worker must have one visible skin');
+   assert(r.workerReceivesShadows,'Character must still receive scene shadows');
    assert(!r.rootMotion,'Root motion must stay disabled');
    assert(r.gripParentCorrect,'Weapon socket is not under hand_r');
    assert.deepEqual(r.gripInHand,samples[0].gripInHand,'Weapon grip moved in hand space');
@@ -52,6 +55,12 @@ try{
    await screenshot(mode.toLowerCase()+'-'+i);
   }
   assert(samples.some(r=>distance(r.rightHand,samples[0].rightHand)>.001||distance(r.leftFoot,samples[0].leftFoot)>.001),mode+' did not animate the actual skeleton');
+  if(mode==='Chopping'){
+   const first=samples[0],last=samples.at(-1);
+   const rate=(last.animationTime-first.animationTime)*last.choppingClipLength/(last.gameTime-first.gameTime);
+   assert(Math.abs(rate-1.5)<.12,'Chopping time did not advance at the authored rate: '+rate);
+   result.choppingMeasuredRate=rate;
+  }
   result.previews[mode]=samples;
  }
  await page.evaluate(()=>window.orcbandsAnimationPreview('Gameplay'));

@@ -85,6 +85,35 @@ commands. The ordinary controller never enters these review overrides on its own
 The static rest profile remains the fallback when licensed model assets are
 available locally without the optional animation pack.
 
+## Chopping cadence and fire-lit character stability
+
+Chopping plays at an authored state speed of **1.5**: the 2.267-second source
+cycle takes about **1.51 seconds** in game. Idle/walking remain at 1.0, and root
+movement speed stays independent of clip playback. No source FBX is modified.
+
+The character matte shader combines the sun/ambient and the five authored
+unshadowed firelights in one colour pass (`noforwardadd novertexlights`). This
+avoids repeatedly drawing the animated skin against the base depth for each
+point light. It targets the fire-facing stipple/flicker reported in WebGL while
+retaining the atlas, hard normals, directional shadow receiving/casting and
+existing fog/grade. The separate forest materials and real scene lights retain
+their existing rendering. The earlier diagnostic shadow-bias change is not part
+of the final approach.
+
+`CampCharacterLighting` binds the existing five Light components' positions,
+ranges, colours and intensities once on startup. The character shader evaluates
+a smooth bounded diffuse falloff from those values; this approximates Unity's
+point-light attenuation rather than changing the purchased art. Call `Refresh`
+when a future feature changes those stationary sources. There is no per-frame
+bounds fitting, grip adjustment, or animation-owned root travel.
+
+For an identical-pose diagnostic, `window.orcbandsShadowReview({...})` can freeze
+a chopping pose, adjust sun bias, disable sun shadows, or disable the firelights.
+Use `normalBias`, `bias`, `pose` (normalised clip time), `freeze`, `disableShadows`
+and `disableFirelights`. These are explicit review operations, not gameplay
+updates; restore both light switches and use the Gameplay animation preview when
+finished. Only opt-in PR visual review records videos.
+
 ## Tree command update — 23 October 2026
 
 Tested implementation: `c13b2e1c95134e352c4fc33e95e0ab3be8a7b420`.

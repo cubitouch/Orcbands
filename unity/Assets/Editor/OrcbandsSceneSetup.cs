@@ -132,15 +132,16 @@ namespace Orcbands.Editor
             // This intentionally avoids the stationary-camera tile regression.
             // The real art above is exported from buildCampfire/buildTorches in
             // Three.js; only the lightweight animated point lights are Unity-native.
-            AddFlicker("Hearth firelight",
+            var characterFirelights = new List<Light>();
+            characterFirelights.Add(AddFlicker("Hearth firelight",
                 Surface(ground, layout.campfire.x, layout.campfire.z) + Vector3.up * .76f,
-                7.2f, 6.7f, .8f, new Color(1f, .48f, .22f));
+                7.2f, 6.7f, .8f, new Color(1f, .48f, .22f)));
             for (int i = 0; i < layout.torches.Length; i++)
             {
                 P loc = layout.torches[i];
-                AddFlicker("Torch firelight " + (i + 1),
+                characterFirelights.Add(AddFlicker("Torch firelight " + (i + 1),
                     Surface(ground, loc.x, loc.z) + Vector3.up * 2f,
-                    4.5f, 2.45f, i * 2.3f, new Color(1f, .66f, .36f));
+                    4.5f, 2.45f, i * 2.3f, new Color(1f, .66f, .36f)));
             }
 
             GameObject worker = CharacterSceneFactory.Create(Surface(ground, 1.7f, 2.8f));
@@ -207,6 +208,7 @@ namespace Orcbands.Editor
             RenderSettings.sun = sun;
 
             var controllerObject = new GameObject("Orcbands Controller");
+            controllerObject.AddComponent<CampCharacterLighting>().Firelights = characterFirelights.ToArray();
             // Keep all five original fire positions synchronized across the
             // bending flame shader and bounded smoke/ember particle pools.
             Shader particleShader = Shader.Find("Orcbands/FireParticles");
@@ -384,7 +386,7 @@ namespace Orcbands.Editor
             }
         }
 
-        private static void AddFlicker(string name, Vector3 position,
+        private static Light AddFlicker(string name, Vector3 position,
             float radius, float intensity, float phase, Color warmthColor)
         {
             var flame = new GameObject(name);
@@ -400,6 +402,7 @@ namespace Orcbands.Editor
             motion.BaseIntensity = intensity;
             motion.LightColor = warmthColor;
             motion.Phase = phase;
+            return light;
         }
 
         /// <summary>GameCI custom build method, invoked separately for each target.</summary>
