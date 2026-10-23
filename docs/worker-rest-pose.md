@@ -3,7 +3,7 @@
 ## Owned configuration
 
 `unity/Assets/Editor/WorkerRestProfile.asset` is the editable profile for the licensed
-male goblin worker. It contains absolute bone-local Euler rotations for arms, wrists and right-hand grip, the
+male goblin worker. It contains absolute bone-local Euler rotations for arms, wrists and right-hand fingers, the
 `hand_r` socket position/rotation, a shaft grip point in imported axe coordinates,
 and the calibrated axe length. All values are applied once during scene generation.
 The vendor prefab, FBX, texture atlas and import settings are unchanged.
@@ -55,3 +55,45 @@ and finger silhouette; inspect the camp view for shadows and lighting integratio
 inspect selected/moved views for RTS readability and terrain contact. An open,
 low-poly hand may require a controlled shaft intersection or authored finger pose.
 Human visual approval is required before merging.
+
+### Interactive calibration in the actual Unity player
+
+For art iteration only, `window.orcbandsTuneWorker({gripPosition, gripEuler,
+bones: [{name, euler}]})` changes the worker socket and named local bone rotations
+on explicit request. `gripPosition`, `gripEuler` and each `euler` are `{x,y,z}`
+objects. This command runs once; it does not fit bounds or change vendor assets.
+It is separate from normal gameplay and cannot write the owned source profile.
+Copy accepted calibration values into `WorkerRestProfile.asset`, regenerate and
+validate the untouched default player before accepting screenshots as evidence.
+
+## Inspected result — 23 October 2026
+
+Tested implementation: `20b0038133902a1becc4557f5c3b7be959ee4b93`.
+[Licensed Unity build and regression capture](https://github.com/cubitouch/Orcbands/actions/runs/39935247764) passed.
+The first three screenshots below are higher-resolution captures from the untouched
+compiled player; no interactive tuning was applied. Selected/moved views and
+`capture.json` are the matching CI captures. All images use actual Unity WebGL.
+
+| Required view | Evidence |
+| --- | --- |
+| Front | [Worker and grip](reviews/worker-rest-pose/worker-front.png) |
+| Profile | [Handle and blade clearance](reviews/worker-rest-pose/worker-side.png) |
+| Campfire three-quarter | [Resting stance](reviews/worker-rest-pose/worker-three-quarter.png) |
+| RTS selected | [Normal camera and selection ring](reviews/worker-rest-pose/selected.png) |
+| Moved and turned | [Close view after real pointer movement](reviews/worker-rest-pose/worker-moved.png) |
+
+The movement capture records 2.035 units travelled, a changed facing, zero root
+ground error, unchanged hand-local grip position, correct weapon rotation with
+facing, and no browser errors. Selection, right-click movement, zoomed-out
+selection, camera orbit/pan/zoom/reset and the existing smoke checks pass. The
+smoke checks exercise fire motion, fog toggling and stable distant forest lighting.
+Visual inspection found the handle against/through the gripping area, a blade
+clear of the arm and legs, planted feet, camp-lit shadows and visible smoke/sparks
+without rectangular lighting artifacts. The 2.0-unit height and 2.10-unit selection
+capsule are retained; no commercial source files are added to the public tree.
+
+Limitations: the vendor hand remains a coarse, mitten-like low-poly shape; the
+shaft uses a small controlled overlap rather than an anatomical finger wrap. The
+pose is static while moving; no walking/breathing clips are included. Desktop
+player execution was not tested in this task; the compiled WebGL player uses the
+same shared presentation code. Human visual approval remains pending.
