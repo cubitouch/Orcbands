@@ -1,0 +1,368 @@
+{
+  "source": "Unity WebGL",
+  "canopyOffsetPixels": 8,
+  "initial": {
+    "feet": {
+      "x": 1.7000000476837158,
+      "y": 0.06877462565898895,
+      "z": 2.799999952316284
+    },
+    "unitScreen": {
+      "x": 0.4348464012145996,
+      "y": 0.4850299656391144,
+      "z": 37.97820281982422
+    },
+    "destinationScreen": {
+      "x": 0.4034327566623688,
+      "y": 0.4766048789024353,
+      "z": 39.07675552368164
+    },
+    "camera": {
+      "x": -20,
+      "y": 22,
+      "z": 26
+    },
+    "facing": {
+      "x": -0.5735763907432556,
+      "y": 0,
+      "z": 0.8191520571708679
+    },
+    "gripInHand": {
+      "x": 0,
+      "y": 0.054999999701976776,
+      "z": 0.12999999523162842
+    },
+    "axeUp": {
+      "x": -0.9202908277511597,
+      "y": 0.2629343271255493,
+      "z": 0.2897096872329712
+    },
+    "gripEuler": {
+      "x": 0,
+      "y": 0,
+      "z": 270
+    },
+    "leftFoot": {
+      "x": 1.6684515476226807,
+      "y": 0.1710636019706726,
+      "z": 2.7654521465301514
+    },
+    "rightFoot": {
+      "x": 1.7562049627304077,
+      "y": 0.18242229521274567,
+      "z": 2.803853750228882
+    },
+    "rightHand": {
+      "x": 1.9462778568267822,
+      "y": 0.5902807712554932,
+      "z": 2.9503917694091797
+    },
+    "chopScreen": {
+      "x": 0.35330522060394287,
+      "y": 0.6271840333938599,
+      "z": 42.89591979980469
+    },
+    "returnScreen": {
+      "x": 0.43558961153030396,
+      "y": 0.45990192890167236,
+      "z": 38.41642761230469
+    },
+    "targetFeet": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "targetDistance": 0,
+    "targetStandOff": 0,
+    "walkingClipLength": 1.033333420753479,
+    "treeMarkerVisible": false,
+    "moving": false,
+    "chopScreenTarget": "Pine 017",
+    "animation": "Idle",
+    "animatorState": "Idle",
+    "chopTarget": "",
+    "animationTime": 0.06949899345636368,
+    "animated": true,
+    "rootMotion": false,
+    "gripParentCorrect": true,
+    "licensedGrip": true,
+    "selected": false,
+    "frame": 13,
+    "rayTarget": "Worker",
+    "lastSelectionHit": "no click",
+    "groundError": 0
+  },
+  "approach": {
+    "feet": {
+      "x": 5.7049031257629395,
+      "y": 0.052860382944345474,
+      "z": 1.9314666986465454
+    },
+    "unitScreen": {
+      "x": 0.3935844898223877,
+      "y": 0.5459372997283936,
+      "z": 40.56517791748047
+    },
+    "destinationScreen": {
+      "x": 0.3652290999889374,
+      "y": 0.5360990762710571,
+      "z": 41.669837951660156
+    },
+    "camera": {
+      "x": -20,
+      "y": 22,
+      "z": 26
+    },
+    "facing": {
+      "x": 0.9772826433181763,
+      "y": 0,
+      "z": -0.21194076538085938
+    },
+    "gripInHand": {
+      "x": 0,
+      "y": 0.054999999701976776,
+      "z": 0.12999999523162842
+    },
+    "axeUp": {
+      "x": 0.8570621013641357,
+      "y": 0.01645117998123169,
+      "z": 0.5149518251419067
+    },
+    "gripEuler": {
+      "x": 0,
+      "y": 0,
+      "z": 270
+    },
+    "leftFoot": {
+      "x": 5.494961261749268,
+      "y": 0.17334499955177307,
+      "z": 2.0176854133605957
+    },
+    "rightFoot": {
+      "x": 5.9257049560546875,
+      "y": 0.1817733496427536,
+      "z": 1.816359281539917
+    },
+    "rightHand": {
+      "x": 5.465117454528809,
+      "y": 0.5732913613319397,
+      "z": 1.6569387912750244
+    },
+    "chopScreen": {
+      "x": 0.35330522060394287,
+      "y": 0.6271840333938599,
+      "z": 42.89591979980469
+    },
+    "returnScreen": {
+      "x": 0.43558961153030396,
+      "y": 0.45990192890167236,
+      "z": 38.41642761230469
+    },
+    "targetFeet": {
+      "x": 10,
+      "y": 0.03342188149690628,
+      "z": 1
+    },
+    "targetDistance": 4.394938945770264,
+    "targetStandOff": 1.25,
+    "walkingClipLength": 1.033333420753479,
+    "treeMarkerVisible": true,
+    "moving": true,
+    "chopScreenTarget": "Pine 017",
+    "animation": "Walking",
+    "animatorState": "Walking",
+    "chopTarget": "Pine 017",
+    "animationTime": 1.6603224277496338,
+    "animated": true,
+    "rootMotion": false,
+    "gripParentCorrect": true,
+    "licensedGrip": true,
+    "selected": true,
+    "frame": 30,
+    "rayTarget": "Worker",
+    "lastSelectionHit": "Worker",
+    "groundError": 0
+  },
+  "retargeted": {
+    "feet": {
+      "x": 8.456711769104004,
+      "y": -0.015912264585494995,
+      "z": 5.2880859375
+    },
+    "unitScreen": {
+      "x": 0.31902700662612915,
+      "y": 0.5236001014709473,
+      "z": 39.71663284301758
+    },
+    "destinationScreen": {
+      "x": 0.2921842336654663,
+      "y": 0.5132546424865723,
+      "z": 40.837890625
+    },
+    "camera": {
+      "x": -20,
+      "y": 22,
+      "z": 26
+    },
+    "facing": {
+      "x": -0.07970338314771652,
+      "y": 0,
+      "z": 0.9968186020851135
+    },
+    "gripInHand": {
+      "x": 0,
+      "y": 0.054999999701976776,
+      "z": 0.12999999523162842
+    },
+    "axeUp": {
+      "x": -0.8485758304595947,
+      "y": 0.012725830078125,
+      "z": 0.5289231538772583
+    },
+    "gripEuler": {
+      "x": 0,
+      "y": 0,
+      "z": 270
+    },
+    "leftFoot": {
+      "x": 8.424598693847656,
+      "y": 0.20342791080474854,
+      "z": 5.073209285736084
+    },
+    "rightFoot": {
+      "x": 8.492557525634766,
+      "y": 0.08456782251596451,
+      "z": 5.354046821594238
+    },
+    "rightHand": {
+      "x": 8.772562026977539,
+      "y": 0.49829021096229553,
+      "z": 5.202356338500977
+    },
+    "chopScreen": {
+      "x": 0.27241992950439453,
+      "y": 0.5716843605041504,
+      "z": 38.353336334228516
+    },
+    "returnScreen": {
+      "x": 0.43558961153030396,
+      "y": 0.45990192890167236,
+      "z": 38.41642761230469
+    },
+    "targetFeet": {
+      "x": 8,
+      "y": -0.08410003781318665,
+      "z": 11
+    },
+    "targetDistance": 5.7301435470581055,
+    "targetStandOff": 1.25,
+    "walkingClipLength": 1.033333420753479,
+    "treeMarkerVisible": true,
+    "moving": true,
+    "chopScreenTarget": "Pine 027",
+    "animation": "Walking",
+    "animatorState": "Walking",
+    "chopTarget": "Pine 030",
+    "animationTime": 1.935483694076538,
+    "animated": true,
+    "rootMotion": false,
+    "gripParentCorrect": true,
+    "licensedGrip": true,
+    "selected": true,
+    "frame": 53,
+    "rayTarget": "Worker",
+    "lastSelectionHit": "Worker",
+    "groundError": 0
+  },
+  "cancelled": {
+    "feet": {
+      "x": 5.586539268493652,
+      "y": 0.026546891778707504,
+      "z": 7.051126480102539
+    },
+    "unitScreen": {
+      "x": 0.3292733430862427,
+      "y": 0.45962873101234436,
+      "z": 37.078834533691406
+    },
+    "destinationScreen": {
+      "x": 0.3003418445587158,
+      "y": 0.44973501563072205,
+      "z": 38.21263122558594
+    },
+    "camera": {
+      "x": -20,
+      "y": 22,
+      "z": 26
+    },
+    "facing": {
+      "x": -0.6809310913085938,
+      "y": 0,
+      "z": -0.7323477268218994
+    },
+    "gripInHand": {
+      "x": 0,
+      "y": 0.054999999701976776,
+      "z": 0.12999999523162842
+    },
+    "axeUp": {
+      "x": 0.3914932310581207,
+      "y": 0.32301634550094604,
+      "z": -0.8616230487823486
+    },
+    "gripEuler": {
+      "x": 0,
+      "y": 0,
+      "z": 270
+    },
+    "leftFoot": {
+      "x": 5.6051812171936035,
+      "y": 0.13058394193649292,
+      "z": 7.0116658210754395
+    },
+    "rightFoot": {
+      "x": 5.669163703918457,
+      "y": 0.21164019405841827,
+      "z": 7.2191596031188965
+    },
+    "rightHand": {
+      "x": 5.289432048797607,
+      "y": 0.6043083071708679,
+      "z": 7.1929192543029785
+    },
+    "chopScreen": {
+      "x": 0.27241992950439453,
+      "y": 0.5716843605041504,
+      "z": 38.353336334228516
+    },
+    "returnScreen": {
+      "x": 0.43558961153030396,
+      "y": 0.45990192890167236,
+      "z": 38.41642761230469
+    },
+    "targetFeet": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "targetDistance": 0,
+    "targetStandOff": 0,
+    "walkingClipLength": 1.033333420753479,
+    "treeMarkerVisible": false,
+    "moving": true,
+    "chopScreenTarget": "Pine 027",
+    "animation": "Walking",
+    "animatorState": "Walking",
+    "chopTarget": "",
+    "animationTime": 1.4632256031036377,
+    "animated": true,
+    "rootMotion": false,
+    "gripParentCorrect": true,
+    "licensedGrip": true,
+    "selected": true,
+    "frame": 75,
+    "rayTarget": "Ground",
+    "lastSelectionHit": "Worker",
+    "groundError": 0
+  }
+}

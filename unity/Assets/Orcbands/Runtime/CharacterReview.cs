@@ -15,7 +15,10 @@ namespace Orcbands
         [System.Serializable] private class ReportData
         {
             public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp, gripEuler;
-            public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen;
+            public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen, targetFeet;
+            public float targetDistance, targetStandOff, walkingClipLength;
+            public bool treeMarkerVisible, moving;
+            public string chopScreenTarget;
             public string animation, animatorState, chopTarget;
             public float animationTime;
             public bool animated, rootMotion, gripParentCorrect;
@@ -43,12 +46,25 @@ namespace Orcbands
             float nearestDistance = float.MaxValue;
             foreach (var tree in FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None))
             {
-                Vector3 screen = View.WorldToViewportPoint(tree.transform.position + Vector3.up * 1.2f);
+                Vector3 screen = View.WorldToViewportPoint(tree.transform.TransformPoint(new Vector3(0f, 2.5f, 0f)));
                 float distance = Vector3.Distance(tree.transform.position, feet);
-                if (screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
+                Physics.Raycast(View.ViewportPointToRay(screen), out RaycastHit treePick, 300f);
+                if (treePick.collider != null && treePick.collider.GetComponentInParent<WoodcuttingTarget>() == tree && screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
                 { nearest = tree; nearestDistance = distance; }
             }
+            var commandedTree = controller.ChoppingTarget;
+            float walkingLength = 0f;
+            if (body != null)
+                foreach (var clip in body.runtimeAnimatorController.animationClips)
+                    if (clip.name == "Walking") walkingLength = clip.length;
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                moving = controller.IsMoving,
+                treeMarkerVisible = controller.TreeTargetRing != null && controller.TreeTargetRing.gameObject.activeSelf,
+                targetFeet = commandedTree == null ? Vector3.zero : commandedTree.transform.position,
+                targetDistance = commandedTree == null ? 0f : Vector3.ProjectOnPlane(feet - commandedTree.transform.position, Vector3.up).magnitude,
+                targetStandOff = commandedTree == null ? 0f : commandedTree.StandOff,
+                walkingClipLength = walkingLength,
+                chopScreenTarget = nearest == null ? "" : nearest.name,
                 animated = body != null && body.isHuman,
                 rootMotion = body != null && body.applyRootMotion,
                 animation = driver == null ? "Static" : driver.Current.ToString(),
@@ -59,7 +75,7 @@ namespace Orcbands
                 rightFoot = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.RightFoot).position,
                 rightHand = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.RightHand).position,
                 returnScreen = View.WorldToViewportPoint(originalFeet),
-                chopScreen = nearest == null ? Vector3.zero : View.WorldToViewportPoint(nearest.transform.position + Vector3.up * 1.2f),
+                chopScreen = nearest == null ? Vector3.zero : View.WorldToViewportPoint(nearest.transform.TransformPoint(new Vector3(0f, 2.5f, 0f))),
                 chopTarget = controller.ChoppingTarget == null ? "" : controller.ChoppingTarget.name,
                 gripEuler = grip == null ? Vector3.zero : grip.localEulerAngles,
                 gripParentCorrect = grip != null && grip.parent.name == "hand_r",

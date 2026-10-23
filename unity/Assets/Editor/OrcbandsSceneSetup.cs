@@ -116,9 +116,10 @@ namespace Orcbands.Editor
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
                 ApplyWorldMaterials(tree, worldShader);
                 tree.AddComponent<WoodcuttingTarget>();
-                var trunk = tree.AddComponent<CapsuleCollider>();
-                trunk.direction = 1; trunk.height = 3.6f; trunk.radius = .32f;
-                trunk.center = new Vector3(0f, 1.8f, 0f);
+                // Pick the visible silhouette, including branches, rather than
+                // requiring a precise click on a partly hidden narrow trunk.
+                foreach (var mesh in tree.GetComponentsInChildren<MeshFilter>())
+                    mesh.gameObject.AddComponent<MeshCollider>().sharedMesh = mesh.sharedMesh;
                 foreach (var renderer in tree.GetComponentsInChildren<MeshRenderer>())
                 {
                     renderer.shadowCastingMode = distance < 30f ? ShadowCastingMode.On : ShadowCastingMode.Off;
@@ -156,6 +157,14 @@ namespace Orcbands.Editor
                 ring.SetPosition(i, new Vector3(Mathf.Cos(angle) * .58f, 0f, Mathf.Sin(angle) * .58f));
             }
             ringObject.SetActive(false);
+
+            var targetRing = UnityEngine.Object.Instantiate(ringObject);
+            targetRing.name = "Commanded tree marker";
+            var targetLine = targetRing.GetComponent<LineRenderer>();
+            targetLine.startColor = targetLine.endColor = new Color(1f, .64f, .16f, .95f);
+            targetLine.widthMultiplier = .055f;
+            for (int i = 0; i < targetLine.positionCount; i++)
+                targetLine.SetPosition(i, targetLine.GetPosition(i) * 1.45f);
 
             GameObject cameraObject = new GameObject("Perspective RTS Camera");
             cameraObject.tag = "MainCamera";
@@ -230,6 +239,7 @@ namespace Orcbands.Editor
             var controller = controllerObject.AddComponent<OrcbandsController>();
             controller.Worker = worker.transform;
             controller.SelectionRing = ringObject.transform;
+            controller.TreeTargetRing = targetRing.transform;
             controller.GameCamera = camera;
             controller.Ground = ground.GetComponent<Collider>();
             controller.Reveal = reveal;
