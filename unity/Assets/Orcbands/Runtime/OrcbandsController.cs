@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Orcbands
 {
-    /// <summary>RTS selection and camera review, not yet harvesting/pathfinding.</summary>
+    /// <summary>RTS selection, direct movement and tree-chopping animation commands.</summary>
     public sealed class OrcbandsController : MonoBehaviour
     {
         public Transform Worker;
@@ -17,7 +17,19 @@ namespace Orcbands
         private bool hasDestination;
         private Vector3 destination;
         private Vector3 focus = new Vector3(0f, 0f, -1f);
-        private const float MoveSpeed = 4.5f;
+        // Match a walking gait; the original unanimated proxy slid at 4.5 units/s.
+        private const float MoveSpeed = 2.0f;
+        private WoodcuttingTarget chopTarget;
+        private WorkerAnimation animationDriver;
+        public WoodcuttingTarget ChoppingTarget => chopTarget;
+        public bool IsMoving => hasDestination;
+        private void Start() { animationDriver = Worker.GetComponent<WorkerAnimation>(); }
+        public void CancelWorkerCommand()
+        {
+            hasDestination = false;
+            chopTarget = null;
+            if (animationDriver != null) animationDriver.Request(WorkerAnimation.Mode.Idle);
+        }
 
         private void Update()
         {
@@ -38,9 +50,20 @@ namespace Orcbands
             if (selected && Input.GetMouseButtonDown(1))
             {
                 Ray ray = GameCamera.ScreenPointToRay(Input.mousePosition);
-                if (Ground.Raycast(ray, out RaycastHit hit, 300f))
+                if (animationDriver != null) animationDriver.Preview("Gameplay");
+                if (Physics.Raycast(ray, out RaycastHit targetHit, 300f) &&
+                    targetHit.collider.GetComponentInParent<WoodcuttingTarget>() is WoodcuttingTarget tree)
                 {
-                    destination = new Vector3(hit.point.x, hit.point.y, hit.point.z);
+                    chopTarget = tree;
+                    destination = tree.ApproachPoint(Worker.position);
+                    if (Ground.Raycast(new Ray(destination + Vector3.up * 45f, Vector3.down),
+                        out RaycastHit surface, 100f)) destination.y = surface.point.y;
+                    hasDestination = true;
+                }
+                else if (Ground.Raycast(ray, out RaycastHit hit, 300f))
+                {
+                    chopTarget = null;
+                    destination = hit.point;
                     hasDestination = true;
                 }
             }
@@ -61,6 +84,14 @@ namespace Orcbands
                     Worker.rotation = Quaternion.LookRotation(flat.normalized, Vector3.up);
                 }
             }
+
+            if (!hasDestination && chopTarget != null)
+            {
+                Vector3 facing = Vector3.ProjectOnPlane(chopTarget.transform.position - Worker.position, Vector3.up);
+                if (facing.sqrMagnitude > .01f) Worker.rotation = Quaternion.LookRotation(facing, Vector3.up);
+            }
+            if (animationDriver != null) animationDriver.Request(hasDestination ? WorkerAnimation.Mode.Walking
+                : chopTarget != null ? WorkerAnimation.Mode.Chopping : WorkerAnimation.Mode.Idle);
 
             if (SelectionRing != null)
             {

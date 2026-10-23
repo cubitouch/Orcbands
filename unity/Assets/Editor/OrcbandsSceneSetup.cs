@@ -115,6 +115,10 @@ namespace Orcbands.Editor
                 tree.transform.localScale = new Vector3(pos.scale * pos.width, pos.scale * pos.height, pos.scale * pos.width);
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
                 ApplyWorldMaterials(tree, worldShader);
+                tree.AddComponent<WoodcuttingTarget>();
+                var trunk = tree.AddComponent<CapsuleCollider>();
+                trunk.direction = 1; trunk.height = 3.6f; trunk.radius = .32f;
+                trunk.center = new Vector3(0f, 1.8f, 0f);
                 foreach (var renderer in tree.GetComponentsInChildren<MeshRenderer>())
                 {
                     renderer.shadowCastingMode = distance < 30f ? ShadowCastingMode.On : ShadowCastingMode.Off;

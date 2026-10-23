@@ -46,6 +46,8 @@ jobs:
           test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Models/Characters.fbx
           test ! -e unity/Assets/Synty
           cp -a .licensed-source/Synty unity/Assets/Synty
+          test -f .licensed-source/Mixamo/Worker/Idle.fbx
+          cp -a .licensed-source/Mixamo unity/Assets/Mixamo
           rm -rf .licensed-source
       - name: Export approved forest layout and 3D props
         run: |
@@ -80,6 +82,7 @@ jobs:
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
           node tools/capture-unity-characters.mjs
+          node tools/capture-worker-animations.mjs
       - name: Upload licensed WebGL visual review captures
         if: always()
         uses: actions/upload-artifact@v4

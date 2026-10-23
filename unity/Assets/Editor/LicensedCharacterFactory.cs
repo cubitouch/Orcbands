@@ -90,6 +90,12 @@ namespace Orcbands.Editor
                 presentation.ReviewRoles[role] = model.transform;
                 model.SetActive(role == 0);
             }
+            bool animated = WorkerAnimationFactory.HasSources();
+            if (!animated && Environment.GetEnvironmentVariable("ORCBANDS_REQUIRE_PRIVATE_ASSETS") == "1")
+                throw new InvalidOperationException("Restore the private Mixamo worker animations before building");
+            Avatar bodyAvatar = animated ? WorkerAnimationFactory.CreateAvatar(
+                AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + Roles[0]),
+                presentation.ReviewRoles[0].name) : null;
             var rest = AssetDatabase.LoadAssetAtPath<WorkerRestProfile>(
                 "Assets/Editor/WorkerRestProfile.asset");
             if (rest == null) throw new InvalidOperationException("Missing owned worker rest profile");
@@ -98,6 +104,7 @@ namespace Orcbands.Editor
             presentation.FitRestPose(presentation.TargetHeight);
             // Add the tool after fitting, so the axe cannot distort character height/feet.
             AttachWorkerAxe(presentation.ReviewRoles[0], rest, shader, sharedMaterials);
+            if (animated) WorkerAnimationFactory.Configure(root, presentation.ReviewRoles[0], bodyAvatar);
             Debug.Log("Orcbands: using licensed Synty mini-orc with original gameplay root.");
             return root;
         }

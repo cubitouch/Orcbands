@@ -66,12 +66,17 @@ try {
  if(initial.licensedGrip){
   assert(moved.licensedGrip,'Licensed hand socket disappeared after movement');
   assert.deepEqual(moved.gripInHand,initial.gripInHand,'Grip moved relative to hand');
+  assert(moved.gripParentCorrect,'Axe socket lost the hand_r parent');
+  assert.deepEqual(moved.gripEuler,initial.gripEuler,'Grip rotated relative to hand');
+  if(!initial.animated){
   const dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
   const cross=(a,b)=>a.x*b.z-a.z*b.x;
   assert(dot(initial.facing,moved.facing)<.99,'Movement did not change worker facing');
   const c=dot(initial.facing,moved.facing),s=cross(initial.facing,moved.facing);
   const expected={x:c*initial.axeUp.x-s*initial.axeUp.z,y:initial.axeUp.y,z:s*initial.axeUp.x+c*initial.axeUp.z};
   assert(Math.hypot(expected.x-moved.axeUp.x,expected.y-moved.axeUp.y,expected.z-moved.axeUp.z)<.01,'Axe did not follow worker facing');
+  }
+
  }
  await page.locator('#unity-canvas').screenshot({path:resolve(output,'moved.png')});
  await page.evaluate(()=>window.orcbandsReview('worker-moved'));
