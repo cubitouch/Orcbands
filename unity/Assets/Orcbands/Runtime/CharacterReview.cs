@@ -132,7 +132,7 @@ namespace Orcbands
         [System.Serializable] private class ShadowTuning
         {
             public float normalBias = -1f, bias = -1f;
-            public bool disableShadows, freeze;
+            public bool disableShadows, disableFirelights, freeze;
             public float pose;
         }
         // Explicit diagnostic only: compare an identical skinned pose under
@@ -144,6 +144,9 @@ namespace Orcbands
             if (tuning.normalBias >= 0f) RenderSettings.sun.shadowNormalBias = tuning.normalBias;
             if (tuning.bias >= 0f) RenderSettings.sun.shadowBias = tuning.bias;
             RenderSettings.sun.shadows = tuning.disableShadows ? LightShadows.None : LightShadows.Soft;
+            foreach (var fire in FindObjectsByType<CampFlame>(FindObjectsSortMode.None))
+                if (fire.Warmth != null) fire.Warmth.enabled = !tuning.disableFirelights;
+            FindFirstObjectByType<CampCharacterLighting>()?.Refresh();
             var driver = Character.GetComponent<WorkerAnimation>();
             if (driver == null || driver.Body == null) return;
             if (tuning.freeze)

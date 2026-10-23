@@ -82,8 +82,8 @@ assert.match(file('preview/environment.js'), /p\.scale\*\(p\.width\?\?1\)/);
 // narrower four torches; cool woodland fill must not alter fog shaders.
 const sceneCode = file('unity/Assets/Editor/OrcbandsSceneSetup.cs');
 assert.match(sceneCode, /QualitySettings\.pixelLightCount = 6;/);
-assert.match(sceneCode, /7\.2f, 6\.7f, \.8f, new Color\(1f, \.48f, \.22f\)\);/);
-assert.match(sceneCode, /4\.5f, 2\.45f, i \* 2\.3f, new Color\(1f, \.66f, \.36f\)\);/);
+assert.match(sceneCode, /7\.2f, 6\.7f, \.8f, new Color\(1f, \.48f, \.22f\)\)/);
+assert.match(sceneCode, /4\.5f, 2\.45f, i \* 2\.3f, new Color\(1f, \.66f, \.36f\)\)/);
 assert.match(sceneCode, /RenderSettings\.ambientSkyColor = new Color\(\.26f, \.35f, \.39f\);/);
 assert.match(sceneCode, /motion\.LightColor = warmthColor;/);
 assert.match(file('unity/Assets/Orcbands/Runtime/CampFlame.cs'),
@@ -178,3 +178,11 @@ assert(!/^  push:/m.test(visualReview));
 assert(visualReview.includes('node tools/capture-unity-characters.mjs'));
 assert(visualReview.includes('node tools/capture-worker-animations.mjs'));
 assert.match(publicPrCi, /name: Capture character art review[^\n]*\n        if: github\.event_name == 'pull_request'/);
+
+// Characters keep diffuse firelight in their base pass so moving skin does not
+// accumulate depth-competing ForwardAdd draws. The forest retains real lights.
+const characterShader = file('unity/Assets/Orcbands/Shaders/CharacterMatte.shader');
+assert.match(characterShader, /#pragma surface surf Lambert .*noforwardadd novertexlights/);
+assert.match(characterShader, /o\.Emission = o\.Albedo \* CharacterFirelight/);
+assert.match(characterShader, /_CharacterFirePositionRange\[5\]/);
+assert.match(sceneCode, /CampCharacterLighting/);
