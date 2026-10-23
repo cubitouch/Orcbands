@@ -19,14 +19,18 @@ namespace Orcbands.Editor
             new BonePose("upperarm_r", new Vector3(-77.895f, 38.756f, -16.589f)),
             new BonePose("lowerarm_r", new Vector3(-3.725f, 24.435f, -1.828f)),
             new BonePose("hand_r", new Vector3(-1.097f, 11.497f, -.845f)),
+            new BonePose("middle_01_r", new Vector3(-65f, 0f, 0f)),
+            new BonePose("middle_02_r", new Vector3(-65f, 0f, 0f)),
+            new BonePose("thumb_01_r", new Vector3(-25f, -40f, 0f)),
+            new BonePose("thumb_02_r", new Vector3(-25f, 0f, 0f)),
             new BonePose("upperarm_l", new Vector3(-77.740f, -37.398f, 15.927f)),
             new BonePose("lowerarm_l", new Vector3(-3.725f, -24.435f, 1.828f)),
             new BonePose("hand_l", new Vector3(-1.097f, -11.497f, .845f))
         };
 
         [Header("Right hand socket (hand_r local space)")]
-        public Vector3 GripPosition = new Vector3(0f, -.045f, .10f);
-        public Vector3 GripEuler = new Vector3(0f, 0f, 90f);
+        public Vector3 GripPosition = new Vector3(0f, .055f, .13f);
+        public Vector3 GripEuler = new Vector3(0f, 0f, -90f);
         [Header("Axe mesh coordinates, metres after Synty import")]
         public Vector3 AxeGripPoint = new Vector3(0f, -.20f, -.02f);
         public float AxeAuthoredLength = 1.0279594f;

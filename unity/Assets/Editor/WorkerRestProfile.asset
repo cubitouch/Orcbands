@@ -12,14 +12,22 @@ MonoBehaviour:
     LocalEuler: {x: -3.725, y: 24.435, z: -1.828}
   - Bone: hand_r
     LocalEuler: {x: -1.097, y: 11.497, z: -0.845}
+  - Bone: middle_01_r
+    LocalEuler: {x: -65, y: 0, z: 0}
+  - Bone: middle_02_r
+    LocalEuler: {x: -65, y: 0, z: 0}
+  - Bone: thumb_01_r
+    LocalEuler: {x: -25, y: -40, z: 0}
+  - Bone: thumb_02_r
+    LocalEuler: {x: -25, y: 0, z: 0}
   - Bone: upperarm_l
     LocalEuler: {x: -77.740, y: -37.398, z: 15.927}
   - Bone: lowerarm_l
     LocalEuler: {x: -3.725, y: -24.435, z: 1.828}
   - Bone: hand_l
     LocalEuler: {x: -1.097, y: -11.497, z: 0.845}
-  GripPosition: {x: 0, y: -0.045, z: 0.10}
-  GripEuler: {x: 0, y: 0, z: 90}
+  GripPosition: {x: 0, y: 0.055, z: 0.13}
+  GripEuler: {x: 0, y: 0, z: -90}
   AxeGripPoint: {x: 0, y: -0.20, z: -0.02}
   AxeAuthoredLength: 1.0279594
   AxeWorldLength: 0.85

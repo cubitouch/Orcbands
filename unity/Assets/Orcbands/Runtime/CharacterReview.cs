@@ -14,7 +14,8 @@ namespace Orcbands
         private void Awake() { originalFeet = Character.transform.position; }
         [System.Serializable] private class ReportData
         {
-            public Vector3 feet, unitScreen, destinationScreen, camera;
+            public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp;
+            public bool licensedGrip;
             public bool selected;
             public int frame;
             public string rayTarget, lastSelectionHit;
@@ -29,7 +30,14 @@ namespace Orcbands
             Ground.Raycast(new Ray(feet + Vector3.up * 45f,Vector3.down), out RaycastHit surface,100f);
             var controller = GetComponent<OrcbandsController>();
             Physics.Raycast(View.ScreenPointToRay(View.WorldToScreenPoint(feet + Vector3.up * .8f)), out RaycastHit pick, 300f);
+            Transform grip = null;
+            foreach (Transform child in Character.GetComponentsInChildren<Transform>(true))
+                if (child.name == "Worker axe grip") { grip = child; break; }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                facing = Character.transform.forward,
+                licensedGrip = grip != null,
+                gripInHand = grip == null ? Vector3.zero : grip.localPosition,
+                axeUp = grip == null ? Vector3.zero : grip.up,
                 feet = feet, unitScreen = View.WorldToViewportPoint(feet + Vector3.up * .8f),
                 destinationScreen = View.WorldToViewportPoint(destination),
                 camera = View.transform.position, selected = controller.IsWorkerSelected,
@@ -39,13 +47,14 @@ namespace Orcbands
         }
         public void Capture(string preset)
         {
-            Vector3 feet = originalFeet;
+            bool preserveFacing = preset == "worker-moved";
+            Vector3 feet = preserveFacing ? Character.transform.position : originalFeet;
             if (preset == "warm" || preset == "worker-three-quarter") feet = CampfireFeet;
             if (preset == "cool") feet = new Vector3(5.5f, 0f, 4.5f);
             if (Ground.Raycast(new Ray(new Vector3(feet.x,45f,feet.z),Vector3.down), out RaycastHit hit,100f))
                 feet.y = hit.point.y;
             Character.transform.position = feet;
-            Character.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+            if (!preserveFacing) Character.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
             Reveal.SetFogOfWar(!preset.EndsWith("off"));
             Character.ShowReviewRole(preset.StartsWith("warrior") ? 1 : preset.StartsWith("shaman") ? 2 : 0);
             Vector3 target = new Vector3(0f,0f,-1f);
@@ -56,7 +65,7 @@ namespace Orcbands
                 target = feet + Vector3.up * .75f;
                 offset = new Vector3(-3.2f,2.1f,4.1f);
             }
-            if (preset == "worker-front" || preset == "worker-side" || preset == "worker-three-quarter")
+            if (preset == "worker-front" || preset == "worker-side" || preset == "worker-three-quarter" || preset == "worker-moved")
             {
                 target = feet + Vector3.up * 1.05f;
                 Vector3 localOffset = preset == "worker-front" ? new Vector3(0f, .1f, 3.8f)
