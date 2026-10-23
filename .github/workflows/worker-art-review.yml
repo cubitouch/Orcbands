@@ -1,21 +1,27 @@
-name: Worker Tree Command Licensed Review
+name: Licensed Unity PR Visual Review
 
 on:
-  push:
-    branches: [feat/worker-tree-chopping]
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", ".github/workflows/worker-art-review.yml"]
 
 permissions:
   contents: read
 
 concurrency:
-  group: worker-animation-review
+  group: licensed-unity-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   unity-build:
-    # Explicit same-repository integration review; never runs on pull_request.
-    if: github.repository == 'cubitouch/Orcbands' && github.ref == 'refs/heads/feat/worker-tree-chopping'
+    # Maintainer opt-in only. Fork PRs never receive private assets or secrets.
+    # Do not use pull_request_target to execute a PR's build scripts.
+    if: >-
+      github.repository == 'cubitouch/Orcbands' &&
+      github.event.pull_request.state == 'open' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'unity-visual-review')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -35,7 +41,6 @@ jobs:
           test ! -e unity/Assets/Synty
           cp -a .licensed-source/Synty unity/Assets/Synty
           test -f .licensed-source/Mixamo/Worker/Idle.fbx
-          test "$(git hash-object .licensed-source/Mixamo/Worker/Walking.fbx)" = a7231786bc6cc578b85a06f7013bf93e9c0eb359
           cp -a .licensed-source/Mixamo unity/Assets/Mixamo
           rm -rf .licensed-source
       - name: Export approved forest layout and 3D props

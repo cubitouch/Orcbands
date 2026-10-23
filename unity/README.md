@@ -305,4 +305,8 @@ shadows, materials, foot alignment, right-click movement and selection.
 See [ART-CHAR-04 pose, grip and animation handoff](../docs/worker-rest-pose.md).
 The owned editor profile applies the worker rest stance once and retains a
 hand-local socket for future clips. Licensed draft review uses a dedicated
-branch-scoped build; ordinary public PR builds still use the original proxy.
+opt-in PR build (`unity-visual-review` label on a same-repository PR to `main`);
+ordinary public PR builds still use the original proxy. Main deployment keeps
+browser smoke checks and diagnostics; full character captures and animation
+videos run during PR visual review, not deployment. See
+[worker animation CI and review](../docs/worker-animations.md#builds-and-visual-review).

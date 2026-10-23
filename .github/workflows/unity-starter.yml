@@ -128,6 +128,7 @@ jobs:
       - name: Verify WebGL actually boots in Chromium
         run: node tools/smoke-unity-webgl.mjs
       - name: Capture character art review in actual Unity WebGL
+        if: github.event_name == 'pull_request'
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!

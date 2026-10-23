@@ -58,8 +58,21 @@ Incomplete private source fails a trusted build. Normal public PR jobs receive
 neither pack and retain the original selectable/movable proxy. Private imported
 Unity Library data is never cached or uploaded.
 
-The branch-scoped licensed review publishes a compiled Unity WebGL player before
-running smoke/capture tests. `tools/capture-worker-animations.mjs` uses that actual
+The opt-in **Licensed Unity PR Visual Review** workflow publishes a compiled
+Unity WebGL player before running smoke/capture tests. A maintainer requests it
+by adding the `unity-visual-review` label to an open, same-repository PR targeting
+`main`. The label reruns review on subsequent PR updates; remove it when review
+is complete. Fork PRs cannot run this licensed job. Ordinary public PR builds
+continue to use the proxy without private assets.
+
+Deployment on `main` builds the licensed player, checks hosting format and runs
+the existing browser smoke checks (boot, browser errors, stationary lighting,
+fire motion and fog/camera diagnostics). It uploads `orcbands-unity-deploy-smoke`
+and the playable build, then deploys. It does not run the full character capture
+matrix or record Idle/Walking/Chopping videos. Manual main-branch starter builds
+also skip the character review matrix. PR-only validation retains those captures.
+
+`tools/capture-worker-animations.mjs` uses that actual
 player and records WebM plus sampled frames for all three motions. Its checks
 cover live skeleton movement, fixed root during clip-only previews, disabled root
 motion, hand-local socket invariance, tree approach and chopping, ground-command
