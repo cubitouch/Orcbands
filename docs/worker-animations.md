@@ -1,0 +1,114 @@
+# Worker animations — supplied Mixamo clips
+
+The worker uses the user's Idle, Walking and Standing Melee Attack Downward
+FBXs. Their original bytes are stored privately in `Orcbands-PrivateAssets`, under
+`Mixamo/Worker/` (the last file is named `Chopping.fbx`). No source FBXs, imported
+animation curves, avatars or controllers are committed to the public repository.
+Generated Unity assets remain in the ignored Generated directory. Source files
+and their vendor content are never uploaded as public workflow artifacts.
+
+## Controls
+
+- Left-click the worker to select him.
+- Right-click ground to walk there; he returns to idle on arrival.
+- Right-click a tree trunk to approach it, face it and repeat the chopping motion.
+- Right-click ground again to stop chopping and move.
+
+This is an animation interaction. Trees remain standing and no wood is awarded;
+resource harvesting, tree health and pathfinding are separate gameplay features.
+Walking speed is 2.0 world units per second rather than the old unanimated
+4.5-unit slide. The direct movement and terrain projection remain on the gameplay
+root, with the original selection collider and ring.
+
+## Retargeting and source boundaries
+
+`WorkerAnimationFactory` creates an owned humanoid body avatar from a detached
+reference instance of the untouched Synty worker, using explicit named body-bone
+mapping. It validates the result as a valid humanoid avatar. It does not change
+Synty's imported avatar, FBX metadata, mesh, atlas or prefab.
+
+The target humanoid map omits optional finger mappings, retaining the coarse
+Synty hand's authored tool grip. The axe stays under the existing `hand_r` socket;
+no world-space position or bounds calculation follows the weapon each frame.
+
+Each Mixamo file is imported as humanoid. The longest real take is selected,
+avoiding the empty `Take 001` also present in the downloads. Idle and walking
+loop with pose blending; chopping repeats its full strike/recovery without a
+loop-pose smear. Horizontal travel is extracted from the source motion and
+`applyRootMotion` remains false, so clips cannot move the gameplay root.
+The controller contains only Idle, Walking and Chopping and crosses between them
+on gameplay state changes. No procedural gait or runtime body-pose writer is used.
+The character keeps the established model-mount scale and ground offset; it is
+not resized or refitted from animated bounds.
+
+## Builds and visual review
+
+Trusted builds restore both `Synty/` and `Mixamo/` from the private asset repository.
+Incomplete private source fails a trusted build. Normal public PR jobs receive
+neither pack and retain the original selectable/movable proxy. Private imported
+Unity Library data is never cached or uploaded.
+
+The branch-scoped licensed review publishes a compiled Unity WebGL player before
+running smoke/capture tests. `tools/capture-worker-animations.mjs` uses that actual
+player and records WebM plus sampled frames for all three motions. Its checks
+cover live skeleton movement, fixed root during clip-only previews, disabled root
+motion, hand-local socket invariance, tree approach and chopping, ground-command
+interruption, and idle on arrival. The existing smoke suite still covers forest
+lighting stability, fire motion and fog/camera interactions.
+
+For isolated art review, `window.orcbandsAnimationPreview('Idle'|'Walking'|'Chopping')`
+explicitly previews a motion, and `'Gameplay'` returns ownership to the movement
+commands. The ordinary controller never enters these review overrides on its own.
+The static rest profile remains the fallback when licensed model assets are
+available locally without the optional animation pack.
+
+## Inspected result — 23 October 2026
+
+Tested implementation: `0d4929745d0cb96fe57bb3fa4a9bf49e5f0cb0ca`.
+The final evidence/documentation commit does not change that implementation.
+
+| Check | Result |
+| --- | --- |
+| [Licensed Unity WebGL build and interaction regression](https://github.com/cubitouch/Orcbands/actions/runs/39948595606) | Passed |
+| [Public proxy Unity WebGL build and smoke/capture tests](https://github.com/cubitouch/Orcbands/actions/runs/39948603184) | Passed; private checkout skipped |
+| [Forest Asset Lab validation](https://github.com/cubitouch/Orcbands/actions/runs/39948603185) | Passed |
+| Local execution of the animation regression against the same compiled player | Passed |
+| Original uploaded FBX bytes versus private repository Git blob hashes | Identical for all three files |
+
+Idle (16.633 seconds), Walking (1.033 seconds) and Chopping (2.267 seconds) all
+import as humanoid clips. The actual Unity renderer and sampled skeleton reports
+show live movement for each motion, a stationary gameplay root during clip-only
+previews, root motion off, and unchanged hand-local grip position/rotation. The
+pointer-driven run records Walking to Pine 017, Chopping there, Walking after a
+new ground command, and Idle on arrival. Root-to-terrain error is zero in the
+recorded interaction reports. No browser errors were recorded.
+
+| Motion | Real Unity capture | Inspected frame |
+| --- | --- | --- |
+| Idle | [Short MP4](reviews/worker-animations/idle.mp4) | [Frame](reviews/worker-animations/idle.png) |
+| Walking | [Short MP4](reviews/worker-animations/walking.mp4) | [Frame](reviews/worker-animations/walking.png) |
+| Chopping | [Short MP4](reviews/worker-animations/chopping.mp4) | [Frame](reviews/worker-animations/chopping.png) |
+
+The short MP4s are cropped, unmodified-motion segments from a recording of the
+actual compiled WebGL player, previewing each state in place beside the campfire.
+They use no AI imagery or alternative renderer. The complete CI artifact also
+contains the full interaction recording, per-motion frames and
+[the sampled regression report](reviews/worker-animations/animation-report.json).
+Software-rendered capture timing is not a native GPU performance measurement.
+
+The [actual tree interaction](reviews/worker-animations/tree-chopping.png) and
+[return to idle](reviews/worker-animations/returned-idle.png) were inspected.
+Body motion is retargeted to the original proportions, the axe stays in the
+right hand, feet contact the terrain and existing camp light/shadows, fog,
+smoke and sparks remain present without rectangular lighting artifacts.
+
+### Limits
+
+- Chopping is the supplied full-body downward melee motion, repeated as a work
+  action. There is no tree damage, felling, wood reward or synchronized impact FX.
+- The vendor hand retains its coarse mitten-like shape and controlled shaft
+  overlap. No new mesh sculpting or two-hand weapon IK is introduced.
+- Close views at a tree can be obscured by the existing low pine canopy; the
+  clearing previews make the full motion visible for review.
+- Desktop execution was not tested; WebGL builds exercise the shared animation
+  and controller code. The PR remains a draft for human visual approval.

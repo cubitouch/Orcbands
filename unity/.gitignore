@@ -25,3 +25,7 @@
 # Commercial Synty assets, restored only from the private repository.
 /Assets/Synty/
 /Assets/Synty.meta
+
+# User-provided Mixamo animation sources stay in Orcbands-PrivateAssets.
+/Assets/Mixamo/
+/Assets/Mixamo.meta

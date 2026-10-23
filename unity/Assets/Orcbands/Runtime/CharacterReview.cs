@@ -14,7 +14,11 @@ namespace Orcbands
         private void Awake() { originalFeet = Character.transform.position; }
         [System.Serializable] private class ReportData
         {
-            public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp;
+            public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp, gripEuler;
+            public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen;
+            public string animation, animatorState, chopTarget;
+            public float animationTime;
+            public bool animated, rootMotion, gripParentCorrect;
             public bool licensedGrip;
             public bool selected;
             public int frame;
@@ -33,7 +37,32 @@ namespace Orcbands
             Transform grip = null;
             foreach (Transform child in Character.GetComponentsInChildren<Transform>(true))
                 if (child.name == "Worker axe grip") { grip = child; break; }
+            var driver = Character.GetComponent<WorkerAnimation>();
+            var body = driver == null ? null : driver.Body;
+            WoodcuttingTarget nearest = null;
+            float nearestDistance = float.MaxValue;
+            foreach (var tree in FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None))
+            {
+                Vector3 screen = View.WorldToViewportPoint(tree.transform.position + Vector3.up * 1.2f);
+                float distance = Vector3.Distance(tree.transform.position, feet);
+                if (screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
+                { nearest = tree; nearestDistance = distance; }
+            }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                animated = body != null && body.isHuman,
+                rootMotion = body != null && body.applyRootMotion,
+                animation = driver == null ? "Static" : driver.Current.ToString(),
+                animatorState = body == null ? "Static" : body.GetCurrentAnimatorStateInfo(0).IsName("Idle") ? "Idle"
+                    : body.GetCurrentAnimatorStateInfo(0).IsName("Walking") ? "Walking" : "Chopping",
+                animationTime = body == null ? 0f : body.GetCurrentAnimatorStateInfo(0).normalizedTime,
+                leftFoot = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.LeftFoot).position,
+                rightFoot = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.RightFoot).position,
+                rightHand = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.RightHand).position,
+                returnScreen = View.WorldToViewportPoint(originalFeet),
+                chopScreen = nearest == null ? Vector3.zero : View.WorldToViewportPoint(nearest.transform.position + Vector3.up * 1.2f),
+                chopTarget = controller.ChoppingTarget == null ? "" : controller.ChoppingTarget.name,
+                gripEuler = grip == null ? Vector3.zero : grip.localEulerAngles,
+                gripParentCorrect = grip != null && grip.parent.name == "hand_r",
                 facing = Character.transform.forward,
                 licensedGrip = grip != null,
                 gripInHand = grip == null ? Vector3.zero : grip.localPosition,
@@ -72,9 +101,15 @@ namespace Orcbands
             }
         }
 
+        public void AnimationPreview(string mode)
+        {
+            var driver = Character.GetComponent<WorkerAnimation>();
+            if (driver != null) driver.Preview(mode);
+        }
         public void Capture(string preset)
         {
-            bool preserveFacing = preset == "worker-moved";
+            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide";
+            if (!preserveFacing) GetComponent<OrcbandsController>().CancelWorkerCommand();
             Vector3 feet = preserveFacing ? Character.transform.position : originalFeet;
             if (preset == "warm" || preset == "worker-three-quarter") feet = CampfireFeet;
             if (preset == "cool") feet = new Vector3(5.5f, 0f, 4.5f);
@@ -92,10 +127,11 @@ namespace Orcbands
                 target = feet + Vector3.up * .75f;
                 offset = new Vector3(-3.2f,2.1f,4.1f);
             }
-            if (preset == "worker-front" || preset == "worker-side" || preset == "worker-three-quarter" || preset == "worker-moved")
+            if (preset == "worker-front" || preset == "worker-side" || preset == "worker-three-quarter" || preset == "worker-moved" || preset == "worker-chopping")
             {
                 target = feet + Vector3.up * 1.05f;
-                Vector3 localOffset = preset == "worker-front" ? new Vector3(0f, .1f, 3.8f)
+                Vector3 localOffset = preset == "worker-chopping" ? new Vector3(3.8f, 1.5f, .3f)
+                    : preset == "worker-front" ? new Vector3(0f, .1f, 3.8f)
                     : preset == "worker-side" ? new Vector3(3.8f, .1f, 0f)
                     : new Vector3(2.8f, 1.3f, 3.5f);
                 offset = Character.transform.rotation * localOffset;

@@ -37,3 +37,5 @@ See [Asset Lab documentation](docs/asset-lab.md) and [ENV-02 composition, screen
 We use [**POLYGON MINI – Fantasy Character Pack – Art by Synty**](https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/polygon-mini-fantasy-character-pack-art-by-synty-122084) (Synty Studios, Unity Asset Store, package ID **122084**) for the goblin worker, warrior, shaman and the worker's **SM_Prop_Axe_01** axe.
 
 The character models, prefabs, textures and Unity metadata are purchased commercial assets, **not included in this public Git repository**. They are stored in the private `cubitouch/Orcbands-PrivateAssets` repository and made available to trusted Unity builds; public pull-request checks retain a procedural fallback. Ownership and license remain with their respective rights holders. See [Unity private-asset build setup](unity/README.md#licensed-synty-mini-orcs--private-source-integration).
+
+The user-supplied Mixamo idle, walking and chopping FBXs also stay in the private asset repository. See [worker animation controls and integration](docs/worker-animations.md).

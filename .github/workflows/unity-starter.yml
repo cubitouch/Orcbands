@@ -18,6 +18,7 @@ on:
       - "preview/settlement-resources.js"
       - "tools/smoke-unity-webgl.mjs"
       - "tools/capture-unity-characters.mjs"
+      - "tools/capture-worker-animations.mjs"
       - ".github/workflows/unity-starter.yml"
   workflow_dispatch:
     inputs:
@@ -100,6 +101,8 @@ jobs:
           test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Prefabs/Characters/SM_Chr_Dungeon_GoblinMale_01.prefab
           test ! -e unity/Assets/Synty
           cp -a .licensed-source/Synty unity/Assets/Synty
+          test -f .licensed-source/Mixamo/Worker/Idle.fbx
+          cp -a .licensed-source/Mixamo unity/Assets/Mixamo
           rm -rf .licensed-source
       - name: Export approved forest layout and 3D props
         run: |
@@ -167,6 +170,8 @@ jobs:
           test -f .licensed-source/Synty/PolygonMiniFantasyCharacters/Prefabs/Characters/SM_Chr_Dungeon_GoblinMale_01.prefab
           test ! -e unity/Assets/Synty
           cp -a .licensed-source/Synty unity/Assets/Synty
+          test -f .licensed-source/Mixamo/Worker/Idle.fbx
+          cp -a .licensed-source/Mixamo unity/Assets/Mixamo
           rm -rf .licensed-source
       - name: Export approved forest layout and 3D props
         run: |

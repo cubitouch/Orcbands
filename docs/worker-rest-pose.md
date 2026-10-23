@@ -1,5 +1,9 @@
 # Worker resting pose and axe grip (ART-CHAR-04)
 
+This documents the static pose foundation and its inspected ART-CHAR-04 captures.
+With the supplied Mixamo pack, [worker animations](worker-animations.md) now take
+ownership of the body Animator; the hand-local axe socket and finger grip remain.
+
 ## Owned configuration
 
 `unity/Assets/Editor/WorkerRestProfile.asset` is the editable profile for the licensed
