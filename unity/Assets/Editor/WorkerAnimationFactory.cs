@@ -81,6 +81,8 @@ namespace Orcbands.Editor
             {
                 var state = machine.AddState(clip.name);
                 state.motion = clip;
+                // Brisk work cadence without changing idle/walk or root travel.
+                state.speed = clip.name == "Chopping" ? 1.5f : 1f;
                 state.iKOnFeet = true;
                 state.writeDefaultValues = false;
                 if (clip.name == "Idle") machine.defaultState = state;

@@ -204,6 +204,10 @@ namespace Orcbands.Editor
             sunObject.transform.rotation = Quaternion.LookRotation(
                 new Vector3(-22f, -36f, -18f).normalized, Vector3.up);
             sun.shadowCustomResolution = 2048;
+            Debug.Log("WORKER_SHADOW_BASELINE: bias=" + sun.shadowBias + ", normal=" + sun.shadowNormalBias);
+            // Avoid crawling self-shadow patterns on the moving low-poly skin.
+            // Keep real shadow receiving/casting and the existing forest lights.
+            sun.shadowNormalBias = .65f;
             RenderSettings.sun = sun;
 
             var controllerObject = new GameObject("Orcbands Controller");

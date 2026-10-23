@@ -23,9 +23,10 @@ namespace Orcbands
 
         public void Preview(string mode)
         {
-            if (mode == "Gameplay") { Reviewing = false; return; }
+            if (mode == "Gameplay") { Reviewing = false; if (Body != null) Body.speed = 1f; return; }
             if (!System.Enum.TryParse(mode, out Mode parsed)) return;
             Reviewing = true;
+            if (Body != null) Body.speed = 1f;
             Set(parsed, true);
         }
 

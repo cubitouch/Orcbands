@@ -16,11 +16,13 @@ namespace Orcbands
         {
             public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp, gripEuler;
             public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen, targetFeet;
-            public float targetDistance, targetStandOff, walkingClipLength;
+            public float targetDistance, targetStandOff, walkingClipLength, choppingClipLength;
             public bool treeMarkerVisible, moving;
             public string chopScreenTarget;
             public string animation, animatorState, chopTarget;
-            public float animationTime;
+            public float animationTime, animationRate, gameTime, shadowBias, shadowNormalBias;
+            public int activeSkinCount;
+            public bool workerReceivesShadows;
             public bool animated, rootMotion, gripParentCorrect;
             public bool licensedGrip;
             public bool selected;
@@ -53,10 +55,13 @@ namespace Orcbands
                 { nearest = tree; nearestDistance = distance; }
             }
             var commandedTree = controller.ChoppingTarget;
-            float walkingLength = 0f;
+            float walkingLength = 0f, choppingLength = 0f;
             if (body != null)
                 foreach (var clip in body.runtimeAnimatorController.animationClips)
+                {
                     if (clip.name == "Walking") walkingLength = clip.length;
+                    if (clip.name == "Chopping") choppingLength = clip.length;
+                }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
                 moving = controller.IsMoving,
                 treeMarkerVisible = controller.TreeTargetRing != null && controller.TreeTargetRing.gameObject.activeSelf,
@@ -64,6 +69,7 @@ namespace Orcbands
                 targetDistance = commandedTree == null ? 0f : Vector3.ProjectOnPlane(feet - commandedTree.transform.position, Vector3.up).magnitude,
                 targetStandOff = commandedTree == null ? 0f : commandedTree.StandOff,
                 walkingClipLength = walkingLength,
+                choppingClipLength = choppingLength,
                 chopScreenTarget = nearest == null ? "" : nearest.name,
                 animated = body != null && body.isHuman,
                 rootMotion = body != null && body.applyRootMotion,
@@ -71,6 +77,12 @@ namespace Orcbands
                 animatorState = body == null ? "Static" : body.GetCurrentAnimatorStateInfo(0).IsName("Idle") ? "Idle"
                     : body.GetCurrentAnimatorStateInfo(0).IsName("Walking") ? "Walking" : "Chopping",
                 animationTime = body == null ? 0f : body.GetCurrentAnimatorStateInfo(0).normalizedTime,
+                animationRate = body == null ? 0f : body.speed * body.GetCurrentAnimatorStateInfo(0).speed * body.GetCurrentAnimatorStateInfo(0).speedMultiplier,
+                gameTime = Time.time,
+                shadowBias = RenderSettings.sun.shadowBias,
+                shadowNormalBias = RenderSettings.sun.shadowNormalBias,
+                activeSkinCount = Character.ReviewRoles[0].GetComponentsInChildren<SkinnedMeshRenderer>().Length,
+                workerReceivesShadows = Character.ReviewRoles[0].GetComponentInChildren<SkinnedMeshRenderer>()?.receiveShadows ?? false,
                 leftFoot = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.LeftFoot).position,
                 rightFoot = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.RightFoot).position,
                 rightHand = body == null ? Vector3.zero : body.GetBoneTransform(HumanBodyBones.RightHand).position,
@@ -115,6 +127,33 @@ namespace Orcbands
                 foreach (var bone in tuning.bones)
                     if (child.name == bone.name) child.localRotation = Quaternion.Euler(bone.euler);
             }
+        }
+
+        [System.Serializable] private class ShadowTuning
+        {
+            public float normalBias = -1f, bias = -1f;
+            public bool disableShadows, freeze;
+            public float pose;
+        }
+        // Explicit diagnostic only: compare an identical skinned pose under
+        // baseline/tuned shadow bias, with a no-shadow control if needed.
+        public void ShadowReview(string json)
+        {
+            var tuning = JsonUtility.FromJson<ShadowTuning>(json);
+            if (tuning == null || RenderSettings.sun == null) return;
+            if (tuning.normalBias >= 0f) RenderSettings.sun.shadowNormalBias = tuning.normalBias;
+            if (tuning.bias >= 0f) RenderSettings.sun.shadowBias = tuning.bias;
+            RenderSettings.sun.shadows = tuning.disableShadows ? LightShadows.None : LightShadows.Soft;
+            var driver = Character.GetComponent<WorkerAnimation>();
+            if (driver == null || driver.Body == null) return;
+            if (tuning.freeze)
+            {
+                driver.Preview("Chopping");
+                driver.Body.Play("Base Layer.Chopping", 0, tuning.pose);
+                driver.Body.Update(0f);
+                driver.Body.speed = 0f;
+            }
+            else driver.Body.speed = 1f;
         }
 
         public void AnimationPreview(string mode)
