@@ -81,8 +81,8 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
-          ORCBANDS_WORKER_REVIEW=1 node tools/capture-unity-characters.mjs
           node tools/capture-worker-navigation.mjs
+          ORCBANDS_WORKER_REVIEW=1 node tools/capture-unity-characters.mjs
           node tools/capture-worker-animations.mjs
       - name: Upload licensed WebGL visual review captures
         if: always()

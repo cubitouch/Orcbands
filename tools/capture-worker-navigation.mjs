@@ -6,6 +6,7 @@ import {chromium} from 'playwright';
 const output = resolve(process.argv[3] ?? 'smoke-artifacts/unity-webgl/navigation');
 await mkdir(output, {recursive:true});
 const browser = await chromium.launch({args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
+const traces=[];
 try {
  const page = await browser.newPage({viewport:{width:1280,height:800}}), errors = [];
  page.on('pageerror', e=>errors.push(e.message));
@@ -16,11 +17,20 @@ try {
   await page.evaluate(()=>window.orcbandsCharacterReport());
   return JSON.parse((await pending).text().split('CHARACTER_REPORT:')[1].split('\n')[0]);
  };
+ const frames = async(n=2)=>{
+  const first=(await report()).frame;
+  for(let i=0;i<150;i++){
+   await page.waitForTimeout(100);
+   if((await report()).frame>=first+n) return;
+  }
+  throw Error('Unity frames stalled');
+ };
  const command = async point=>{
   await page.evaluate(point=>window.orcbandsNavigationCommand(point), point);
   await page.waitForTimeout(150);
  };
- const initial=await report(), home=initial.feet, traces=[];
+ await frames();
+ const initial=await report(), home=initial.feet;
  assert(initial.navigationClear, 'Spawn collides');
  assert(initial.navigationObstacles>=1220);
  const follow = async(name, point)=>{
@@ -57,7 +67,8 @@ try {
  const canvas=await page.locator('#unity-canvas').boundingBox();
  const click=async(p,button)=>{
   await page.mouse.move(canvas.x+p.x*canvas.width,canvas.y+(1-p.y)*canvas.height);
-  await page.mouse.down({button});await page.waitForTimeout(180);await page.mouse.up({button});await page.waitForTimeout(180);
+  await frames(2);
+  await page.mouse.down({button});await frames(2);await page.mouse.up({button});await frames(2);
  };
  await click(r.unitScreen,'left');r=await report();assert(r.selected,'Worker selection failed');
  await click(r.chopScreen,'right');
@@ -78,4 +89,7 @@ try {
  assert.deepEqual(errors,[]);
  await writeFile(resolve(output,'navigation-report.json'),JSON.stringify({initial,traces,errors},null,2));
  console.log('PASS: actual Unity hut detour, swept clearance, blocked-click projection, arrival, retarget, pointer tree approach/chop and interruption.');
-} finally {await browser.close();}
+} finally {
+ await writeFile(resolve(output,'navigation-traces.json'),JSON.stringify(traces,null,2));
+ await browser.close();
+}
