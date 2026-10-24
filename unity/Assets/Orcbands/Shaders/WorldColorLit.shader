@@ -11,11 +11,13 @@ Shader "Orcbands/WorldColorLit"
         LOD 200
         Cull Off
         CGPROGRAM
-        #pragma surface surf Lambert fullforwardshadows finalcolor:FinalizeColor
+        // Match the character path: no depth-competing point-light passes.
+        #pragma surface surf Lambert fullforwardshadows addshadow noforwardadd novertexlights finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Color;
         half _SurfaceContrast;
-        struct Input { float3 worldPos; };
+        struct Input { float3 worldPos; float3 worldNormal; };
+        #include "CampFirelight.cginc"
 
         float4 _CampRevealSources[6];
         float _CampFogEnabled;
@@ -67,6 +69,7 @@ Shader "Orcbands/WorldColorLit"
             // Expand the tonal separation already present in the original
             // pine OBJ/MTL needle-light and needle-shadow material swatches.
             o.Albedo = saturate((_Color.rgb - .25) * _SurfaceContrast + .25);
+            o.Emission = o.Albedo * CampFirelight(IN.worldPos, normalize(IN.worldNormal));
             o.Alpha = 1;
         }
         // Three.js applies visibility to the already-lit pixel. Applying

@@ -79,7 +79,8 @@ resource placements remain intact. Tree/grass placement and worn terrain
 colours use the same route samples, leaving clear corridors. The map exports
 through the existing geometry bridge and is rendered by Unity; the 2,048px
 baked shadow mask covers the wider map at the previous texel density.
-WASD now pans to ±102 units; maximum dolly distance is 150. Fog of war is still
+The camera pans to ±102 units. Edge scrolling now supplements keyboard pan,
+and the playable dolly range is 24–55 units around the original ~40-unit view. Fog of war is still
 the camp's static reveal mask: press F to inspect the whole woodland.
 These trails do not yet constrain movement: obstacle collision and pathfinding
 are the next gameplay task.
@@ -88,3 +89,11 @@ The Asset Lab comparison measures 65 draw calls and approximately 644,467
 triangles, versus 65 calls and 194,193 before expansion. The forest smoke
 budget is 675,000 triangles; draw-call limits remain unchanged. These are
 Asset Lab performance counters, not substituted Unity visual evidence.
+
+
+Trees and the timber hut now use the same single-pass firelight calculation as
+the character. `CampFirelight.cginc` shares the exact diffuse/range attenuation
+and five stationary fire sources; WorldColorLit disables ForwardAdd and vertex
+light accumulation while retaining sun shadows, material colours and fog. Ground
+and flame shaders keep their existing rendering paths. This targets the reported
+fire-facing tree artifacts without changing the forest palette.

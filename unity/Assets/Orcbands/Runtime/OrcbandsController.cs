@@ -19,7 +19,32 @@ namespace Orcbands
         public string LastSelectionHit { get; private set; } = "no click";
         private bool hasDestination;
         private Vector3 destination;
-        private Vector3 focus = new Vector3(0f, 0f, -1f);
+        public RtsCamera Navigation;
+        private bool selectionPressed, boxSelecting;
+        private Vector2 selectionStart;
+        public bool IsBoxSelecting => boxSelecting;
+        private Rect SelectionRect
+        {
+            get
+            {
+                Vector2 current = new Vector2(Mathf.Clamp(Input.mousePosition.x, 0f, Screen.width),
+                    Mathf.Clamp(Input.mousePosition.y, 0f, Screen.height));
+                return Rect.MinMaxRect(Mathf.Min(selectionStart.x, current.x), Mathf.Min(selectionStart.y, current.y),
+                    Mathf.Max(selectionStart.x, current.x), Mathf.Max(selectionStart.y, current.y));
+            }
+        }
+        public void PointerInside(string inside)
+        {
+            if (Navigation == null) return;
+            if (inside == "1") Navigation.PointerInsideCanvas = true;
+            else Navigation.StopPointer();
+        }
+        public void CancelPointer(string unused)
+        {
+            selectionPressed = boxSelecting = false;
+            if (Navigation != null) { Navigation.Selecting = false; Navigation.StopPointer(); }
+        }
+        private void OnApplicationFocus(bool focused) { if (!focused) CancelPointer(""); }
         // Gameplay travel and the authored walking rate both increase by 50%.
         private const float MoveSpeed = 3.0f;
         private WoodcuttingTarget chopTarget;
@@ -53,15 +78,39 @@ namespace Orcbands
             if (Reveal != null && Input.GetKeyDown(KeyCode.F))
                 Reveal.SetFogOfWar(!Reveal.FogOfWarVisible);
 
-            if (Input.GetMouseButtonDown(0))
+            Vector3 pointer = Input.mousePosition;
+            bool inside = pointer.x >= 0f && pointer.x < Screen.width && pointer.y >= 0f && pointer.y < Screen.height;
+            if (Application.platform == RuntimePlatform.WebGLPlayer && Navigation != null)
+                inside &= Navigation.PointerInsideCanvas;
+            if (inside && Input.GetMouseButtonDown(0))
             {
-                Ray ray = GameCamera.ScreenPointToRay(Input.mousePosition);
-                selected = Physics.Raycast(ray, out RaycastHit hit, 300f) &&
-                           hit.collider != null && hit.collider.transform == Worker;
-                LastSelectionHit = hit.collider == null ? "none" : hit.collider.name;
+                selectionStart = pointer;
+                selectionPressed = true;
+                boxSelecting = false;
             }
+            if (selectionPressed)
+            {
+                if (Vector2.Distance(selectionStart, pointer) >= 6f) boxSelecting = true;
+                if (Input.GetMouseButtonUp(0))
+                {
+                    if (boxSelecting)
+                    {
+                        Vector3 centre = GameCamera.WorldToScreenPoint(Worker.position + Vector3.up * 1.05f);
+                        selected = centre.z > GameCamera.nearClipPlane && centre.z < GameCamera.farClipPlane && SelectionRect.Contains(centre);
+                        LastSelectionHit = selected ? "Worker (box)" : "empty box";
+                    }
+                    else
+                    {
+                        Ray ray = GameCamera.ScreenPointToRay(pointer);
+                        selected = Physics.Raycast(ray, out RaycastHit hit, 300f) && hit.collider != null && hit.collider.transform == Worker;
+                        LastSelectionHit = hit.collider == null ? "none" : hit.collider.name;
+                    }
+                    selectionPressed = boxSelecting = false;
+                }
+            }
+            if (Navigation != null) Navigation.Selecting = selectionPressed;
 
-            if (selected && Input.GetMouseButtonDown(1))
+            if (inside && !selectionPressed && selected && Input.GetMouseButtonDown(1))
             {
                 Ray ray = GameCamera.ScreenPointToRay(Input.mousePosition);
                 if (animationDriver != null) animationDriver.Preview("Gameplay");
@@ -113,50 +162,24 @@ namespace Orcbands
                 SelectionRing.position = Worker.position + new Vector3(0f, .045f, 0f);
             }
 
-            Vector3 forward = Vector3.ProjectOnPlane(GameCamera.transform.forward,
-                Vector3.up).normalized;
-            Vector3 right = Vector3.ProjectOnPlane(GameCamera.transform.right,
-                Vector3.up).normalized;
-            Vector3 pan = right * Input.GetAxisRaw("Horizontal") +
-                          forward * Input.GetAxisRaw("Vertical");
-            if (pan.sqrMagnitude > .01f)
-            {
-                Vector3 candidate = focus + pan.normalized * 12f * Time.deltaTime;
-                candidate.x = Mathf.Clamp(candidate.x, -MapHalfExtent + 8f, MapHalfExtent - 8f);
-                candidate.z = Mathf.Clamp(candidate.z, -MapHalfExtent + 8f, MapHalfExtent - 8f);
-                GameCamera.transform.position += candidate - focus;
-                focus = candidate;
-            }
-
-            // Perspective dolly retains the approved three-quarter viewing angle.
-            float scroll = Input.mouseScrollDelta.y;
-            if (Mathf.Abs(scroll) > .01f)
-            {
-                Vector3 offset = GameCamera.transform.position - focus;
-                float distance = Mathf.Clamp(offset.magnitude - scroll * 2.7f, 10f, 150f);
-                GameCamera.transform.position = focus + offset.normalized * distance;
-            }
-
-            float turn = 0f;
-            if (Input.GetKey(KeyCode.Q)) turn += 55f * Time.deltaTime;
-            if (Input.GetKey(KeyCode.E)) turn -= 55f * Time.deltaTime;
-            if (turn != 0f)
-            {
-                Vector3 offset = GameCamera.transform.position - focus;
-                GameCamera.transform.position = focus +
-                    Quaternion.AngleAxis(turn, Vector3.up) * offset;
-                GameCamera.transform.LookAt(focus);
-            }
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                focus = new Vector3(0f, 0f, -1f);
-                GameCamera.transform.position = new Vector3(-20f, 22f, 26f);
-                GameCamera.transform.LookAt(focus);
-            }
         }
 
         private void OnGUI()
         {
+            if (boxSelecting && Event.current.type == EventType.Repaint)
+            {
+                Rect rect = SelectionRect;
+                rect.y = Screen.height - rect.yMax;
+                Color previousColour = GUI.color;
+                GUI.color = new Color(.62f, .83f, .36f, .14f);
+                GUI.DrawTexture(rect, Texture2D.whiteTexture);
+                GUI.color = new Color(.72f, .91f, .45f, .95f);
+                GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 2f), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(rect.x, rect.yMax - 2f, rect.width, 2f), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(rect.x, rect.y, 2f, rect.height), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(rect.xMax - 2f, rect.y, 2f, rect.height), Texture2D.whiteTexture);
+                GUI.color = previousColour;
+            }
             // The WebGL host already displays control hints below the canvas.
             // Preserve the in-game hints only for native desktop builds.
             if (Application.platform == RuntimePlatform.WebGLPlayer) return;
@@ -166,9 +189,9 @@ namespace Orcbands
             GUI.color = Color.white;
             GUI.Label(new Rect(28, 22, 330, 24), "Orcbands  ·  Unity forest preview");
             GUI.Label(new Rect(28, 47, 330, 20),
-                "Select worker: click    Move/chop: right-click");
+                "Select: click/drag    Move/chop: right-click");
             GUI.Label(new Rect(28, 67, 330, 20),
-                "WASD pan · Wheel zoom · Q/E rotate · R reset · F: fog of war");
+                "Mouse edges: pan · Wheel: zoom · Q/E: rotate · R: reset · F: fog");
             GUI.color = previous;
         }
     }

@@ -6,7 +6,8 @@ namespace Orcbands
     public sealed class WorkerCarryPose : MonoBehaviour
     {
         public Animator Body;
-        public bool CorrectionEnabled = true;
+        // The supplied carrying walk already authors the hand position.
+        public bool CorrectionEnabled = false;
         [Tooltip("Metres in character-facing space, independent of model import scale.")]
         public Vector3 HandOffset = new Vector3(.22f, 0f, .06f);
         [Tooltip("Rotation relative to the animated right hand, in degrees.")]

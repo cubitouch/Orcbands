@@ -24,7 +24,9 @@ namespace Orcbands
             public int activeSkinCount, treeCount;
             public float carryWeight, mapHalfExtent;
             public Vector3 handEuler, handOffset;
-            public bool workerReceivesShadows;
+            public bool workerReceivesShadows, boxSelecting, pointerInside;
+            public Vector3 cameraFocus;
+            public float cameraDistance, zoomMin, zoomMax;
             public bool animated, rootMotion, gripParentCorrect;
             public bool licensedGrip;
             public bool selected;
@@ -69,6 +71,12 @@ namespace Orcbands
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
                 moving = controller.IsMoving,
+                boxSelecting = controller.IsBoxSelecting,
+                pointerInside = controller.Navigation != null && controller.Navigation.PointerInsideCanvas,
+                cameraFocus = controller.Navigation == null ? Vector3.zero : controller.Navigation.Focus,
+                cameraDistance = controller.Navigation == null ? 0f : controller.Navigation.Distance,
+                zoomMin = controller.Navigation == null ? 0f : controller.Navigation.MinDistance,
+                zoomMax = controller.Navigation == null ? 0f : controller.Navigation.MaxDistance,
                 workPositionClear = WoodcuttingTarget.ClearsWorkAreas(feet, controller.WorkPositionExclusions),
                 treeCount = FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None).Length,
                 mapHalfExtent = controller.MapHalfExtent,

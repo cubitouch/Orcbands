@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Orcbands
 {
-    /// <summary>Bind the five authored firelights for single-pass character lighting.</summary>
+    /// <summary>Bind the five authored firelights for single-pass character and world-prop lighting.</summary>
     public sealed class CampCharacterLighting : MonoBehaviour
     {
         public Light[] Firelights;
@@ -27,8 +27,8 @@ namespace Orcbands
                         ? light.color.linear : light.color;
                     radiance[i] = new Vector4(color.r, color.g, color.b, 0f) * light.intensity;
                 }
-            Shader.SetGlobalVectorArray("_CharacterFirePositionRange", positions);
-            Shader.SetGlobalVectorArray("_CharacterFireRadiance", radiance);
+            Shader.SetGlobalVectorArray("_CampFirePositionRange", positions);
+            Shader.SetGlobalVectorArray("_CampFireRadiance", radiance);
         }
     }
 }
