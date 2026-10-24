@@ -33,6 +33,15 @@ namespace Orcbands
             public int frame;
             public string rayTarget, lastSelectionHit;
             public float groundError;
+            public int treeStrikes, activeTreePulses, woodChips;
+            public int wood, remainingWood, lastTreeRemaining, depletedTrees, shadowRepairs, shadowChangedPixels, navigationRevision;
+            public string lastDepletedTree;
+            public Vector3 stumpPosition, stumpScreen;
+            public float stumpRadius;
+            public bool stumpVisible, lastTreeClearance;
+            public float treeBend, lastStrikePhase, lastStrikeAge;
+            public string lastStruckTree;
+            public Vector3 chipOrigin;
             public bool navigationClear;
             public int remainingWaypoints, navigationObstacles, navigationExpanded;
             public string commandResult;
@@ -58,6 +67,7 @@ namespace Orcbands
             foreach (var tree in FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None))
             {
                 Vector3 screen = View.WorldToViewportPoint(tree.transform.TransformPoint(new Vector3(0f, 2.5f, 0f)));
+                if (tree.IsDepleted) continue;
                 float distance = Vector3.Distance(tree.transform.position, feet);
                 if (screen.z <= 0f || screen.x <= .08f || screen.x >= .92f ||
                     screen.y <= .08f || screen.y >= .92f || distance >= nearestDistance) continue;
@@ -65,6 +75,10 @@ namespace Orcbands
                 if (treePick.collider != null && treePick.collider.GetComponentInParent<WoodcuttingTarget>() == tree && screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
                 { nearest = tree; nearestDistance = distance; }
             }
+            var chopEffects = GetComponent<TreeChopEffects>();
+            var harvest = GetComponent<WorkerHarvest>();
+            var shadows = GetComponent<ForestShadowMap>();
+            var lastTree = harvest == null ? null : harvest.LastTarget;
             var commandedTree = controller.ChoppingTarget;
             float walkingLength = 0f, choppingLength = 0f;
             if (body != null)
@@ -74,6 +88,27 @@ namespace Orcbands
                     if (clip.name == "Chopping") choppingLength = clip.length;
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                wood = harvest == null ? 0 : harvest.Wood,
+                remainingWood = controller.ChoppingTarget == null ? 0 : controller.ChoppingTarget.RemainingWood,
+                lastTreeRemaining = lastTree == null ? WoodcuttingTarget.WoodPerTree : lastTree.RemainingWood,
+                depletedTrees = harvest == null ? 0 : harvest.DepletedTrees,
+                lastDepletedTree = harvest == null ? "" : harvest.LastDepletedTree,
+                stumpPosition = harvest == null ? Vector3.zero : harvest.LastStumpPosition,
+                stumpScreen = lastTree == null ? Vector3.zero : View.WorldToViewportPoint(lastTree.transform.position + Vector3.up * .2f),
+                stumpRadius = lastTree == null ? 0f : lastTree.StumpRadius,
+                stumpVisible = lastTree != null && lastTree.Stump != null && lastTree.Stump.activeSelf,
+                lastTreeClearance = lastTree != null && controller.Pathfinder.IsClear(lastTree.transform.position + Vector3.right * (lastTree.StumpRadius + WorkerNavigation.Clearance + .05f)),
+                shadowRepairs = shadows == null ? 0 : shadows.Repairs,
+                shadowChangedPixels = shadows == null ? 0 : shadows.ChangedPixels,
+                navigationRevision = controller.Pathfinder == null ? 0 : controller.Pathfinder.Revision,
+                treeStrikes = harvest == null ? 0 : harvest.StrikeCount,
+                activeTreePulses = chopEffects == null ? 0 : chopEffects.ActivePulses,
+                woodChips = chopEffects == null ? 0 : chopEffects.LiveChips,
+                treeBend = chopEffects == null ? 0f : chopEffects.CurrentBend,
+                lastStrikePhase = chopEffects == null ? 0f : chopEffects.LastHitNormalizedTime,
+                lastStrikeAge = chopEffects == null ? 0f : Time.time - chopEffects.LastHitTime,
+                lastStruckTree = chopEffects == null ? "" : chopEffects.LastTree,
+                chipOrigin = chopEffects == null ? Vector3.zero : chopEffects.LastChipOrigin,
                 moving = controller.IsMoving,
                 navigationClear = controller.Pathfinder != null && controller.Pathfinder.IsClear(feet),
                 remainingWaypoints = controller.RemainingWaypoints,
@@ -230,7 +265,7 @@ namespace Orcbands
         }
         public void Capture(string preset)
         {
-            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide";
+            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide" || preset == "tree-feedback" || preset == "harvest-stump";
             if (!preserveFacing) GetComponent<OrcbandsController>().CancelWorkerCommand();
             Vector3 feet = preserveFacing ? Character.transform.position : originalFeet;
             if (preset == "warm" || preset == "worker-three-quarter") feet = CampfireFeet;
@@ -260,6 +295,17 @@ namespace Orcbands
                     : preset == "worker-side" ? new Vector3(3.8f, .1f, 0f)
                     : new Vector3(2.8f, 1.3f, 3.5f);
                 offset = Character.transform.rotation * localOffset;
+            }
+            if (preset == "tree-feedback" && GetComponent<OrcbandsController>().ChoppingTarget is WoodcuttingTarget tree)
+            {
+                target = tree.transform.position + Vector3.up * 1.8f;
+                Vector3 away = Vector3.ProjectOnPlane(Character.transform.position - tree.transform.position, Vector3.up).normalized;
+                offset = away * 7.5f + Vector3.Cross(Vector3.up, away) * 4f + Vector3.up * 3.2f;
+            }
+            if (preset == "harvest-stump" && GetComponent<WorkerHarvest>().LastTarget is WoodcuttingTarget stumpTree)
+            {
+                target = stumpTree.transform.position + Vector3.up * .5f;
+                offset = new Vector3(-5f, 6f, 7f);
             }
             View.transform.position = target + offset;
             View.transform.LookAt(target);

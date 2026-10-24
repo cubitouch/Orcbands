@@ -3,7 +3,7 @@ name: Licensed Unity PR Visual Review
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", ".github/workflows/worker-art-review.yml"]
+    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", "tools/capture-tree-chop-feedback.mjs", "tools/capture-finite-trees.mjs", ".github/workflows/worker-art-review.yml"]
 
 permissions:
   contents: read
@@ -81,6 +81,8 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
+          node tools/capture-finite-trees.mjs
+          node tools/capture-tree-chop-feedback.mjs
           node tools/capture-worker-navigation.mjs
           ORCBANDS_WORKER_REVIEW=1 node tools/capture-unity-characters.mjs
           node tools/capture-worker-animations.mjs

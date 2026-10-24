@@ -25,6 +25,11 @@
     #unity-warning { position: absolute; left: 16px; right: 16px; top: 16px; z-index: 3; pointer-events: none; color: #e8caa4; }
     footer { margin-top: 13px; flex-wrap: wrap; color: #a9bda7; font-size: 13px; }
     footer p { margin: 0; }
+    .footer-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #music-toggle { font: inherit; color: #c9e6a5; background: transparent; border: 1px solid #405945; border-radius: 7px; padding: 9px 13px; cursor: pointer; min-width: 112px; }
+    #music-toggle:hover, #music-toggle:focus-visible { background: #2e4934; }
+    #music-toggle[aria-pressed="true"] { background: #2e4934; border-color: #7c9f66; }
+    #music-status { color: #e8caa4; }
     footer a { color: #c9e6a5; text-decoration: none; border: 1px solid #405945; border-radius: 7px; padding: 9px 13px; }
     footer a:hover, footer a:focus-visible { background: #2e4934; }
     @media (max-width: 700px) {
@@ -50,9 +55,51 @@
   </main>
   <footer>
     <p>Select: left-click or drag a box · Move/chop: right-click ground/tree · Camera: mouse edges · Wheel: zoom · Q/E: rotate · R: reset · F: fog</p>
-    <a href="../">Compare with original Asset Lab ↗</a>
+    <div class="footer-actions">
+      <button id="music-toggle" type="button" aria-pressed="false" aria-controls="background-music">♫ Music: Off</button>
+      <span id="music-status" role="status" aria-live="polite"></span>
+      <a href="../">Compare with original Asset Lab ↗</a>
+    </div>
   </footer>
+  <audio id="background-music" loop preload="none" src="https://audio-previews.elements.envatousercontent.com/files/608037494/preview.mp3"></audio>
   <script>
+    const music = document.querySelector('#background-music');
+    const musicButton = document.querySelector('#music-toggle');
+    const musicStatus = document.querySelector('#music-status');
+    music.volume = .24;
+    let musicWanted = false, musicPending = false, musicRequest = 0;
+    const renderMusic = () => {
+      const playing = musicWanted && !music.paused;
+      musicButton.textContent = musicPending && musicWanted ? '♫ Music: Loading…' : playing ? '♫ Music: On' : '♫ Music: Off';
+      musicButton.setAttribute('aria-pressed', playing ? 'true' : 'false');
+    };
+    const musicFailed = () => {
+      musicRequest++; musicWanted = musicPending = false;
+      music.pause(); renderMusic(); musicStatus.textContent = 'Music unavailable. Try again.';
+    };
+    musicButton.addEventListener('click', async () => {
+      const request = ++musicRequest;
+      musicWanted = !musicWanted; musicPending = musicWanted;
+      musicStatus.textContent = '';
+      if (!musicWanted) { music.pause(); renderMusic(); return; }
+      if (music.error) music.load();
+      renderMusic();
+      try {
+        await music.play();
+        if (request !== musicRequest) return;
+        musicPending = false; renderMusic();
+      } catch (error) { if (request === musicRequest) musicFailed(); }
+    });
+    // Unity captures document keyboard input. Handle button activation first,
+    // while the trusted key event still permits audio playback.
+    for (const type of ['keydown', 'keyup']) window.addEventListener(type, event => {
+      if (document.activeElement !== musicButton || (event.code !== 'Enter' && event.code !== 'Space')) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      if (type === 'keydown' && !event.repeat) musicButton.click();
+    }, true);
+    music.addEventListener('playing', () => { if (!musicWanted) music.pause(); renderMusic(); });
+    music.addEventListener('pause', renderMusic);
+    music.addEventListener('error', () => { if (musicWanted) musicFailed(); });
     const canvas = document.querySelector('#unity-canvas');
     const loading = document.querySelector('#unity-loading-bar');
     const progress = document.querySelector('#unity-progress-bar-full');

@@ -79,7 +79,7 @@ namespace Orcbands
         public bool CommandTree(WoodcuttingTarget tree)
         {
             CancelWorkerCommand();
-            if (tree == null || Pathfinder == null) return RejectCommand();
+            if (tree == null || tree.IsDepleted || Pathfinder == null) return RejectCommand();
             var candidates = new List<Vector3>();
             tree.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
             if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
@@ -95,6 +95,13 @@ namespace Orcbands
             LastCommandResult = message;
             feedbackUntil = Time.time + 3f;
         }
+        public void FinishTree()
+        {
+            CancelWorkerCommand();
+            LastCommandResult = "Tree exhausted · choose another tree";
+            feedbackUntil = Time.time + 4f;
+        }
+
         private bool RejectCommand()
         {
             CancelWorkerCommand();
@@ -240,12 +247,12 @@ namespace Orcbands
             if (Application.platform == RuntimePlatform.WebGLPlayer) return;
             var previous = GUI.color;
             GUI.color = new Color(.11f, .17f, .14f, .84f);
-            GUI.DrawTexture(new Rect(16, 16, 348, 78), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(16, Screen.height - 138, 348, 78), Texture2D.whiteTexture);
             GUI.color = Color.white;
-            GUI.Label(new Rect(28, 22, 330, 24), "Orcbands  ·  Unity forest preview");
-            GUI.Label(new Rect(28, 47, 330, 20),
+            GUI.Label(new Rect(28, Screen.height - 132, 330, 24), "Orcbands  ·  Unity forest preview");
+            GUI.Label(new Rect(28, Screen.height - 107, 330, 20),
                 "Select: click/drag    Move/chop: right-click");
-            GUI.Label(new Rect(28, 67, 330, 20),
+            GUI.Label(new Rect(28, Screen.height - 87, 330, 20),
                 "Mouse edges: pan · Wheel: zoom · Q/E: rotate · R: reset · F: fog");
             GUI.color = previous;
         }
