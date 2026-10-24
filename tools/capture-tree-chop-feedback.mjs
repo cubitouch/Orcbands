@@ -42,7 +42,7 @@ try {
   }
   assert(working,'Worker never arrived to chop');
   await page.evaluate(()=>window.orcbandsReview('tree-feedback'));await frames();
-  const startCount=working.treeStrikes,hits=[];let count=startCount,sawChips=false,sawBend=false;
+  const startCount=working.treeStrikes,hits=[];let count=startCount,previousHit=startCount?working:null,sawChips=false,sawBend=false;
   for(let i=0;i<400;i++){
    const r=await report();traces.push(r);
    assert.deepEqual(r.targetFeet,working.targetFeet,'Effect moved the tree collider/root');
@@ -50,16 +50,18 @@ try {
    assert(r.navigationClear);assert(r.activeTreePulses<=1);assert(r.woodChips<=64);
    sawChips ||= r.woodChips>0;sawBend ||= r.treeBend>.002;
    if(r.treeStrikes>count){
-    assert.equal(r.treeStrikes,count+1,'Duplicate/catch-up strike');count=r.treeStrikes;hits.push(r);
+    const loops=previousHit?Math.floor(r.lastStrikePhase)-Math.floor(previousHit.lastStrikePhase):Math.floor(r.lastStrikePhase)+1;
+    assert.equal(r.treeStrikes-count,loops,'Strike count differs from elapsed animation cycles');
+    count=r.treeStrikes;hits.push(r);previousHit=r;
     assert.equal(r.lastStruckTree,r.chopTarget);
     const phase=r.lastStrikePhase%1;
     assert(phase>=.39-.001&&phase<.67,'Feedback missed the downward strike phase: '+phase);
-    if(hits.length===1)await page.locator('#unity-canvas').screenshot({path:resolve(output,'strike.png'),timeout:120000});
    }
    if(hits.length>=3&&sawBend&&sawChips)break;
    await page.waitForTimeout(100);
   }
-  assert(hits.length>=3,'Three consecutive strikes missing');assert(sawChips,'No wood chips');assert(sawBend,'Tree did not shudder');
+  assert(hits.length>=3,'Three observed strikes missing');assert(sawChips,'No wood chips');assert(sawBend,'Tree did not shudder');
+  await page.locator('#unity-canvas').screenshot({path:resolve(output,'strike.png'),timeout:120000});
   await page.evaluate(home=>window.orcbandsNavigationCommand(home),initial.feet);
   await frames(1);
   const cancelled=await report();assert.equal(cancelled.chopTarget,'');
