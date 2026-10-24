@@ -90,6 +90,13 @@
         musicPending = false; renderMusic();
       } catch (error) { if (request === musicRequest) musicFailed(); }
     });
+    // Unity captures document keyboard input. Handle button activation first,
+    // while the trusted key event still permits audio playback.
+    for (const type of ['keydown', 'keyup']) window.addEventListener(type, event => {
+      if (document.activeElement !== musicButton || (event.code !== 'Enter' && event.code !== 'Space')) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      if (type === 'keydown' && !event.repeat) musicButton.click();
+    }, true);
     music.addEventListener('playing', () => { if (!musicWanted) music.pause(); renderMusic(); });
     music.addEventListener('pause', renderMusic);
     music.addEventListener('error', () => { if (musicWanted) musicFailed(); });

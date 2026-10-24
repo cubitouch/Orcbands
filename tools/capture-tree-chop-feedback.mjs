@@ -60,8 +60,10 @@ try {
    await page.waitForTimeout(100);
   }
   assert(hits.length>=3,'Three consecutive strikes missing');assert(sawChips,'No wood chips');assert(sawBend,'Tree did not shudder');
-  const previous=(await report()).treeStrikes;
   await page.evaluate(home=>window.orcbandsNavigationCommand(home),initial.feet);
+  await frames(1);
+  const cancelled=await report();assert.equal(cancelled.chopTarget,'');
+  const previous=cancelled.treeStrikes;
   let settled;
   for(let i=0;i<100;i++){
    const r=await report();traces.push(r);
