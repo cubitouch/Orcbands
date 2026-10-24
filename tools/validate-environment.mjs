@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {createLayout,groundHeight,pathDistance,pathPoint,wornGround} from '../preview/environment-layout.js';
+import {createLayout,groundHeight,pathDistance,pathPoint,wornGround,woodlandTrails,MAP_HALF_EXTENT} from '../preview/environment-layout.js';
 const layout=createLayout();
 assert.deepEqual(layout,createLayout(),'Scene must reproduce exactly');
 assert.notDeepEqual(layout,createLayout(42),'Seed must control variation');
-assert.equal(layout.trees.length,244,'Keep the 244-pine authored level');
+assert.equal(layout.trees.length,1220,'Expand the original 244-pine forest fivefold');
+assert.equal(MAP_HALF_EXTENT,110);
+assert.equal(woodlandTrails.length,6,'Six connected seeded woodland branches');
+for(const route of woodlandTrails)for(const p of route){
+ assert(Math.abs(p.x)<MAP_HALF_EXTENT&&Math.abs(p.z)<MAP_HALF_EXTENT,'Trail must remain on the map');
+ assert(wornGround(p.x,p.z)>.65,'New trails must be continuously worn');
+}
+for(const [sx,sz] of [[1,1],[1,-1],[-1,1],[-1,-1]])
+ assert(layout.trees.filter(t=>t.x*sx>44&&t.z*sz>39).length>80,'New trees must spread across the wider map');
 const widths=new Set(layout.trees.map(p=>p.width));
 const heights=new Set(layout.trees.map(p=>p.height));
 assert(widths.size>=3&&heights.size>=3,'Forest must mix tall, narrow and broad low crowns');

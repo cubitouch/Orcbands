@@ -209,3 +209,21 @@ smoke and sparks remain present without rectangular lighting artifacts.
   clearing previews make the full motion visible for review.
 - Desktop execution was not tested; WebGL builds exercise the shared animation
   and controller code. The PR remains a draft for human visual approval.
+
+
+### Brisk walking and carry correction
+
+Travel is now 3.0 units/second; the Walking state plays at 1.5×, matching
+that 50% increase. Idle stays at 1× and Chopping stays at 1.5×. Root motion
+remains off. `WorkerCarryPose`, on the Animator object, uses the base layer's
+IK pass to move the animated right-hand goal slightly outward and rotate the
+wrist during Walking only. Its editable `HandOffset` (metres in character
+space) and `HandEuler` (relative to the animated hand) preserve the existing
+hand-parented axe socket. The weight follows state transitions; idle and chopping
+receive no correction. Future carrying clips can disable `CorrectionEnabled`.
+No vendor FBX, rig or grip profile was edited.
+
+`orcbandsCarryReview({handOffset:{x:.22,y:0,z:.06},handEuler:{x:0,y:35,z:0},
+freeze:true,pose:.25,mode:'Walking',disable:false})` is an explicit WebGL
+calibration hook. Restore the authored values, then use the Gameplay preview
+to release the frozen pose. It never runs automatically during gameplay.

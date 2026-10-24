@@ -70,3 +70,16 @@ ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
 ```
 
 The campfire is deliberately stylized. There is no smoke, audio, wind simulation, gameplay or Unity prefab. The woodland remains a finite prototype environment, best judged from the camp and normal RTS views.
+
+
+The expanded woodland has 1,220 pines (five times the previous 244), within a
+220 × 220-unit map envelope. Six seeded winding trail branches connect to
+the original north/south route and each other. The camp, original tree IDs and
+resource placements remain intact. Tree/grass placement and worn terrain
+colours use the same route samples, leaving clear corridors. The map exports
+through the existing geometry bridge and is rendered by Unity; the 2,048px
+baked shadow mask covers the wider map at the previous texel density.
+WASD now pans to ±102 units; maximum dolly distance is 150. Fog of war is still
+the camp's static reveal mask: press F to inspect the whole woodland.
+These trails do not yet constrain movement: obstacle collision and pathfinding
+are the next gameplay task.

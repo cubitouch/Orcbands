@@ -75,7 +75,8 @@
       }).then(instance => {
         loading.style.display = 'none';
         window.orcbandsReview = preset => instance.SendMessage('Orcbands Controller', 'Capture', preset);
-        window.orcbandsShadowReview = tuning => instance.SendMessage('Orcbands Controller', 'ShadowReview', JSON.stringify(tuning));
+        window.orcbandsCarryReview = tuning => instance.SendMessage('Orcbands Controller', 'CarryReview', JSON.stringify(tuning));
+      window.orcbandsShadowReview = tuning => instance.SendMessage('Orcbands Controller', 'ShadowReview', JSON.stringify(tuning));
         window.orcbandsAnimationPreview = mode => instance.SendMessage('Orcbands Controller', 'AnimationPreview', mode);
         window.orcbandsTuneWorker = tuning => instance.SendMessage('Orcbands Controller', 'TuneWorker', JSON.stringify(tuning));
         window.orcbandsCharacterReport = () => instance.SendMessage('Orcbands Controller', 'Report', '');

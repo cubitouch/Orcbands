@@ -45,7 +45,10 @@ try{
   for(let i=0;i<5;i++){
    await frames(i%2===0?2:3);
    const r=await report();samples.push(r);
-   assert.equal(r.animationRate,mode==='Chopping'?1.5:1,'Unexpected animation playback rate');
+   assert.equal(r.animationRate,mode==='Idle'?1:1.5,'Unexpected animation playback rate');
+   assert.equal(r.treeCount,1220,'Expanded forest missing trees');
+   assert.equal(r.mapHalfExtent,110,'Camera uses obsolete map bounds');
+   if(i>0)assert(Math.abs(r.carryWeight-(mode==='Walking'?1:0))<.01,'Walking carry correction leaked into another state');
    assert.equal(r.activeSkinCount,1,'Worker must have one visible skin');
    assert(r.workerReceivesShadows,'Character must still receive scene shadows');
    assert(!r.rootMotion,'Root motion must stay disabled');
