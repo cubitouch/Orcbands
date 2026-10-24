@@ -17,11 +17,13 @@ namespace Orcbands
             public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp, gripEuler;
             public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen, targetFeet;
             public float targetDistance, targetStandOff, walkingClipLength, choppingClipLength;
-            public bool treeMarkerVisible, moving;
+            public bool treeMarkerVisible, moving, workPositionClear;
             public string chopScreenTarget;
             public string animation, animatorState, chopTarget;
             public float animationTime, animationRate, gameTime, shadowBias, shadowNormalBias;
-            public int activeSkinCount;
+            public int activeSkinCount, treeCount;
+            public float carryWeight, mapHalfExtent;
+            public Vector3 handEuler, handOffset;
             public bool workerReceivesShadows;
             public bool animated, rootMotion, gripParentCorrect;
             public bool licensedGrip;
@@ -44,12 +46,15 @@ namespace Orcbands
                 if (child.name == "Worker axe grip") { grip = child; break; }
             var driver = Character.GetComponent<WorkerAnimation>();
             var body = driver == null ? null : driver.Body;
+            var carry = body == null ? null : body.GetComponent<WorkerCarryPose>();
             WoodcuttingTarget nearest = null;
             float nearestDistance = float.MaxValue;
             foreach (var tree in FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None))
             {
                 Vector3 screen = View.WorldToViewportPoint(tree.transform.TransformPoint(new Vector3(0f, 2.5f, 0f)));
                 float distance = Vector3.Distance(tree.transform.position, feet);
+                if (screen.z <= 0f || screen.x <= .08f || screen.x >= .92f ||
+                    screen.y <= .08f || screen.y >= .92f || distance >= nearestDistance) continue;
                 Physics.Raycast(View.ViewportPointToRay(screen), out RaycastHit treePick, 300f);
                 if (treePick.collider != null && treePick.collider.GetComponentInParent<WoodcuttingTarget>() == tree && screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
                 { nearest = tree; nearestDistance = distance; }
@@ -64,6 +69,12 @@ namespace Orcbands
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
                 moving = controller.IsMoving,
+                workPositionClear = WoodcuttingTarget.ClearsWorkAreas(feet, controller.WorkPositionExclusions),
+                treeCount = FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None).Length,
+                mapHalfExtent = controller.MapHalfExtent,
+                carryWeight = carry == null ? 0f : carry.Weight,
+                handEuler = carry == null ? Vector3.zero : carry.HandEuler,
+                handOffset = carry == null ? Vector3.zero : carry.HandOffset,
                 treeMarkerVisible = controller.TreeTargetRing != null && controller.TreeTargetRing.gameObject.activeSelf,
                 targetFeet = commandedTree == null ? Vector3.zero : commandedTree.transform.position,
                 targetDistance = commandedTree == null ? 0f : Vector3.ProjectOnPlane(feet - commandedTree.transform.position, Vector3.up).magnitude,
@@ -129,6 +140,29 @@ namespace Orcbands
             }
         }
 
+        [System.Serializable] private class CarryTuning
+        {
+            public Vector3 handEuler, handOffset;
+            public bool disable, freeze;
+            public float pose;
+            public string mode = "Walking";
+        }
+        // Explicit WebGL pose calibration; copy accepted values into WorkerCarryPose.
+        public void CarryReview(string json)
+        {
+            var tuning = JsonUtility.FromJson<CarryTuning>(json);
+            var driver = Character.GetComponent<WorkerAnimation>();
+            if (tuning == null || driver == null || driver.Body == null) return;
+            var carry = driver.Body.GetComponent<WorkerCarryPose>();
+            carry.CorrectionEnabled = !tuning.disable;
+            carry.HandEuler = tuning.handEuler;
+            carry.HandOffset = tuning.handOffset;
+            driver.Preview(tuning.mode);
+            driver.Body.Play("Base Layer." + tuning.mode, 0, tuning.pose);
+            driver.Body.Update(0f);
+            driver.Body.speed = tuning.freeze ? 0f : 1f;
+        }
+
         [System.Serializable] private class ShadowTuning
         {
             public float normalBias = -1f, bias = -1f;
@@ -178,7 +212,10 @@ namespace Orcbands
             Reveal.SetFogOfWar(!preset.EndsWith("off"));
             Character.ShowReviewRole(preset.StartsWith("warrior") ? 1 : preset.StartsWith("shaman") ? 2 : 0);
             Vector3 target = new Vector3(0f,0f,-1f);
+            View.fieldOfView = preset == "map" ? 60f : 38f;
+            View.farClipPlane = preset == "map" ? 400f : 240f;
             Vector3 offset = new Vector3(-20f,22f,27f);
+            if (preset == "map") { target = Vector3.zero; offset = new Vector3(0f, 205f, .1f); }
             if (preset == "out") offset *= 1.65f;
             if (preset == "close" || preset == "warm" || preset == "cool" || preset == "warrior" || preset == "shaman")
             {

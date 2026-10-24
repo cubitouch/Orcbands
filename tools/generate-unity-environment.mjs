@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as THREE from 'three';
 import {
-  createLayout, groundHeight, wornGround, HUT_PLACEMENT, TORCH_PLACEMENTS,
+  createLayout, groundHeight, wornGround, HUT_PLACEMENT, TORCH_PLACEMENTS, TREE_COUNT, MAP_HALF_EXTENT,
 } from '../preview/environment-layout.js';
 import { groundVariation, noise } from '../preview/ground-surface.js';
 import { createGrassGeometry, createRockGeometry, createForestFloorPatches, createTerrainGeometry } from '../preview/environment.js';
@@ -18,7 +18,7 @@ import { generateTreeShadowTexture } from './generate-unity-tree-shadows.mjs';
 const root = resolve(import.meta.dirname, '../unity/Assets/Orcbands/Generated');
 mkdirSync(root, { recursive: true });
 const layout = createLayout();
-if (layout.trees.length !== 244) throw new Error('Expected the approved 244-pine forest');
+if (layout.trees.length !== TREE_COUNT) throw new Error('Expected the expanded 1,220-pine forest');
 const shadowResult = generateTreeShadowTexture(layout.trees, resolve(root, 'approved-pine-shadows.png'));
 if (shadowResult.enhancedRoots < 80)
   throw new Error('Too few tree roots have ground-contact shading');
@@ -27,6 +27,13 @@ for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.sta
   throw new Error('Missing forest resource: ' + key);
 writeFileSync(resolve(root, 'grove-layout.json'), JSON.stringify({
   seed: layout.seed,
+  mapHalfExtent: MAP_HALF_EXTENT,
+  // Existing authored camp footprints, used only to choose a clear work spot.
+  workExclusions: [...layout.resources,
+    {...HUT_PLACEMENT,radius:3.9}, {...layout.campfire,radius:1.15},
+    ...TORCH_PLACEMENTS.map(p=>({...p,radius:.38}))]
+    .map(p=>({x:-p.x,z:p.z,radius:p.radius})),
+  trails: layout.trails.map(samples => ({points:samples.map(p=>({...p,x:-p.x}))})),
   // Three.js is right-handed and Unity's world is left-handed: reflect X
   // so the original camera/view and the authored layout match on screen.
   trees: layout.trees.map(p => ({ ...p, x: -p.x, angle: -p.angle })),
@@ -138,5 +145,5 @@ exportMesh('grass-props', layout.plants.map(p => ({
   position: [p.x, groundHeight(p.x, p.z), p.z],
   scale: p.scale, angle: p.angle,
 })));
-console.log('Exported the Three.js grove: 244 pines,', layout.resources.length,
+console.log('Exported the woodland:', layout.trees.length, 'pines,', layout.resources.length,
   'resource placements,', layout.plants.length, 'plants,', layout.rocks.length, 'rocks');

@@ -26,8 +26,7 @@ the requested new file; it does not provide a visibly different gait.
 
 This is an animation interaction. Trees remain standing and no wood is awarded;
 resource harvesting, tree health and pathfinding are separate gameplay features.
-Walking speed is 2.0 world units per second rather than the old unanimated
-4.5-unit slide. The direct movement and terrain projection remain on the gameplay
+Walking speed is 3.0 world units per second, with the clip playing at 1.5×. The direct movement and terrain projection remain on the gameplay
 root, with the original selection collider and ring.
 
 ## Retargeting and source boundaries
@@ -88,7 +87,7 @@ available locally without the optional animation pack.
 ## Chopping cadence and fire-lit character stability
 
 Chopping plays at an authored state speed of **1.5**: the 2.267-second source
-cycle takes about **1.51 seconds** in game. Idle/walking remain at 1.0, and root
+cycle takes about **1.51 seconds** in game. Idle remains at 1.0; walking is now 1.5, and root
 movement speed stays independent of clip playback. No source FBX is modified.
 
 The character matte shader combines the sun/ambient and the five authored
@@ -118,7 +117,7 @@ finished. Only opt-in PR visual review records videos.
 
 Tested implementation: `c13b2e1c95134e352c4fc33e95e0ab3be8a7b420`.
 Private source revision: `64f757cb32c0f62bb066890e1f90577a008e6010`.
-The licensed workflow verifies the replacement walking blob before building.
+That review verified the replacement walking blob before building.
 
 Trees use static colliders from their actual mesh rather than a narrow capsule
 around the trunk. Clicking foliage therefore commands the visible tree instead
@@ -209,3 +208,35 @@ smoke and sparks remain present without rectangular lighting artifacts.
   clearing previews make the full motion visible for review.
 - Desktop execution was not tested; WebGL builds exercise the shared animation
   and controller code. The PR remains a draft for human visual approval.
+
+
+### Brisk walking and carry correction
+
+Travel is now 3.0 units/second; the Walking state plays at 1.5×, matching
+that 50% increase. Idle stays at 1× and Chopping stays at 1.5×. Root motion
+remains off. `WorkerCarryPose`, on the Animator object, uses the base layer's
+IK pass to move the animated right-hand goal slightly outward and rotate the
+wrist during Walking only. Its editable `HandOffset` (metres in character
+space) and `HandEuler` (relative to the animated hand) preserve the existing
+hand-parented axe socket. The weight follows state transitions; idle and chopping
+receive no correction. Future carrying clips can disable `CorrectionEnabled`.
+No vendor FBX, rig or grip profile was edited.
+
+`orcbandsCarryReview({handOffset:{x:.22,y:0,z:.06},handEuler:{x:0,y:35,z:0},
+freeze:true,pose:.25,mode:'Walking',disable:false})` is an explicit WebGL
+calibration hook. Restore the authored values, then use the Gameplay preview
+to release the frozen pose. It never runs automatically during gameplay.
+
+Tree work positions now stop outside each scaled Pine 01 crown: its authored
+1.36m radius × overall scale × crown-width variant, plus .65m for the worker
+body and a small visual margin. `WoodcuttingTarget.CrownRadius` and
+`WorkerClearance` remain editable. This avoids the former fixed 1.25m stop
+inside low branches. It is a target-specific stop distance; movement still
+travels directly and does not avoid other obstacles until pathfinding lands.
+
+Work positions also test a deterministic 15-degree fan around the tree, choosing
+the nearest endpoint outside existing camp resource/hut/fire/torch footprints
+and other tree colliders. This avoids placing the worker in Pine 017's food
+baskets when moving the stop away from its branches. These footprint checks
+only choose the endpoint; they do not route or collide the moving worker.
+If the entire work circle is blocked, the original radial point is the fallback.

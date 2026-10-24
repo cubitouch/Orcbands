@@ -11,6 +11,8 @@ namespace Orcbands
         public Transform SelectionRing;
         public Transform TreeTargetRing;
         public CampReveal Reveal;
+        public float MapHalfExtent = 110f;
+        public WoodcuttingTarget.WorkExclusion[] WorkPositionExclusions;
 
         private bool selected;
         public bool IsWorkerSelected => selected;
@@ -18,8 +20,8 @@ namespace Orcbands
         private bool hasDestination;
         private Vector3 destination;
         private Vector3 focus = new Vector3(0f, 0f, -1f);
-        // Match a walking gait; the original unanimated proxy slid at 4.5 units/s.
-        private const float MoveSpeed = 2.0f;
+        // Gameplay travel and the authored walking rate both increase by 50%.
+        private const float MoveSpeed = 3.0f;
         private WoodcuttingTarget chopTarget;
         private WorkerAnimation animationDriver;
         public WoodcuttingTarget ChoppingTarget => chopTarget;
@@ -67,7 +69,7 @@ namespace Orcbands
                     targetHit.collider.GetComponentInParent<WoodcuttingTarget>() is WoodcuttingTarget tree)
                 {
                     SetChoppingTarget(tree);
-                    destination = tree.ApproachPoint(Worker.position);
+                    destination = tree.ApproachPoint(Worker.position, WorkPositionExclusions);
                     if (Ground.Raycast(new Ray(destination + Vector3.up * 45f, Vector3.down),
                         out RaycastHit surface, 100f)) destination.y = surface.point.y;
                     hasDestination = true;
@@ -120,8 +122,8 @@ namespace Orcbands
             if (pan.sqrMagnitude > .01f)
             {
                 Vector3 candidate = focus + pan.normalized * 12f * Time.deltaTime;
-                candidate.x = Mathf.Clamp(candidate.x, -30f, 30f);
-                candidate.z = Mathf.Clamp(candidate.z, -30f, 30f);
+                candidate.x = Mathf.Clamp(candidate.x, -MapHalfExtent + 8f, MapHalfExtent - 8f);
+                candidate.z = Mathf.Clamp(candidate.z, -MapHalfExtent + 8f, MapHalfExtent - 8f);
                 GameCamera.transform.position += candidate - focus;
                 focus = candidate;
             }
@@ -131,7 +133,7 @@ namespace Orcbands
             if (Mathf.Abs(scroll) > .01f)
             {
                 Vector3 offset = GameCamera.transform.position - focus;
-                float distance = Mathf.Clamp(offset.magnitude - scroll * 2.7f, 10f, 87f);
+                float distance = Mathf.Clamp(offset.magnitude - scroll * 2.7f, 10f, 150f);
                 GameCamera.transform.position = focus + offset.normalized * distance;
             }
 

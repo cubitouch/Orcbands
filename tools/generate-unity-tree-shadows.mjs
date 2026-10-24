@@ -4,10 +4,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { deflateSync } from 'node:zlib';
-import { groundHeight } from '../preview/environment-layout.js';
+import { groundHeight, MAP_HALF_EXTENT } from '../preview/environment-layout.js';
 
-export const SHADOW_MAP_SIZE = 1024;
-export const SHADOW_HALF_EXTENT = 55;
+export const SHADOW_MAP_SIZE = 2048;
+export const SHADOW_HALF_EXTENT = MAP_HALF_EXTENT;
 
 // Same sun direction as the approved Three.js grove: (-22, 36, 18).
 // A point at elevation y projects to x + 22/36*y, z - 18/36*y.

@@ -24,5 +24,5 @@ for(const p of RESOURCE_PLACEMENTS.filter(p=>['stone','woodpile','stonepile','fo
  for(let i=0;i<pos.count;i++)contact=Math.min(contact,pos.getY(i)-groundHeight(pos.getX(i),pos.getZ(i)));
  assert(contact<.025&&contact>-.10,'Stockpiles/outcrops must sit in the terrain, without floating or excessive sinking');
 }
-assert.equal(createLayout().trees.length,244,'Preserve the standing forest');
+assert.equal(createLayout().trees.length,1220,'Preserve the standing forest');
 console.log('PASS: empty/partial/full contents, fixed supports/baskets, valid triangles, matching outcrop footprint, visible depletion and terrain contact.');

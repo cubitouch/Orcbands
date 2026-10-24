@@ -2,7 +2,7 @@
 
 For the subsequent torch and visibility addition, including current counters and screenshots, see [Trail torches and fog of war](torches-fog.md). The captures below document the original forest expansion.
 
-The hut clearing now sits inside **244 pines**, up from 36. The original inner tree placements and Pine 01 geometry/palette remain unchanged; 208 additional instances create woodland on all sides, with a second northern layer and connecting trees between the larger pockets. The clearing and winding routes stay open.
+The first forest expansion placed the hut clearing inside **244 pines**, up from 36. The original inner tree placements and Pine 01 geometry/palette remain unchanged; 208 additional instances create woodland on all sides, with a second northern layer and connecting trees between the larger pockets. The clearing and winding routes stay open.
 
 ## Actual WebGL views
 
@@ -32,7 +32,7 @@ These are Chromium screenshots of actual geometry. Desktop fire captures use the
 
 `preview/environment-layout.js` retains the inner 36-tree composition and uses independent fixed seeds for the surrounding forest and its ground cover. Deliberate irregular clusters establish the outer woodland. Additional trees connect the pockets so they do not read as isolated islands. Trunk spacing and the full canopy/path clearance margin reject unsuitable placements. All tree scales remain uniform and within 0.83–1.17.
 
-The current layout contains 244 pines, 1,618 grass clumps and 38 rocks. Ground cover is lighter per tree in distant woodland, keeping the camp readable and limiting geometry cost. Existing material batches and shared tree geometry remain in use; tree count does not add individual draw calls.
+That earlier layout contained 244 pines, 1,618 grass clumps and 38 rocks. Ground cover is lighter per tree in distant woodland, keeping the camp readable and limiting geometry cost. Existing material batches and shared tree geometry remain in use; tree count does not add individual draw calls.
 
 The far camera, orbit limits, fog and shadow coverage now accommodate the expanded woods. A very coarse outer terrain apron avoids exposing a display-platform edge in the wide view. The detailed centre and its terrain-integrated path remain intact.
 
@@ -70,3 +70,21 @@ ORCBANDS_LOCAL_THREE=1 node tools/smoke-preview.mjs
 ```
 
 The campfire is deliberately stylized. There is no smoke, audio, wind simulation, gameplay or Unity prefab. The woodland remains a finite prototype environment, best judged from the camp and normal RTS views.
+
+
+The expanded woodland has 1,220 pines (five times the previous 244), within a
+220 × 220-unit map envelope. Six seeded winding trail branches connect to
+the original north/south route and each other. The camp, original tree IDs and
+resource placements remain intact. Tree/grass placement and worn terrain
+colours use the same route samples, leaving clear corridors. The map exports
+through the existing geometry bridge and is rendered by Unity; the 2,048px
+baked shadow mask covers the wider map at the previous texel density.
+WASD now pans to ±102 units; maximum dolly distance is 150. Fog of war is still
+the camp's static reveal mask: press F to inspect the whole woodland.
+These trails do not yet constrain movement: obstacle collision and pathfinding
+are the next gameplay task.
+
+The Asset Lab comparison measures 65 draw calls and approximately 644,467
+triangles, versus 65 calls and 194,193 before expansion. The forest smoke
+budget is 675,000 triangles; draw-call limits remain unchanged. These are
+Asset Lab performance counters, not substituted Unity visual evidence.

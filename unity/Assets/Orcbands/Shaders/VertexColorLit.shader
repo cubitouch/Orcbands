@@ -115,8 +115,8 @@ Shader "Orcbands/VertexColorLit"
         {
             // Shadow silhouettes projected from the approved OBJ pines
             // and the original Three.js sun vector. Unity mirrors world X.
-            float2 uv = float2(.5 - IN.worldPos.x / 110.0,
-                               .5 + IN.worldPos.z / 110.0);
+            float2 uv = float2(.5 - IN.worldPos.x / 220.0,
+                               .5 + IN.worldPos.z / 220.0);
             float shadow = tex2D(_ForestShadowTex, saturate(uv)).r;
             color.rgb *= lerp(1.0, shadow, _ForestShadowStrength);
             color.rgb = CampShade(color.rgb, IN.worldPos);

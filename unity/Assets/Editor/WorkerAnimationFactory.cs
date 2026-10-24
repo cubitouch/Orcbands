@@ -76,13 +76,16 @@ namespace Orcbands.Editor
             string path = Generated + "WorkerAnimations.controller";
             AssetDatabase.DeleteAsset(path);
             var controller = AnimatorController.CreateAnimatorControllerAtPath(path);
+            var layers = controller.layers;
+            layers[0].iKPass = true;
+            controller.layers = layers;
             var machine = controller.layers[0].stateMachine;
             foreach (var clip in clips)
             {
                 var state = machine.AddState(clip.name);
                 state.motion = clip;
-                // Brisk work cadence without changing idle/walk or root travel.
-                state.speed = clip.name == "Chopping" ? 1.5f : 1f;
+                // Match the faster gameplay walk; keep the existing work cadence.
+                state.speed = clip.name == "Idle" ? 1f : 1.5f;
                 state.iKOnFeet = true;
                 state.writeDefaultValues = false;
                 if (clip.name == "Idle") machine.defaultState = state;
@@ -95,6 +98,7 @@ namespace Orcbands.Editor
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             animator.enabled = true;
             root.AddComponent<WorkerAnimation>().Body = animator;
+            model.gameObject.AddComponent<WorkerCarryPose>().Body = animator;
             Debug.Log("WORKER_ANIMATIONS: valid mapped humanoid avatar, Idle/Walking/Chopping; root motion off");
         }
 

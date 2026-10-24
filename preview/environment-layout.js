@@ -59,6 +59,8 @@ export function createStoryLayout(seed,trees){
  return props;
 }
 export const GROVE_SEED = 2302;
+export const TREE_COUNT = 1220;
+export const MAP_HALF_EXTENT = 110;
 export const CAMPFIRE_PLACEMENT={x:.1,z:.15};
 export function nearCampfire(x,z,margin=0){return Math.hypot(x-CAMPFIRE_PLACEMENT.x,z-CAMPFIRE_PLACEMENT.z)<1.15+margin;}
 export const HUT_PLACEMENT = {x:-3,z:-3.8,scale:1,angle:0};
@@ -89,19 +91,52 @@ export const clearingTrail = Array.from({length:49},(_,i)=>{
 export const hutApproach=Array.from({length:33},(_,i)=>{
  const t=i/32;return {x:-2.4-.6*t+.12*Math.sin(t*Math.PI),z:1.9-3.55*t,halfWidth:.67+.08*Math.sin(t*4)};
 });
-export function pathDistance(x, z) {
- let d=Infinity;
- for(const samples of [pathSamples,clearingTrail,hutApproach])for(const p of samples)d=Math.min(d,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
+// Seeded branching foot trails in the expanded woodland. Shared endpoints
+// connect the branches to each other and the original north/south meander.
+// These are visual corridors, not a navigation graph or collision solver.
+function createWoodlandTrails() {
+ const random=seededRandom(GROVE_SEED+4401),routes=[];
+ const north=pathPoint(-.6),south=pathPoint(1.6);
+ const chains=[[[north.x,north.z],[50,55],[96,85]],
+  [[south.x,south.z],[-45,-60],[-96,-85]],
+  [[50,55],[62,10],[85,-55],[98,-95]],
+  [[-45,-60],[-65,-5],[-85,60],[-98,95]],
+  [[-85,60],[-20,80],[50,55]],
+  [[-45,-60],[20,-85],[85,-55]]];
+ for(const points of chains){
+  const samples=[];
+  for(let j=1;j<points.length;j++){
+   const [ax,az]=points[j-1],[bx,bz]=points[j],length=Math.hypot(bx-ax,bz-az);
+   const bend=(random()-.5)*9,phase=random()*6.28,steps=Math.ceil(length/.45);
+   for(let i=0;i<=steps;i++){
+    const t=i/steps,wave=Math.sin(t*Math.PI)*(bend+1.1*Math.sin(t*9+phase));
+    samples.push({x:ax+(bx-ax)*t-(bz-az)/length*wave,
+     z:az+(bz-az)*t+(bx-ax)/length*wave,halfWidth:1.25+.18*Math.sin(t*8+phase)});
+   }
+  }
+  routes.push(samples);
+ }
+ return routes;
+}
+export const woodlandTrails=createWoodlandTrails();
+// Spatial buckets keep tree placement and terrain colouring local even with
+// six long trails and 1,220 trees. Only nearby routes can affect ground wear.
+const routeCells=new Map(),routeCellSize=8;
+for(const p of [pathSamples,clearingTrail,hutApproach,...woodlandTrails].flat()){
+ const key=Math.floor(p.x/routeCellSize)+','+Math.floor(p.z/routeCellSize);
+ if(!routeCells.has(key))routeCells.set(key,[]);
+ routeCells.get(key).push(p);
+}
+export function pathDistance(x,z) {
+ let d=Infinity;const cx=Math.floor(x/routeCellSize),cz=Math.floor(z/routeCellSize);
+ for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+  const samples=routeCells.get((cx+dx)+','+(cz+dz));
+  if(samples)for(const p of samples)d=Math.min(d,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
+ }
  return d;
 }
 export function wornGround(x,z){
- // Cache-friendly nearest route lookup, with a smooth, asymmetric noisy transition into turf.
- const t=(25-z)/50,step=1/200,index=Math.round((t+1)*200);
- let distance=Infinity;
- for(let j=Math.max(0,index-10);j<=Math.min(pathSamples.length-1,index+10);j++){
-  const p=pathSamples[j];distance=Math.min(distance,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
- }
- for(const p of [...clearingTrail,...hutApproach])distance=Math.min(distance,Math.hypot(x-p.x,z-p.z)-p.halfWidth);
+ const distance=pathDistance(x,z);
  const edge=(noise(x*1.6+8,z*1.6)-.5)*.58+(noise(x*.55,z*.55+20)-.5)*.9;
  const track=Math.max(0,Math.min(1,(.65-distance+edge)/1.15));
  // An irregular trampled apron at the trail junction, fading into the open clearing.
@@ -157,6 +192,22 @@ function outerForest(seed,existing){
  }
  return trees;
 }
+// Add woodland beyond the original composition rather than packing five
+// times the trees into the camp. Seeded clumps alternate with open glades.
+function expandedForest(seed,existing){
+ const random=seededRandom(seed+21703),trees=[];
+ for(let attempt=0;trees.length<TREE_COUNT-existing.length&&attempt<100000;attempt++){
+  const x=-101+random()*202,z=-101+random()*202;
+  if(x>-44&&x<44&&z>-49&&z<39)continue;
+  if(random()> .32+.68*noise(x*.055+17,z*.055-9))continue;
+  const scale=.83+random()*.34;
+  if(pathDistance(x,z)<1.36*scale+.45)continue;
+  if(existing.some(t=>Math.hypot(t.x-x,t.z-z)<2.4)||trees.some(t=>Math.hypot(t.x-x,t.z-z)<2.4))continue;
+  trees.push({x,z,scale,angle:random()*Math.PI*2});
+ }
+ if(trees.length+existing.length!==TREE_COUNT)throw Error('Expanded forest could not reach tree target');
+ return trees;
+}
 export function createLayout(seed = GROVE_SEED) {
   const random = seededRandom(seed);
   const trees = treePositions.map(([x,z]) => ({x, z, scale:.83 + random() * .34, angle:random() * Math.PI * 2}));
@@ -200,7 +251,9 @@ export function createLayout(seed = GROVE_SEED) {
   }
   const added=outerForest(seed,trees),forestRandom=seededRandom(seed+6300);
   trees.push(...added);
-  for(const tree of added)for(let i=0;i<5;i++){
+  const expansion=expandedForest(seed,trees);
+  trees.push(...expansion);
+  for(const tree of [...added,...expansion])for(let i=0;i<5;i++){
    const angle=forestRandom()*Math.PI*2,r=.5+Math.sqrt(forestRandom())*2.0;
    const x=tree.x+Math.cos(angle)*r,z=tree.z+Math.sin(angle)*r,type=i%3,scale=.65+forestRandom()*.55;
    const radius=[.30,.36,.55][type]*scale;
@@ -216,6 +269,6 @@ export function createLayout(seed = GROVE_SEED) {
     const clearance=(pathDistance(tree.x,tree.z)-.33)/(1.36*tree.scale);
     return {...tree,width:Math.max(.78,Math.min(widthTarget,clearance)),height};
   });
-  return {seed,trees:shapedTrees,story:createStoryLayout(seed,shapedTrees),rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
+  return {seed,mapHalfExtent:MAP_HALF_EXTENT,trails:woodlandTrails,trees:shapedTrees,story:createStoryLayout(seed,shapedTrees),rocks:rocks.filter(p=>!nearCampfire(p.x,p.z,p.radius)&&!nearTorch(p.x,p.z,p.radius)&&!nearResource(p.x,p.z,p.radius)),
    plants:plants.filter(p=>!nearCampfire(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearTorch(p.x,p.z,[.30,.36,.55][p.type]*p.scale)&&!nearResource(p.x,p.z,[.30,.36,.55][p.type]*p.scale)),campfire:{...CAMPFIRE_PLACEMENT},resources:RESOURCE_PLACEMENTS.map(p=>({...p}))};
 }

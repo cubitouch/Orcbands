@@ -20,7 +20,7 @@ namespace Orcbands.Editor
         private const string HutPath = "Assets/Orcbands/Art/timber-hut-01.obj";
 
         [Serializable] public class P { public float x, z, scale = 1f, angle, width = 1f, height = 1f; }
-        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; }
+        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; public WoodcuttingTarget.WorkExclusion[] workExclusions; }
         private const string Generated = "Assets/Orcbands/Generated/";
         private static readonly Dictionary<string, Material> Shades = new Dictionary<string, Material>();
 
@@ -33,7 +33,7 @@ namespace Orcbands.Editor
             if (pine == null || hut == null || json == null)
                 throw new InvalidOperationException("Run npm install --no-save three@0.166.1 && node tools/generate-unity-environment.mjs");
             Grove layout = JsonUtility.FromJson<Grove>(json.text);
-            if (layout == null || layout.trees == null || layout.trees.Length != 244 ||
+            if (layout == null || layout.trees == null || layout.trees.Length != 1220 ||
                 layout.hut == null || layout.campfire == null || layout.torches == null ||
                 layout.torches.Length != 4)
                 throw new InvalidOperationException("Incomplete exported Three.js grove");
@@ -104,7 +104,7 @@ namespace Orcbands.Editor
             building.transform.rotation = Quaternion.Euler(0f, layout.hut.angle * Mathf.Rad2Deg, 0f);
             ApplyWorldMaterials(building, worldShader);
 
-            var forest = new GameObject("Approved 244-pine forest");
+            var forest = new GameObject("Expanded 1,220-pine forest");
             for (int i = 0; i < layout.trees.Length; i++)
             {
                 P pos = layout.trees[i];
@@ -115,13 +115,15 @@ namespace Orcbands.Editor
                 tree.transform.localScale = new Vector3(pos.scale * pos.width, pos.scale * pos.height, pos.scale * pos.width);
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
                 ApplyWorldMaterials(tree, worldShader);
-                tree.AddComponent<WoodcuttingTarget>();
+                // Pine 01 is 2.72m wide before our seeded crown scaling.
+                tree.AddComponent<WoodcuttingTarget>().CrownRadius = 1.36f * pos.scale * pos.width;
                 // Pick the visible silhouette, including branches, rather than
                 // requiring a precise click on a partly hidden narrow trunk.
                 foreach (var mesh in tree.GetComponentsInChildren<MeshFilter>())
                     mesh.gameObject.AddComponent<MeshCollider>().sharedMesh = mesh.sharedMesh;
                 foreach (var renderer in tree.GetComponentsInChildren<MeshRenderer>())
                 {
+                    GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, StaticEditorFlags.BatchingStatic);
                     renderer.shadowCastingMode = distance < 30f ? ShadowCastingMode.On : ShadowCastingMode.Off;
                     renderer.receiveShadows = distance < 25f;
                 }
@@ -245,6 +247,8 @@ namespace Orcbands.Editor
             controller.GameCamera = camera;
             controller.Ground = ground.GetComponent<Collider>();
             controller.Reveal = reveal;
+            controller.MapHalfExtent = layout.mapHalfExtent;
+            controller.WorkPositionExclusions = layout.workExclusions;
             var review = controllerObject.AddComponent<CharacterReview>();
             review.Character = worker.GetComponent<CharacterPresentation>();
             review.View = camera; review.Ground = controller.Ground; review.Reveal = reveal;
@@ -254,7 +258,7 @@ namespace Orcbands.Editor
                 throw new InvalidOperationException("Unable to save Unity forest scene");
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
-            Debug.Log("Orcbands Unity: approved layout, 244 pines, colored ground, "+
+            Debug.Log("Orcbands Unity: expanded layout, 1,220 pines, colored ground, "+
                 layout.resourceCount+" resources, vegetation, rocks, fire and RTS perspective camera");
         }
 

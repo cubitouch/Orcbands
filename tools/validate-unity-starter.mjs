@@ -31,7 +31,7 @@ assert(file('unity/Assets/Editor/OrcbandsSceneSetup.cs').includes('RenderSetting
 assert.match(file('unity/Assets/Orcbands/Runtime/CampReveal.cs'), /RevealedAtmosphere/);
 console.log('Unity starter bridge validated: 4 copied mesh inputs, manifest, version, scene and CI.');
 
-assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /244/);
+assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /1220/);
 assert.match(file('unity/Assets/Editor/OrcbandsSceneSetup.cs'), /camera.fieldOfView = 38f/);
 
 // Catch a truncated namespace/class in the standalone visibility component

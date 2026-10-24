@@ -34,14 +34,14 @@ export function createTerrainGeometry() {
   const vertices=[],colors=[];
   // One continuous mesh: dense vertices in the walkable woodland, coarse in distant meadow.
   const xs=[-250],zs=[-250];
-  for(let n=-100;n < -26;n+=2)xs.push(n);
+  for(let n=-100;n < -26;n+=1)xs.push(n);
   for(let n=-26;n < -10;n+=1)xs.push(n);
   for(let i=0;i<50;i++)xs.push(-10+i*.4);
   for(let n=10;n < 26;n+=1)xs.push(n);
-  for(let n=26;n <=100;n+=2)xs.push(n);
-  for(let n=-100;n < -34;n+=2)zs.push(n);
+  for(let n=26;n <=100;n+=1)xs.push(n);
+  for(let n=-100;n < -34;n+=1)zs.push(n);
   for(let i=0;i<114;i++)zs.push(-34+i*68/114);
-  for(let n=34;n <=100;n+=2)zs.push(n);
+  for(let n=34;n <=100;n+=1)zs.push(n);
   xs.push(250);zs.push(250);
   // Muted moss and compacted earth: keep worn routes readable without a
   // uniform golden carpet through the clearing.
