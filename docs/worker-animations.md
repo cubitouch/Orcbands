@@ -26,8 +26,7 @@ the requested new file; it does not provide a visibly different gait.
 
 This is an animation interaction. Trees remain standing and no wood is awarded;
 resource harvesting, tree health and pathfinding are separate gameplay features.
-Walking speed is 2.0 world units per second rather than the old unanimated
-4.5-unit slide. The direct movement and terrain projection remain on the gameplay
+Walking speed is 3.0 world units per second, with the clip playing at 1.5×. The direct movement and terrain projection remain on the gameplay
 root, with the original selection collider and ring.
 
 ## Retargeting and source boundaries
@@ -88,7 +87,7 @@ available locally without the optional animation pack.
 ## Chopping cadence and fire-lit character stability
 
 Chopping plays at an authored state speed of **1.5**: the 2.267-second source
-cycle takes about **1.51 seconds** in game. Idle/walking remain at 1.0, and root
+cycle takes about **1.51 seconds** in game. Idle remains at 1.0; walking is now 1.5, and root
 movement speed stays independent of clip playback. No source FBX is modified.
 
 The character matte shader combines the sun/ambient and the five authored
@@ -118,7 +117,7 @@ finished. Only opt-in PR visual review records videos.
 
 Tested implementation: `c13b2e1c95134e352c4fc33e95e0ab3be8a7b420`.
 Private source revision: `64f757cb32c0f62bb066890e1f90577a008e6010`.
-The licensed workflow verifies the replacement walking blob before building.
+That review verified the replacement walking blob before building.
 
 Trees use static colliders from their actual mesh rather than a narrow capsule
 around the trunk. Clicking foliage therefore commands the visible tree instead
@@ -227,3 +226,10 @@ No vendor FBX, rig or grip profile was edited.
 freeze:true,pose:.25,mode:'Walking',disable:false})` is an explicit WebGL
 calibration hook. Restore the authored values, then use the Gameplay preview
 to release the frozen pose. It never runs automatically during gameplay.
+
+Tree work positions now stop outside each scaled Pine 01 crown: its authored
+1.36m radius × overall scale × crown-width variant, plus .65m for the worker
+body and a small visual margin. `WoodcuttingTarget.CrownRadius` and
+`WorkerClearance` remain editable. This avoids the former fixed 1.25m stop
+inside low branches. It is a target-specific stop distance; movement still
+travels directly and does not avoid other obstacles until pathfinding lands.

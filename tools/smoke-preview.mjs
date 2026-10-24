@@ -120,7 +120,8 @@ try{
  const resumeTime=(await metrics()).campfire.time;
  await page.waitForFunction(start=>window.__orcbandsReview.metrics().campfire.time>start+.05,resumeTime);
  check(desktopMetrics.calls<=66,'Grove draw-call budget exceeded');
- check(desktopMetrics.triangles<195000,'Grove triangle budget exceeded');
+ // The fivefold woodland renders ~644k triangles; batches stay at 65 calls.
+ check(desktopMetrics.triangles<675000,'Expanded grove triangle budget exceeded');
  await page.getByRole('button',{name:'Resources',exact:true}).click();
  // Every resource state is still selected and asserted; selected snapshots
  // represent foliage, supplies and both authored construction structures.

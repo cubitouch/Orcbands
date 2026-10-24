@@ -53,6 +53,8 @@ namespace Orcbands
             {
                 Vector3 screen = View.WorldToViewportPoint(tree.transform.TransformPoint(new Vector3(0f, 2.5f, 0f)));
                 float distance = Vector3.Distance(tree.transform.position, feet);
+                if (screen.z <= 0f || screen.x <= .08f || screen.x >= .92f ||
+                    screen.y <= .08f || screen.y >= .92f || distance >= nearestDistance) continue;
                 Physics.Raycast(View.ViewportPointToRay(screen), out RaycastHit treePick, 300f);
                 if (treePick.collider != null && treePick.collider.GetComponentInParent<WoodcuttingTarget>() == tree && screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
                 { nearest = tree; nearestDistance = distance; }
@@ -209,6 +211,8 @@ namespace Orcbands
             Reveal.SetFogOfWar(!preset.EndsWith("off"));
             Character.ShowReviewRole(preset.StartsWith("warrior") ? 1 : preset.StartsWith("shaman") ? 2 : 0);
             Vector3 target = new Vector3(0f,0f,-1f);
+            View.fieldOfView = preset == "map" ? 60f : 38f;
+            View.farClipPlane = preset == "map" ? 400f : 240f;
             Vector3 offset = new Vector3(-20f,22f,27f);
             if (preset == "map") { target = Vector3.zero; offset = new Vector3(0f, 205f, .1f); }
             if (preset == "out") offset *= 1.65f;

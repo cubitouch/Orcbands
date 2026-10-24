@@ -115,7 +115,8 @@ namespace Orcbands.Editor
                 tree.transform.localScale = new Vector3(pos.scale * pos.width, pos.scale * pos.height, pos.scale * pos.width);
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
                 ApplyWorldMaterials(tree, worldShader);
-                tree.AddComponent<WoodcuttingTarget>();
+                // Pine 01 is 2.72m wide before our seeded crown scaling.
+                tree.AddComponent<WoodcuttingTarget>().CrownRadius = 1.36f * pos.scale * pos.width;
                 // Pick the visible silhouette, including branches, rather than
                 // requiring a precise click on a partly hidden narrow trunk.
                 foreach (var mesh in tree.GetComponentsInChildren<MeshFilter>())
