@@ -41,7 +41,7 @@ namespace Orcbands.Editor
                 {
                     Vector2 next = WorkerNavigation.Flat(p), delta = next - previous;
                     float t = delta.sqrMagnitude == 0f ? 0f : Mathf.Clamp01(-Vector2.Dot(previous, delta) / delta.sqrMagnitude);
-                    Require((previous + t * delta).magnitude > 1.5f + WorkerNavigation.Clearance, "circle clearance lost in smoothing");
+                    Require((previous + t * delta).magnitude > 1.5f + WorkerNavigation.Clearance, "circle clearance lost in smoothing: " + previous.ToString("R") + " -> " + next.ToString("R") + " distance=" + (previous + t * delta).magnitude.ToString("R"));
                     previous = next;
                 }
                 Require(nav.TryMoveRoute(P(-4, 0), P(0, 0), route, out adjusted) && adjusted, "blocked click projects locally");

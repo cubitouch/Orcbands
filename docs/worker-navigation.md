@@ -22,7 +22,8 @@ fallback work position is used.
 
 `WorkerNavigation` uses a 0.5-metre grid, eight-neighbour A*, a binary heap and
 four-metre spatial bins. Circle and oriented-box footprints are inflated by
-0.62 metres for the worker's body and visual margin. Diagonal edges cannot cut
+0.62 metres for the worker's body and visual margin, plus a one-centimetre
+numerical skin to keep tangent routes outside that clearance. Diagonal edges cannot cut
 blocked corners. Route smoothing only removes waypoints when an exact swept
 clearance test succeeds. The same sweep guards every movement step, including
 long frames. Terrain elevation, three-unit/second travel, root-motion ownership,

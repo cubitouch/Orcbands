@@ -17,6 +17,8 @@ namespace Orcbands
         public const float Clearance = .62f;
         public const float CellSize = .5f;
         private const float BinSize = 4f;
+        // Keep numerical tangencies outside the body clearance, including smoothed segments.
+        private const float CollisionSkin = .01f;
         private float limit;
         private int width, binWidth, query, search;
         private List<int>[] bins;
@@ -92,14 +94,14 @@ namespace Orcbands
                             aa = new Vector2(c * aa.x - s * aa.y, s * aa.x + c * aa.y);
                             bb = new Vector2(c * bb.x - s * bb.y, s * bb.x + c * bb.y);
                             float enter = 0f, leave = 1f;
-                            if (Slab(aa.x, bb.x - aa.x, o.halfWidth + Clearance, ref enter, ref leave) &&
-                                Slab(aa.y, bb.y - aa.y, o.halfDepth + Clearance, ref enter, ref leave)) return false;
+                            if (Slab(aa.x, bb.x - aa.x, o.halfWidth + Clearance + CollisionSkin, ref enter, ref leave) &&
+                                Slab(aa.y, bb.y - aa.y, o.halfDepth + Clearance + CollisionSkin, ref enter, ref leave)) return false;
                         }
                         else
                         {
                             Vector2 ab = b - a;
                             float t = ab.sqrMagnitude < .000001f ? 0f : Mathf.Clamp01(Vector2.Dot(centre - a, ab) / ab.sqrMagnitude);
-                            float radius = o.radius + Clearance;
+                            float radius = o.radius + Clearance + CollisionSkin;
                             if ((a + ab * t - centre).sqrMagnitude <= radius * radius) return false;
                         }
                     }
