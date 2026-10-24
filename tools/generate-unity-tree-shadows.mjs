@@ -13,7 +13,7 @@ export const SHADOW_HALF_EXTENT = MAP_HALF_EXTENT;
 // A point at elevation y projects to x + 22/36*y, z - 18/36*y.
 const sun = { x: -22, y: 36, z: 18 };
 
-function originalPineTriangles() {
+export function originalPineTriangles() {
   const path = resolve(import.meta.dirname, '../preview/assets/low-poly-pine-01.obj');
   const vertices = [], triangles = [];
   for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {

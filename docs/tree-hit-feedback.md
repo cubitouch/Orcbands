@@ -3,20 +3,24 @@
 While an orc is stationary and chopping its commanded tree, each downward strike
 gives that tree a small elastic shudder and emits nine faceted wood chips from
 the visible struck face, clear of the low foliage. The base remains anchored and the tree settles within 0.65s.
-Chips tumble, fall and shrink away within 0.7s. They are visual feedback only;
-trees are not felled and no wood inventory is awarded.
+Chips tumble, fall and shrink away within 0.7s. Trees now contain 12 wood: each
+accepted strike immediately adds one wood to the live counter. At zero, the
+canopy disappears, the existing stump art replaces it and the worker stops.
+See [finite-tree gameplay](finite-trees.md).
 
-`TreeChopEffects` reads the live Animator's normalized chopping time in
+`WorkerHarvest` reads the live Animator's normalized chopping time in
 `LateUpdate`. The supplied downward melee clip contacts around phase 0.39,
 measured from the retargeted hand/axe motion. The cursor emits once per crossing
 and never replays a backlog after a long frame, preview, restart or retarget.
-Walking, idle, transitions and animation previews cannot generate hits. A new
+Walking, idle, transitions and animation previews cannot generate hits. The public
+proxy uses a matching game-time swing clock when no licensed Animator is present. A new
 command stops new hits; the existing shudder and chips finish settling.
 
 The struck renderers receive temporary material property overrides. Their
 world-space vertex deformation also drives directional shadows and works with
 the existing static pine batching. Tree roots, mesh colliders, work distances
-and navigation footprints remain fixed. The overrides are restored after each
+and navigation footprints remain fixed during strikes. At exhaustion the canopy
+colliders are disabled and the crown footprint becomes a solid stump footprint. The overrides are restored after each
 pulse, including when the effect component is disabled. The woodland stays
 static when nothing is being chopped. No per-tree Update components, copied
 meshes, material clones or global forest-sway shader parameters are needed.

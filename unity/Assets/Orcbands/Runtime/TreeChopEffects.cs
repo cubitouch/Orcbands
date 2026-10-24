@@ -9,24 +9,8 @@ namespace Orcbands
     {
         public OrcbandsController Controller;
         public Material ChipMaterial;
-        public const float HitPhase = .39f;
         public const float SettleTime = .65f;
         public const int ChipsPerHit = 9;
-        public struct SwingCursor
-        {
-            private bool tracking;
-            private float previous;
-            public void Reset() { tracking = false; }
-            public bool Advance(float normalizedTime)
-            {
-                if (!tracking || normalizedTime < previous)
-                { tracking = true; previous = normalizedTime; return false; }
-                bool hit = Mathf.FloorToInt(normalizedTime - HitPhase) > Mathf.FloorToInt(previous - HitPhase);
-                previous = normalizedTime;
-                // A slow frame may cross several loops. Emit at most one current hit, never a backlog.
-                return hit;
-            }
-        }
         private sealed class Pulse
         {
             public WoodcuttingTarget tree;
@@ -37,8 +21,6 @@ namespace Orcbands
             public float started;
         }
         private readonly List<Pulse> pulses = new List<Pulse>(4);
-        private SwingCursor cursor;
-        private WoodcuttingTarget trackedTree;
         private WorkerAnimation driver;
         private Transform axeGrip;
         private ParticleSystem chips;
@@ -67,21 +49,6 @@ namespace Orcbands
                     foreach (Transform child in Controller.Worker.GetComponentsInChildren<Transform>(true))
                         if (child.name == "Worker axe grip") { axeGrip = child; break; }
             }
-            WoodcuttingTarget target = Controller == null ? null : Controller.ChoppingTarget;
-            bool working = target != null && !Controller.IsMoving && driver != null &&
-                !driver.Reviewing && driver.Current == WorkerAnimation.Mode.Chopping && driver.Body != null;
-            if (working)
-            {
-                var state = driver.Body.GetCurrentAnimatorStateInfo(0);
-                working = state.IsName("Chopping") && !driver.Body.IsInTransition(0);
-                if (working)
-                {
-                    if (trackedTree != target) { cursor.Reset(); trackedTree = target; }
-                    if (cursor.Advance(state.normalizedTime)) Strike(target, state.normalizedTime);
-                }
-            }
-            if (!working) { cursor.Reset(); trackedTree = null; }
-
             CurrentBend = 0f;
             for (int i = pulses.Count - 1; i >= 0; i--)
             {
@@ -97,7 +64,7 @@ namespace Orcbands
                     if (renderer != null) renderer.SetPropertyBlock(pulse.block);
             }
         }
-        private void Strike(WoodcuttingTarget tree, float normalizedTime)
+        public void PlayStrike(WoodcuttingTarget tree, float normalizedTime)
         {
             StrikeCount++; LastTree = tree.name;
             LastHitNormalizedTime = normalizedTime; LastHitTime = Time.time;
@@ -186,7 +153,7 @@ namespace Orcbands
         private void OnDisable()
         {
             foreach (var pulse in pulses) Restore(pulse);
-            pulses.Clear(); cursor.Reset(); trackedTree = null; CurrentBend = 0f;
+            pulses.Clear(); CurrentBend = 0f;
             if (chips != null) chips.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
         private void OnDestroy() { if (chipMesh != null) Destroy(chipMesh); }

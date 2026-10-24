@@ -10,7 +10,7 @@ assert.equal(grove.torches.length, 4);
 assert.equal(grove.workExclusions.length,22,'Camp work-position footprint export');
 for(const p of grove.workExclusions)assert([p.x,p.z,p.radius].every(Number.isFinite)&&p.radius>0);
 assert(grove.resourceCount >= 15);
-for (const name of ['woodland-story', 'terrain', 'resource-art', 'stone-props', 'grass-props', 'forest-patches', 'hearth-art', 'hearth-flames', 'torches-art', 'torches-flames']) {
+for (const name of ['harvest-stump', 'woodland-story', 'terrain', 'resource-art', 'stone-props', 'grass-props', 'forest-patches', 'hearth-art', 'hearth-flames', 'torches-art', 'torches-flames']) {
   const file = resolve(root, name + '.bytes');
   const data = readFileSync(file);
   const count = data.readInt32LE(0);
@@ -28,3 +28,8 @@ assert.equal(shadowPng.readUInt32BE(16), 2048, 'shadow map width');
 assert.equal(shadowPng.readUInt32BE(20), 2048, 'shadow map height');
 assert(shadowPng.length > 5000, 'pine shadow map empty');
 console.log('Three.js to Unity approved map and mesh bridge OK');
+
+const shadowSource = JSON.parse(readFileSync(resolve(root, 'pine-shadow-source.json'), 'utf8'));
+assert(shadowSource.vertices.length > 50 && shadowSource.triangles.length > 300);
+for (const v of shadowSource.vertices) assert([v.x,v.y,v.z].every(Number.isFinite));
+for (const i of shadowSource.triangles) assert(Number.isInteger(i) && i>=0 && i<shadowSource.vertices.length);

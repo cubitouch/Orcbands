@@ -41,3 +41,5 @@ The character models, prefabs, textures and Unity metadata are purchased commerc
 The user-supplied Mixamo idle, walking and chopping FBXs also stay in the private asset repository. See [worker animation controls and integration](docs/worker-animations.md).
 
 Playable controls: left-click or drag a box to select; right-click ground/tree to move or chop. Move the pointer near the game edges to pan, use the wheel for bounded zoom, Q/E to orbit and R to reset. [Camera and selection details](docs/rts-controls.md).
+
+Trees contain 12 wood. Each axe strike adds one wood to the live counter; exhausted trees leave a stump and the worker stops. [Finite tree controls and limits](docs/finite-trees.md).

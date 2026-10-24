@@ -9,7 +9,7 @@ namespace Orcbands.Editor
         { if (!condition) throw new InvalidOperationException("Tree strike regression: " + message); }
         public static void Run()
         {
-            var clock = new TreeChopEffects.SwingCursor();
+            var clock = new WorkerHarvest.SwingCursor();
             Require(!clock.Advance(.1f), "entry emits an early hit");
             Require(!clock.Advance(.38f), "wind-up emits chips");
             Require(clock.Advance(.4f), "downward strike missing");

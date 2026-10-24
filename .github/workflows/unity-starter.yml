@@ -21,6 +21,7 @@ on:
       - "tools/capture-worker-animations.mjs"
       - "tools/capture-rts-controls.mjs"
       - "tools/capture-worker-navigation.mjs"
+      - "tools/capture-finite-trees.mjs"
       - "tools/capture-tree-chop-feedback.mjs"
       - "tools/test-background-music.mjs"
       - ".github/workflows/unity-starter.yml"
@@ -138,6 +139,7 @@ jobs:
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
           node tools/test-background-music.mjs
+          node tools/capture-finite-trees.mjs
           node tools/capture-tree-chop-feedback.mjs
           node tools/capture-worker-navigation.mjs
           node tools/capture-rts-controls.mjs
