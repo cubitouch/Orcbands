@@ -241,6 +241,11 @@ namespace Orcbands.Editor
                 reveal.Sources[i + 2] = new Vector4(layout.torches[i].x,
                     layout.torches[i].z, 6.2f, 0f);
             var controller = controllerObject.AddComponent<OrcbandsController>();
+            var chopEffects = controllerObject.AddComponent<TreeChopEffects>();
+            chopEffects.Controller = controller;
+            var chipsMaterial = new Material(worldShader);
+            chipsMaterial.SetColor("_Color", new Color(.67f, .43f, .21f));
+            chopEffects.ChipMaterial = SavedMaterial("WoodChipBark", chipsMaterial);
             var pathfinder = controllerObject.AddComponent<WorkerNavigation>();
             pathfinder.MapHalfExtent = layout.mapHalfExtent;
             if (layout.navigationObstacles == null || layout.navigationObstacles.Length < layout.trees.Length)
@@ -424,6 +429,7 @@ namespace Orcbands.Editor
         {
             GenerateScene();
             NavigationChecks.Run();
+            TreeChopChecks.Run();
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             // GitHub Pages serves static files without Content-Encoding for
             // Unity's pre-compressed WebGL bundles. Emit uncompressed files.

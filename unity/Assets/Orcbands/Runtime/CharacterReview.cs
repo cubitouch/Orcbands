@@ -33,6 +33,10 @@ namespace Orcbands
             public int frame;
             public string rayTarget, lastSelectionHit;
             public float groundError;
+            public int treeStrikes, activeTreePulses, woodChips;
+            public float treeBend, lastStrikePhase, lastStrikeAge;
+            public string lastStruckTree;
+            public Vector3 chipOrigin;
             public bool navigationClear;
             public int remainingWaypoints, navigationObstacles, navigationExpanded;
             public string commandResult;
@@ -65,6 +69,7 @@ namespace Orcbands
                 if (treePick.collider != null && treePick.collider.GetComponentInParent<WoodcuttingTarget>() == tree && screen.z > 0f && screen.x > .08f && screen.x < .92f && screen.y > .08f && screen.y < .92f && distance < nearestDistance)
                 { nearest = tree; nearestDistance = distance; }
             }
+            var chopEffects = GetComponent<TreeChopEffects>();
             var commandedTree = controller.ChoppingTarget;
             float walkingLength = 0f, choppingLength = 0f;
             if (body != null)
@@ -74,6 +79,14 @@ namespace Orcbands
                     if (clip.name == "Chopping") choppingLength = clip.length;
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                treeStrikes = chopEffects == null ? 0 : chopEffects.StrikeCount,
+                activeTreePulses = chopEffects == null ? 0 : chopEffects.ActivePulses,
+                woodChips = chopEffects == null ? 0 : chopEffects.LiveChips,
+                treeBend = chopEffects == null ? 0f : chopEffects.CurrentBend,
+                lastStrikePhase = chopEffects == null ? 0f : chopEffects.LastHitNormalizedTime,
+                lastStrikeAge = chopEffects == null ? 0f : Time.time - chopEffects.LastHitTime,
+                lastStruckTree = chopEffects == null ? "" : chopEffects.LastTree,
+                chipOrigin = chopEffects == null ? Vector3.zero : chopEffects.LastChipOrigin,
                 moving = controller.IsMoving,
                 navigationClear = controller.Pathfinder != null && controller.Pathfinder.IsClear(feet),
                 remainingWaypoints = controller.RemainingWaypoints,
@@ -230,7 +243,7 @@ namespace Orcbands
         }
         public void Capture(string preset)
         {
-            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide";
+            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide" || preset == "tree-feedback";
             if (!preserveFacing) GetComponent<OrcbandsController>().CancelWorkerCommand();
             Vector3 feet = preserveFacing ? Character.transform.position : originalFeet;
             if (preset == "warm" || preset == "worker-three-quarter") feet = CampfireFeet;
@@ -260,6 +273,12 @@ namespace Orcbands
                     : preset == "worker-side" ? new Vector3(3.8f, .1f, 0f)
                     : new Vector3(2.8f, 1.3f, 3.5f);
                 offset = Character.transform.rotation * localOffset;
+            }
+            if (preset == "tree-feedback" && GetComponent<OrcbandsController>().ChoppingTarget is WoodcuttingTarget tree)
+            {
+                target = tree.transform.position + Vector3.up * 1.8f;
+                Vector3 away = Vector3.ProjectOnPlane(Character.transform.position - tree.transform.position, Vector3.up).normalized;
+                offset = away * 7.5f + Vector3.Cross(Vector3.up, away) * 4f + Vector3.up * 3.2f;
             }
             View.transform.position = target + offset;
             View.transform.LookAt(target);
