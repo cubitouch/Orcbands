@@ -247,12 +247,12 @@ namespace Orcbands
             if (Application.platform == RuntimePlatform.WebGLPlayer) return;
             var previous = GUI.color;
             GUI.color = new Color(.11f, .17f, .14f, .84f);
-            GUI.DrawTexture(new Rect(16, Screen.height - 100, 348, 78), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(16, Screen.height - 138, 348, 78), Texture2D.whiteTexture);
             GUI.color = Color.white;
-            GUI.Label(new Rect(28, Screen.height - 94, 330, 24), "Orcbands  ·  Unity forest preview");
-            GUI.Label(new Rect(28, Screen.height - 69, 330, 20),
+            GUI.Label(new Rect(28, Screen.height - 132, 330, 24), "Orcbands  ·  Unity forest preview");
+            GUI.Label(new Rect(28, Screen.height - 107, 330, 20),
                 "Select: click/drag    Move/chop: right-click");
-            GUI.Label(new Rect(28, Screen.height - 49, 330, 20),
+            GUI.Label(new Rect(28, Screen.height - 87, 330, 20),
                 "Mouse edges: pan · Wheel: zoom · Q/E: rotate · R: reset · F: fog");
             GUI.color = previous;
         }

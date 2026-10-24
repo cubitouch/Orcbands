@@ -97,7 +97,11 @@ namespace Orcbands
                     float soft = 0f;
                     for (int j = 0; j < 3; j++)
                         for (int i = 0; i < 3; i++)
-                            soft += cast[(y + j) * width + x + i] * (i == 1 ? 2f : 1f) * (j == 1 ? 2f : 1f) / 16f;
+                        {
+                            int px = Mathf.Clamp(ox + x + i, 0, Original.width - 1) - ox;
+                            int py = Mathf.Clamp(oy + y + j, 0, Original.height - 1) - oy;
+                            soft += cast[py * width + px] * (i == 1 ? 2f : 1f) * (j == 1 ? 2f : 1f) / 16f;
+                        }
                     float shadow = 1f - (1f - soft) * contactTransmission[y * rect.width + x];
                     byte value = (byte)Mathf.RoundToInt(255f * (1f - shadow * .48f));
                     pixels[y * rect.width + x] = new Color32(value, value, value, 255);
