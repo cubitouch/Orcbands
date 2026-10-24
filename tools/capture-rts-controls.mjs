@@ -49,10 +49,18 @@ try {
  assert(dot(left.start.cameraFocus,left.end.cameraFocus,right.start.cameraFocus,right.end.cameraFocus)<0,'Horizontal edges pan in the same direction');
  assert(dot(top.start.cameraFocus,top.end.cameraFocus,bottom.start.cameraFocus,bottom.end.cameraFocus)<0,'Vertical edges pan in the same direction');
  await reset();await move(.5,.5);
- for(let i=0;i<4;i++){await page.mouse.wheel(0,-3000);await frames(3);}
- const near=await report();assert(Math.abs(near.cameraDistance-near.zoomMin)<.05,'Near zoom escaped limit');await shot('zoom-near');
- for(let i=0;i<4;i++){await page.mouse.wheel(0,3000);await frames(3);}
- const far=await report();assert(Math.abs(far.cameraDistance-far.zoomMax)<.05,'Far zoom escaped limit');await shot('zoom-far');
+ const wheelTo=async(direction,target)=>{
+  // Unity normalises a browser wheel event to one notch, even for large deltas.
+  for(let i=0;i<24;i++){
+   if(Math.abs((await report()).cameraDistance-target)<.05)break;
+   await page.mouse.wheel(0,direction*3000);await frames(2);
+  }
+  // One further notch must stay pinned to the limit.
+  await page.mouse.wheel(0,direction*3000);await frames(2);
+  return report();
+ };
+ const near=await wheelTo(-1,24);assert(Math.abs(near.cameraDistance-near.zoomMin)<.05,'Near zoom escaped limit');await shot('zoom-near');
+ const far=await wheelTo(1,55);assert(Math.abs(far.cameraDistance-far.zoomMax)<.05,'Far zoom escaped limit');await shot('zoom-far');
  assert.equal(near.zoomMin,24);assert.equal(far.zoomMax,55);
  await reset();const centre=await report();assert(centre.cameraDistance>24&&centre.cameraDistance<55);
  assert(distance(centre.camera,{x:-20,y:22,z:26})<.01,'Reset camera changed');
