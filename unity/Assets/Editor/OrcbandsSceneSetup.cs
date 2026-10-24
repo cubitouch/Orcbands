@@ -20,7 +20,7 @@ namespace Orcbands.Editor
         private const string HutPath = "Assets/Orcbands/Art/timber-hut-01.obj";
 
         [Serializable] public class P { public float x, z, scale = 1f, angle, width = 1f, height = 1f; }
-        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; public WoodcuttingTarget.WorkExclusion[] workExclusions; }
+        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; public WoodcuttingTarget.WorkExclusion[] workExclusions; public WorkerNavigation.Footprint[] navigationObstacles; }
         private const string Generated = "Assets/Orcbands/Generated/";
         private static readonly Dictionary<string, Material> Shades = new Dictionary<string, Material>();
 
@@ -241,6 +241,12 @@ namespace Orcbands.Editor
                 reveal.Sources[i + 2] = new Vector4(layout.torches[i].x,
                     layout.torches[i].z, 6.2f, 0f);
             var controller = controllerObject.AddComponent<OrcbandsController>();
+            var pathfinder = controllerObject.AddComponent<WorkerNavigation>();
+            pathfinder.MapHalfExtent = layout.mapHalfExtent;
+            if (layout.navigationObstacles == null || layout.navigationObstacles.Length < layout.trees.Length)
+                throw new InvalidOperationException("Missing navigation footprints; regenerate the environment");
+            pathfinder.Obstacles = layout.navigationObstacles;
+            controller.Pathfinder = pathfinder;
             controller.Worker = worker.transform;
             controller.SelectionRing = ringObject.transform;
             controller.TreeTargetRing = targetRing.transform;
@@ -417,6 +423,7 @@ namespace Orcbands.Editor
         public static void Build()
         {
             GenerateScene();
+            NavigationChecks.Run();
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             // GitHub Pages serves static files without Content-Encoding for
             // Unity's pre-compressed WebGL bundles. Emit uncompressed files.

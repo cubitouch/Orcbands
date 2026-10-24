@@ -17,7 +17,8 @@ The historical Three.js Asset Lab remains intact in `preview/`.
 4. Let Unity import the assets. Choose **Orcbands → Generate Starter Scene**.
 5. Open `Assets/Scenes/OrcbandsStarter.unity` and press **Play**.
 6. Click the original miniature worker proxy and right-click the ground to move it.
-   Pan with WASD/arrows, dolly with the mouse wheel, Q/E to orbit and R to reset.
+   Pan at the canvas edges (or with WASD/arrows), zoom with the mouse wheel,
+   Q/E to orbit and R to reset. Movement routes around trees and camp structures.
 
 The generated scene is intentionally **gitignored**. Its inputs (meshes, generator
 and scripts) are version-controlled, and CI regenerates it before each build.
@@ -28,7 +29,7 @@ Run the menu command after a clean clone or when source assets change.
 - The **real** original Pine 01 and Timber Hut 01 OBJ/MTL source assets, copied
   byte-for-byte from `preview/assets/`. Geometry scale and material import
   should be visually checked inside Unity.
-- The **approved 244-pine forest layout**, directly imported from the Three.js
+- The **approved 1,220-pine forest layout**, directly imported from the Three.js
   seeded source, including exact resource placement, the original winding paths,
   terrain height/color and the authored stone and grass variants.
 - Original resource meshes including berry bushes, wood/stone stockpiles,
@@ -36,8 +37,8 @@ Run the menu command after a clean clone or when source assets change.
 - Forest-edge tree shading, camp torches and animated firelight, directional
   shadows, low-lying terrain and a perspective RTS camera matching the
   reference Three.js angle.
-- An original faceted **temporary worker proxy** with selection and direct click-to-move.
-  There is no pathfinding, obstacle avoidance, resource harvesting, storage
+- An original faceted **temporary worker proxy** with selection and obstacle-aware click-to-move.
+  See [worker navigation](../docs/worker-navigation.md). There is no resource harvesting, storage
   economy, construction simulation or persistent game state.
 
 If the imports have missing or flat-looking materials, fix the Unity import
@@ -73,8 +74,9 @@ license file or account credentials to the repository itself.
 
 ## Next milestone
 
-Navigation around obstacles, real resource objects, a worker task state
-machine, carrying/delivery, dynamic resource counters and persisted scene data.
+Real resource gathering, a worker task state machine, carrying/delivery,
+dynamic resource counters and persisted scene data. Obstacle routing is implemented;
+see [controls, limits and navigation checks](../docs/worker-navigation.md).
 
 ## Visual fidelity pass 2 — awaiting WebGL review
 

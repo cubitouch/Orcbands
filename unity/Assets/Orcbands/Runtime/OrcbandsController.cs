@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Orcbands
 {
-    /// <summary>RTS selection, direct movement and tree-chopping animation commands.</summary>
+    /// <summary>RTS selection, obstacle-aware movement and tree-chopping commands.</summary>
     public sealed class OrcbandsController : MonoBehaviour
     {
         public Transform Worker;
@@ -19,6 +20,13 @@ namespace Orcbands
         public string LastSelectionHit { get; private set; } = "no click";
         private bool hasDestination;
         private Vector3 destination;
+        public WorkerNavigation Pathfinder;
+        private readonly List<Vector3> route = new List<Vector3>();
+        private int waypoint, routeRevision;
+        private float feedbackUntil;
+        public string LastCommandResult { get; private set; } = "Ready";
+        public int RemainingWaypoints => hasDestination ? route.Count - waypoint : 0;
+        public Vector3 Destination => destination;
         public RtsCamera Navigation;
         private bool selectionPressed, boxSelecting;
         private Vector2 selectionStart;
@@ -55,8 +63,44 @@ namespace Orcbands
         public void CancelWorkerCommand()
         {
             hasDestination = false;
+            route.Clear(); waypoint = 0;
             SetChoppingTarget(null);
             if (animationDriver != null) animationDriver.Request(WorkerAnimation.Mode.Idle);
+        }
+
+        public bool CommandMove(Vector3 point)
+        {
+            CancelWorkerCommand();
+            if (Pathfinder == null || !Pathfinder.TryMoveRoute(Worker.position, point, route, out bool adjusted))
+                return RejectCommand();
+            BeginRoute(null, adjusted ? "Moving to nearby clear ground" : "Moving");
+            return true;
+        }
+        public bool CommandTree(WoodcuttingTarget tree)
+        {
+            CancelWorkerCommand();
+            if (tree == null || Pathfinder == null) return RejectCommand();
+            var candidates = new List<Vector3>();
+            tree.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
+            if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
+            BeginRoute(tree, "Approaching tree");
+            return true;
+        }
+        private void BeginRoute(WoodcuttingTarget tree, string message)
+        {
+            waypoint = 0; hasDestination = route.Count > 0;
+            destination = hasDestination ? route[route.Count - 1] : Worker.position;
+            routeRevision = Pathfinder.Revision;
+            SetChoppingTarget(tree);
+            LastCommandResult = message;
+            feedbackUntil = Time.time + 3f;
+        }
+        private bool RejectCommand()
+        {
+            CancelWorkerCommand();
+            LastCommandResult = "No clear route to that destination";
+            feedbackUntil = Time.time + 3f;
+            return false;
         }
 
         private void SetChoppingTarget(WoodcuttingTarget tree)
@@ -117,34 +161,41 @@ namespace Orcbands
                 if (Physics.Raycast(ray, out RaycastHit targetHit, 300f) &&
                     targetHit.collider.GetComponentInParent<WoodcuttingTarget>() is WoodcuttingTarget tree)
                 {
-                    SetChoppingTarget(tree);
-                    destination = tree.ApproachPoint(Worker.position, WorkPositionExclusions);
-                    if (Ground.Raycast(new Ray(destination + Vector3.up * 45f, Vector3.down),
-                        out RaycastHit surface, 100f)) destination.y = surface.point.y;
-                    hasDestination = true;
+                    CommandTree(tree);
                 }
-                else if (Ground.Raycast(ray, out RaycastHit hit, 300f))
-                {
-                    SetChoppingTarget(null);
-                    destination = hit.point;
-                    hasDestination = true;
-                }
+                else if (Ground.Raycast(ray, out RaycastHit hit, 300f)) CommandMove(hit.point);
             }
 
-            if (hasDestination)
+            if (hasDestination && Pathfinder.Revision != routeRevision)
             {
-                Vector3 flat = destination - Worker.position;
+                // Future construction/felling rebuilds invalidate outstanding routes.
+                if (chopTarget != null) CommandTree(chopTarget);
+                else CommandMove(destination);
+            }
+            float remaining = MoveSpeed * Time.deltaTime;
+            while (hasDestination && remaining > 0f)
+            {
+                Vector3 flat = route[waypoint] - Worker.position;
                 flat.y = 0f;
-                if (flat.magnitude < .035f) hasDestination = false;
-                else
+                float distance = flat.magnitude;
+                float step = Mathf.Min(distance, remaining);
+                Vector3 next = distance < .000001f ? Worker.position : Worker.position + flat / distance * step;
+                // A swept check covers the entire step, even after a slow frame.
+                if (!Pathfinder.SegmentClear(Worker.position, next) ||
+                    !Ground.Raycast(new Ray(new Vector3(next.x, 45f, next.z), Vector3.down), out RaycastHit elevation, 100f))
+                { RejectCommand(); break; }
+                next.y = elevation.point.y;
+                Worker.position = next;
+                if (distance > .000001f) Worker.rotation = Quaternion.LookRotation(flat / distance, Vector3.up);
+                remaining -= step;
+                if (distance <= step)
                 {
-                    Vector3 next = Worker.position + flat.normalized *
-                        Mathf.Min(flat.magnitude, MoveSpeed * Time.deltaTime);
-                    if (Ground.Raycast(new Ray(new Vector3(next.x, 45f, next.z),
-                        Vector3.down), out RaycastHit elevation, 100f))
-                        next.y = elevation.point.y;
-                    Worker.position = next;
-                    Worker.rotation = Quaternion.LookRotation(flat.normalized, Vector3.up);
+                    waypoint++;
+                    if (waypoint >= route.Count)
+                    {
+                        hasDestination = false;
+                        LastCommandResult = chopTarget == null ? "Arrived" : "Chopping";
+                    }
                 }
             }
 
@@ -166,6 +217,10 @@ namespace Orcbands
 
         private void OnGUI()
         {
+            if (Time.time < feedbackUntil)
+            {
+                GUI.Box(new Rect(Screen.width / 2f - 170f, Screen.height - 46f, 340f, 28f), LastCommandResult);
+            }
             if (boxSelecting && Event.current.type == EventType.Repaint)
             {
                 Rect rect = SelectionRect;

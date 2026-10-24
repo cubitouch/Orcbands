@@ -33,6 +33,10 @@ namespace Orcbands
             public int frame;
             public string rayTarget, lastSelectionHit;
             public float groundError;
+            public bool navigationClear;
+            public int remainingWaypoints, navigationObstacles, navigationExpanded;
+            public string commandResult;
+            public Vector3 navigationDestination;
         }
         public void Report(string unused)
         {
@@ -71,6 +75,12 @@ namespace Orcbands
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
                 moving = controller.IsMoving,
+                navigationClear = controller.Pathfinder != null && controller.Pathfinder.IsClear(feet),
+                remainingWaypoints = controller.RemainingWaypoints,
+                navigationObstacles = controller.Pathfinder == null ? 0 : controller.Pathfinder.ObstacleCount,
+                navigationExpanded = controller.Pathfinder == null ? 0 : controller.Pathfinder.LastExpanded,
+                navigationDestination = controller.Destination,
+                commandResult = controller.LastCommandResult,
                 boxSelecting = controller.IsBoxSelecting,
                 pointerInside = controller.Navigation != null && controller.Navigation.PointerInsideCanvas,
                 cameraFocus = controller.Navigation == null ? Vector3.zero : controller.Navigation.Focus,
@@ -121,6 +131,18 @@ namespace Orcbands
                 lastSelectionHit = controller.LastSelectionHit,
                 groundError = Mathf.Abs(feet.y - surface.point.y) }));
         }
+        [System.Serializable] private class NavigationRequest { public Vector3 point; }
+        // Review-only bridge exercises the same command path as a ground right-click.
+        public void NavigationCommand(string json)
+        {
+            var request = JsonUtility.FromJson<NavigationRequest>(json);
+            if (request == null) return;
+            var controller = GetComponent<OrcbandsController>();
+            var driver = Character.GetComponent<WorkerAnimation>();
+            if (driver != null) driver.Preview("Gameplay");
+            controller.CommandMove(request.point);
+        }
+
         [System.Serializable] private class TuningBone { public string name; public Vector3 euler; }
         [System.Serializable] private class WorkerTuning
         {

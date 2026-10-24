@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Orcbands
@@ -26,33 +27,20 @@ namespace Orcbands
             return true;
         }
 
-        public Vector3 ApproachPoint(Vector3 worker, WorkExclusion[] areas)
+        public void WorkPoints(Vector3 worker, WorkExclusion[] areas, List<Vector3> points)
         {
+            points.Clear();
             Vector3 away = Vector3.ProjectOnPlane(worker - transform.position, Vector3.up);
             if (away.sqrMagnitude < .01f) away = Vector3.back;
             away.Normalize();
-            Vector3 fallback = transform.position + away * StandOff;
-            // Search the work circle in a deterministic fan. Keep the nearest
-            // clear endpoint; movement to it is still a direct gameplay command.
-            Vector3 best = fallback;
-            float bestDistance = float.PositiveInfinity;
+            // All candidates remain outside the low branches. Navigation chooses a
+            // reachable candidate in one search; there is no blocked radial fallback.
             for (int step = 0; step < 24; step++)
             {
                 int sector = step == 0 ? 0 : (step + 1) / 2 * (step % 2 == 1 ? 1 : -1);
                 Vector3 point = transform.position + Quaternion.AngleAxis(sector * 15f, Vector3.up) * away * StandOff;
-                if (!ClearsWorkAreas(point, areas)) continue;
-                bool otherTree = false;
-                foreach (var hit in Physics.OverlapCapsule(point + Vector3.up * .6f,
-                    point + Vector3.up * 1.6f, .54f))
-                {
-                    var tree = hit.GetComponentInParent<WoodcuttingTarget>();
-                    if (tree != null && tree != this) { otherTree = true; break; }
-                }
-                if (otherTree) continue;
-                float distance = (worker - point).sqrMagnitude;
-                if (distance < bestDistance) { bestDistance = distance; best = point; }
+                if (ClearsWorkAreas(point, areas)) points.Add(point);
             }
-            return best;
         }
     }
 }
