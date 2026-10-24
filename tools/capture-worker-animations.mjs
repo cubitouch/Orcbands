@@ -81,6 +81,7 @@ try{
  await screenshot('tree-approach');
  result.interaction.chopping=await until(r=>r.chopTarget!==''&&r.animation==='Chopping'&&r.animatorState==='Chopping','chop at tree');
  assert(!result.interaction.chopping.moving,'Chopping began while moving');
+ assert(result.interaction.chopping.workPositionClear,'Chopping endpoint overlaps a camp footprint');
  assert(result.interaction.chopping.treeMarkerVisible,'Tree marker disappeared while chopping');
  assert.equal(result.interaction.chopping.chopTarget,clickedTree,'Chop target changed on arrival');
  assert(Math.abs(result.interaction.chopping.targetDistance-result.interaction.chopping.targetStandOff)<.04,'Worker did not stop at the tree work position');

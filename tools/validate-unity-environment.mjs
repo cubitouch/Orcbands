@@ -7,6 +7,8 @@ const grove = JSON.parse(readFileSync(resolve(root, 'grove-layout.json'), 'utf8'
 assert.equal(grove.seed, 2302);
 assert.equal(grove.trees.length, 1220);
 assert.equal(grove.torches.length, 4);
+assert.equal(grove.workExclusions.length,22,'Camp work-position footprint export');
+for(const p of grove.workExclusions)assert([p.x,p.z,p.radius].every(Number.isFinite)&&p.radius>0);
 assert(grove.resourceCount >= 15);
 for (const name of ['woodland-story', 'terrain', 'resource-art', 'stone-props', 'grass-props', 'forest-patches', 'hearth-art', 'hearth-flames', 'torches-art', 'torches-flames']) {
   const file = resolve(root, name + '.bytes');

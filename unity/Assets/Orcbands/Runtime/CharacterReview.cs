@@ -17,7 +17,7 @@ namespace Orcbands
             public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp, gripEuler;
             public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen, targetFeet;
             public float targetDistance, targetStandOff, walkingClipLength, choppingClipLength;
-            public bool treeMarkerVisible, moving;
+            public bool treeMarkerVisible, moving, workPositionClear;
             public string chopScreenTarget;
             public string animation, animatorState, chopTarget;
             public float animationTime, animationRate, gameTime, shadowBias, shadowNormalBias;
@@ -69,6 +69,7 @@ namespace Orcbands
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
                 moving = controller.IsMoving,
+                workPositionClear = WoodcuttingTarget.ClearsWorkAreas(feet, controller.WorkPositionExclusions),
                 treeCount = FindObjectsByType<WoodcuttingTarget>(FindObjectsSortMode.None).Length,
                 mapHalfExtent = controller.MapHalfExtent,
                 carryWeight = carry == null ? 0f : carry.Weight,

@@ -12,6 +12,7 @@ namespace Orcbands
         public Transform TreeTargetRing;
         public CampReveal Reveal;
         public float MapHalfExtent = 110f;
+        public WoodcuttingTarget.WorkExclusion[] WorkPositionExclusions;
 
         private bool selected;
         public bool IsWorkerSelected => selected;
@@ -68,7 +69,7 @@ namespace Orcbands
                     targetHit.collider.GetComponentInParent<WoodcuttingTarget>() is WoodcuttingTarget tree)
                 {
                     SetChoppingTarget(tree);
-                    destination = tree.ApproachPoint(Worker.position);
+                    destination = tree.ApproachPoint(Worker.position, WorkPositionExclusions);
                     if (Ground.Raycast(new Ray(destination + Vector3.up * 45f, Vector3.down),
                         out RaycastHit surface, 100f)) destination.y = surface.point.y;
                     hasDestination = true;

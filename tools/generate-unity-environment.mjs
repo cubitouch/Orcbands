@@ -28,6 +28,11 @@ for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.sta
 writeFileSync(resolve(root, 'grove-layout.json'), JSON.stringify({
   seed: layout.seed,
   mapHalfExtent: MAP_HALF_EXTENT,
+  // Existing authored camp footprints, used only to choose a clear work spot.
+  workExclusions: [...layout.resources,
+    {...HUT_PLACEMENT,radius:3.9}, {...layout.campfire,radius:1.15},
+    ...TORCH_PLACEMENTS.map(p=>({...p,radius:.38}))]
+    .map(p=>({x:-p.x,z:p.z,radius:p.radius})),
   trails: layout.trails.map(samples => ({points:samples.map(p=>({...p,x:-p.x}))})),
   // Three.js is right-handed and Unity's world is left-handed: reflect X
   // so the original camera/view and the authored layout match on screen.

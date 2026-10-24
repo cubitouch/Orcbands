@@ -20,7 +20,7 @@ namespace Orcbands.Editor
         private const string HutPath = "Assets/Orcbands/Art/timber-hut-01.obj";
 
         [Serializable] public class P { public float x, z, scale = 1f, angle, width = 1f, height = 1f; }
-        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; }
+        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; public WoodcuttingTarget.WorkExclusion[] workExclusions; }
         private const string Generated = "Assets/Orcbands/Generated/";
         private static readonly Dictionary<string, Material> Shades = new Dictionary<string, Material>();
 
@@ -248,6 +248,7 @@ namespace Orcbands.Editor
             controller.Ground = ground.GetComponent<Collider>();
             controller.Reveal = reveal;
             controller.MapHalfExtent = layout.mapHalfExtent;
+            controller.WorkPositionExclusions = layout.workExclusions;
             var review = controllerObject.AddComponent<CharacterReview>();
             review.Character = worker.GetComponent<CharacterPresentation>();
             review.View = camera; review.Ground = controller.Ground; review.Reveal = reveal;

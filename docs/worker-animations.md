@@ -233,3 +233,10 @@ body and a small visual margin. `WoodcuttingTarget.CrownRadius` and
 `WorkerClearance` remain editable. This avoids the former fixed 1.25m stop
 inside low branches. It is a target-specific stop distance; movement still
 travels directly and does not avoid other obstacles until pathfinding lands.
+
+Work positions also test a deterministic 15-degree fan around the tree, choosing
+the nearest endpoint outside existing camp resource/hut/fire/torch footprints
+and other tree colliders. This avoids placing the worker in Pine 017's food
+baskets when moving the stop away from its branches. These footprint checks
+only choose the endpoint; they do not route or collide the moving worker.
+If the entire work circle is blocked, the original radial point is the fallback.
