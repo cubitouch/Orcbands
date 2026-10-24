@@ -28,7 +28,18 @@ for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.sta
 writeFileSync(resolve(root, 'grove-layout.json'), JSON.stringify({
   seed: layout.seed,
   mapHalfExtent: MAP_HALF_EXTENT,
-  // Existing authored camp footprints, used only to choose a clear work spot.
+  // Gameplay footprints share the exact reflected placements with rendered art.
+  navigationObstacles: [
+    ...layout.trees.map(p=>({x:-p.x,z:p.z,radius:1.36*p.scale*(p.width??1)})),
+    ...layout.resources.filter(p=>p.state!=='chips').map(p=>({x:-p.x,z:p.z,radius:p.radius})),
+    {x:-HUT_PLACEMENT.x,z:HUT_PLACEMENT.z,halfWidth:3.25,halfDepth:2.6,angle:-HUT_PLACEMENT.angle},
+    {x:-layout.campfire.x,z:layout.campfire.z,radius:1.15},
+    ...TORCH_PLACEMENTS.map(p=>({x:-p.x,z:p.z,radius:.38})),
+    ...layout.rocks.filter(p=>p.type>0).map(p=>({x:-p.x,z:p.z,radius:p.radius})),
+    ...layout.story.filter(p=>p.kind==='deadLog'||p.kind==='mossRock')
+      .map(p=>({x:-p.x,z:p.z,radius:p.radius})),
+  ],
+  // Existing authored camp footprints also protect chopping work positions.
   workExclusions: [...layout.resources,
     {...HUT_PLACEMENT,radius:3.9}, {...layout.campfire,radius:1.15},
     ...TORCH_PLACEMENTS.map(p=>({...p,radius:.38}))]

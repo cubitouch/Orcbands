@@ -108,6 +108,7 @@
         window.orcbandsShadowReview = tuning => instance.SendMessage('Orcbands Controller', 'ShadowReview', JSON.stringify(tuning));
         window.orcbandsAnimationPreview = mode => instance.SendMessage('Orcbands Controller', 'AnimationPreview', mode);
         window.orcbandsTuneWorker = tuning => instance.SendMessage('Orcbands Controller', 'TuneWorker', JSON.stringify(tuning));
+        window.orcbandsNavigationCommand = point => instance.SendMessage('Orcbands Controller', 'NavigationCommand', JSON.stringify({point}));
         window.orcbandsCharacterReport = () => instance.SendMessage('Orcbands Controller', 'Report', '');
         // Click the canvas to direct keyboard controls to the game.
       }).catch(message => {
