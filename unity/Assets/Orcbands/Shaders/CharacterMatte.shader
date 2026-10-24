@@ -20,25 +20,7 @@ Shader "Orcbands/CharacterMatte"
         sampler2D _MainTex;
         half _SurfaceContrast;
         struct Input { float3 worldPos; float3 worldNormal; float2 uv_MainTex; };
-        float4 _CharacterFirePositionRange[5];
-        float4 _CharacterFireRadiance[5];
-        float3 CharacterFirelight(float3 world, float3 normal)
-        {
-            float3 light = 0;
-            [unroll] for (int i = 0; i < 5; i++)
-            {
-                float3 delta = _CharacterFirePositionRange[i].xyz - world;
-                float distanceSquared = max(dot(delta, delta), .0001);
-                float rangeSquared = max(_CharacterFirePositionRange[i].w * _CharacterFirePositionRange[i].w, .0001);
-                float radiusSquared = distanceSquared / rangeSquared;
-                float edge = saturate(1.0 - radiusSquared);
-                float attenuation = edge * edge / (1.0 + 25.0 * radiusSquared);
-                float diffuse = saturate(dot(normal, delta * rsqrt(distanceSquared)));
-                light += _CharacterFireRadiance[i].rgb * (diffuse * attenuation);
-            }
-            return light;
-        }
-
+        #include "CampFirelight.cginc"
 
         float4 _CampRevealSources[6];
         float _CampFogEnabled;
@@ -94,7 +76,7 @@ Shader "Orcbands/CharacterMatte"
             o.Albedo = saturate((atlas.rgb * _Color.rgb - .25) * _SurfaceContrast + .25);
             // Fire lights are unshadowed in the existing camp. Evaluate their
             // diffuse contribution here, retaining sun shadows and atlas UVs.
-            o.Emission = o.Albedo * CharacterFirelight(IN.worldPos, normalize(IN.worldNormal));
+            o.Emission = o.Albedo * CampFirelight(IN.worldPos, normalize(IN.worldNormal));
             o.Alpha = 1;
         }
         // Three.js applies visibility to the already-lit pixel. Applying

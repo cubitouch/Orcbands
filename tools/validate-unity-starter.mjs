@@ -183,6 +183,11 @@ assert.match(publicPrCi, /name: Capture character art review[^\n]*\n        if: 
 // accumulate depth-competing ForwardAdd draws. The forest retains real lights.
 const characterShader = file('unity/Assets/Orcbands/Shaders/CharacterMatte.shader');
 assert.match(characterShader, /#pragma surface surf Lambert .*noforwardadd novertexlights/);
-assert.match(characterShader, /o\.Emission = o\.Albedo \* CharacterFirelight/);
-assert.match(characterShader, /_CharacterFirePositionRange\[5\]/);
+assert.match(characterShader, /o\.Emission = o\.Albedo \* CampFirelight/);
+assert.match(file('unity/Assets/Orcbands/Shaders/CampFirelight.cginc'), /_CampFirePositionRange\[5\]/);
+assert.match(characterShader, /#include "CampFirelight.cginc"/);
+const worldShader = file('unity/Assets/Orcbands/Shaders/WorldColorLit.shader');
+assert.match(worldShader, /noforwardadd novertexlights/);
+assert.match(worldShader, /#include "CampFirelight.cginc"/);
+assert.match(worldShader, /o\.Emission = o\.Albedo \* CampFirelight/);
 assert.match(sceneCode, /CampCharacterLighting/);

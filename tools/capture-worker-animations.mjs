@@ -48,7 +48,7 @@ try{
    assert.equal(r.animationRate,mode==='Idle'?1:1.5,'Unexpected animation playback rate');
    assert.equal(r.treeCount,1220,'Expanded forest missing trees');
    assert.equal(r.mapHalfExtent,110,'Camera uses obsolete map bounds');
-   if(i>0)assert(Math.abs(r.carryWeight-(mode==='Walking'?1:0))<.01,'Walking carry correction leaked into another state');
+   if(i>0)assert(Math.abs(r.carryWeight)<.01,'Walking carry correction leaked into another state');
    assert.equal(r.activeSkinCount,1,'Worker must have one visible skin');
    assert(r.workerReceivesShadows,'Character must still receive scene shadows');
    assert(!r.rootMotion,'Root motion must stay disabled');

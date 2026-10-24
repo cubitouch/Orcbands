@@ -1,16 +1,16 @@
 # Worker animations — supplied Mixamo clips
 
-The worker uses the user's Idle, replacement Walking (1), and Standing Melee Attack Downward
+The worker uses the user's Dwarf Idle, Walk With Briefcase (1), and Standing Melee Attack Downward
 FBXs. Their original bytes are stored privately in `Orcbands-PrivateAssets`, under
 `Mixamo/Worker/` (the last file is named `Chopping.fbx`). No source FBXs, imported
 animation curves, avatars or controllers are committed to the public repository.
 Generated Unity assets remain in the ignored Generated directory. Source files
 and their vendor content are never uploaded as public workflow artifacts.
 
-The replacement upload is stored at the existing `Walking.fbx` path with its
+The earlier 23 October Walking (1) upload was stored at the existing `Walking.fbx` path with its
 original GUID retained. Its Git blob is `a7231786bc6cc578b85a06f7013bf93e9c0eb359`
 and SHA-256 is `f4f1e827ce7dbc825417e432cb394cceb601adc35227ec42358fe94e4a107437`.
-The replacement has different FBX metadata, but all 1,575 parsed animation-key
+That earlier replacement had different FBX metadata, but all 1,575 parsed animation-key
 arrays (times, values and tangent attributes) match the previous upload. It is
 the requested new file; it does not provide a visibly different gait.
 
@@ -210,22 +210,21 @@ smoke and sparks remain present without rectangular lighting artifacts.
   and controller code. The PR remains a draft for human visual approval.
 
 
-### Brisk walking and carry correction
+### Carrying walk and grunt idle — 24 October 2026
 
-Travel is now 3.0 units/second; the Walking state plays at 1.5×, matching
-that 50% increase. Idle stays at 1× and Chopping stays at 1.5×. Root motion
-remains off. `WorkerCarryPose`, on the Animator object, uses the base layer's
-IK pass to move the animated right-hand goal slightly outward and rotate the
-wrist during Walking only. Its editable `HandOffset` (metres in character
-space) and `HandEuler` (relative to the animated hand) preserve the existing
-hand-parented axe socket. The weight follows state transitions; idle and chopping
-receive no correction. Future carrying clips can disable `CorrectionEnabled`.
-No vendor FBX, rig or grip profile was edited.
+The current private `Walking.fbx` is the supplied Walk With Briefcase (1), with
+its carrying arm on the right. `Idle.fbx` is the supplied Dwarf Idle. The existing
+meta GUIDs are preserved. Private revision: `69b189f0701e5cd5114331953983aaaa01c5c474`.
+Source blob hashes: Walking `9f19bf4cf5b6c92f20a0ff5c1a5ab9f190717d33`,
+Idle `ec67faebd95293f89b830fd0ef09791e60b910d1`.
 
-`orcbandsCarryReview({handOffset:{x:.22,y:0,z:.06},handEuler:{x:0,y:35,z:0},
-freeze:true,pose:.25,mode:'Walking',disable:false})` is an explicit WebGL
-calibration hook. Restore the authored values, then use the Gameplay preview
-to release the frozen pose. It never runs automatically during gameplay.
+Travel remains 3.0 units/second and Walking plays at 1.5×. Idle stays at 1×;
+Chopping stays at 1.5×. Root motion is off. The carrying walk authors the hand
+position, so the former outward hand IK correction is disabled by default.
+`WorkerCarryPose.CorrectionEnabled` remains an optional calibration control.
+The vendor rig, original .85-unit axe and hand-parented socket are unchanged.
+`orcbandsCarryReview` can freeze individual poses; pass `disable:true` to retain
+the unmodified clip and use the Gameplay preview to release it.
 
 Tree work positions now stop outside each scaled Pine 01 crown: its authored
 1.36m radius × overall scale × crown-width variant, plus .65m for the worker

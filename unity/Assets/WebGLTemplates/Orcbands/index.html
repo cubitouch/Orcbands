@@ -49,7 +49,7 @@
     <div id="unity-warning" role="alert"></div>
   </main>
   <footer>
-    <p>Worker: left-click · Move: right-click ground · Chop: right-click tree (trunk or canopy) · Camera: WASD · Wheel · Q/E · R · F: fog of war</p>
+    <p>Select: left-click or drag a box · Move/chop: right-click ground/tree · Camera: mouse edges · Wheel: zoom · Q/E: rotate · R: reset · F: fog</p>
     <a href="../">Compare with original Asset Lab ↗</a>
   </footer>
   <script>
@@ -57,6 +57,33 @@
     const loading = document.querySelector('#unity-loading-bar');
     const progress = document.querySelector('#unity-progress-bar-full');
     const warning = document.querySelector('#unity-warning');
+    let unity = null, pointerInside = false;
+    const setPointerInside = inside => {
+      if (pointerInside === inside) return;
+      pointerInside = inside;
+      unity?.SendMessage('Orcbands Controller', 'PointerInside', inside ? '1' : '0');
+    };
+    const cancelPointer = () => {
+      setPointerInside(false);
+      unity?.SendMessage('Orcbands Controller', 'CancelPointer', '');
+    };
+    canvas.addEventListener('pointerenter', () => setPointerInside(document.hasFocus()));
+    canvas.addEventListener('pointerleave', () => setPointerInside(false));
+    canvas.addEventListener('pointermove', event => {
+      const box = canvas.getBoundingClientRect();
+      setPointerInside(document.hasFocus() && event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom);
+    });
+    canvas.addEventListener('pointerdown', event => {
+      canvas.focus();
+      if (event.button === 0) canvas.setPointerCapture(event.pointerId);
+      setPointerInside(true);
+    });
+    canvas.addEventListener('pointerup', () => { if (!pointerInside) cancelPointer(); });
+    canvas.addEventListener('pointercancel', cancelPointer);
+    canvas.addEventListener('wheel', event => event.preventDefault(), {passive:false});
+    window.addEventListener('blur', cancelPointer);
+    window.addEventListener('focus', () => setPointerInside(canvas.matches(':hover')));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelPointer(); });
     const buildUrl = 'Build';
     const config = {
       dataUrl: buildUrl + '/{{{ DATA_FILENAME }}}',
@@ -74,9 +101,11 @@
         progress.style.width = Math.round(amount * 100) + '%';
       }).then(instance => {
         loading.style.display = 'none';
+        unity = instance;
+        instance.SendMessage('Orcbands Controller', 'PointerInside', pointerInside ? '1' : '0');
         window.orcbandsReview = preset => instance.SendMessage('Orcbands Controller', 'Capture', preset);
         window.orcbandsCarryReview = tuning => instance.SendMessage('Orcbands Controller', 'CarryReview', JSON.stringify(tuning));
-      window.orcbandsShadowReview = tuning => instance.SendMessage('Orcbands Controller', 'ShadowReview', JSON.stringify(tuning));
+        window.orcbandsShadowReview = tuning => instance.SendMessage('Orcbands Controller', 'ShadowReview', JSON.stringify(tuning));
         window.orcbandsAnimationPreview = mode => instance.SendMessage('Orcbands Controller', 'AnimationPreview', mode);
         window.orcbandsTuneWorker = tuning => instance.SendMessage('Orcbands Controller', 'TuneWorker', JSON.stringify(tuning));
         window.orcbandsCharacterReport = () => instance.SendMessage('Orcbands Controller', 'Report', '');

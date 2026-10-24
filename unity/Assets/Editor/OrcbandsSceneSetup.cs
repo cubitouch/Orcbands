@@ -245,6 +245,10 @@ namespace Orcbands.Editor
             controller.SelectionRing = ringObject.transform;
             controller.TreeTargetRing = targetRing.transform;
             controller.GameCamera = camera;
+            var navigation = controllerObject.AddComponent<RtsCamera>();
+            navigation.View = camera;
+            navigation.MapHalfExtent = layout.mapHalfExtent;
+            controller.Navigation = navigation;
             controller.Ground = ground.GetComponent<Collider>();
             controller.Reveal = reveal;
             controller.MapHalfExtent = layout.mapHalfExtent;

@@ -39,3 +39,5 @@ We use [**POLYGON MINI – Fantasy Character Pack – Art by Synty**](https://as
 The character models, prefabs, textures and Unity metadata are purchased commercial assets, **not included in this public Git repository**. They are stored in the private `cubitouch/Orcbands-PrivateAssets` repository and made available to trusted Unity builds; public pull-request checks retain a procedural fallback. Ownership and license remain with their respective rights holders. See [Unity private-asset build setup](unity/README.md#licensed-synty-mini-orcs--private-source-integration).
 
 The user-supplied Mixamo idle, walking and chopping FBXs also stay in the private asset repository. See [worker animation controls and integration](docs/worker-animations.md).
+
+Playable controls: left-click or drag a box to select; right-click ground/tree to move or chop. Move the pointer near the game edges to pan, use the wheel for bounded zoom, Q/E to orbit and R to reset. [Camera and selection details](docs/rts-controls.md).
