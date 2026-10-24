@@ -2,7 +2,7 @@
 
 While an orc is stationary and chopping its commanded tree, each downward strike
 gives that tree a small elastic shudder and emits nine faceted wood chips from
-the struck side. The base remains anchored and the tree settles within 0.65s.
+the visible struck face, clear of the low foliage. The base remains anchored and the tree settles within 0.65s.
 Chips tumble, fall and shrink away within 0.7s. They are visual feedback only;
 trees are not felled and no wood inventory is awarded.
 
@@ -23,7 +23,7 @@ meshes, material clones or global forest-sway shader parameters are needed.
 
 One lazy particle pool has a hard 64-chip cap and one original tetrahedral chip
 mesh. The shared WorldColorLit material keeps the camp's existing lighting and
-fog behavior. The game does not allocate particle objects on each strike.
+fog behavior, with a lighter fresh-wood colour for readability. The game does not allocate particle objects on each strike.
 
 ## Music
 

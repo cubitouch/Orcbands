@@ -119,11 +119,11 @@ namespace Orcbands
             }
             pulse.pivot = tree.transform.position; pulse.direction = -towardWorker; pulse.started = Time.time;
             EnsureChipPool();
-            // Follow the authored axe head's strike height, bounded to the struck side of the low trunk.
+            // Follow the authored axe height; release chips at the struck face, clear of low foliage.
             Vector3 head = axeGrip == null ? tree.transform.position + towardWorker * .45f + Vector3.up * .7f
                 : axeGrip.position + axeGrip.up * .5f;
             float height = Mathf.Clamp(head.y - tree.transform.position.y, .35f, 1.2f);
-            float reach = Mathf.Clamp(Vector3.Dot(head - tree.transform.position, towardWorker), .22f, Mathf.Max(.22f, tree.CrownRadius * .75f));
+            float reach = Mathf.Clamp(Vector3.Dot(head - tree.transform.position, towardWorker), tree.CrownRadius + .03f, tree.CrownRadius + .15f);
             LastChipOrigin = tree.transform.position + towardWorker * reach + Vector3.up * height;
             var random = new System.Random(2901 + StrikeCount * 47);
             Vector3 side = Vector3.Cross(Vector3.up, towardWorker);
@@ -151,6 +151,7 @@ namespace Orcbands
             var main = chips.main;
             main.loop = true; main.playOnAwake = false; main.startSpeed = 0f; main.maxParticles = 64;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.cullingMode = ParticleSystemCullingMode.AlwaysSimulate;
             main.gravityModifier = .85f; main.startRotation3D = true;
             var emission = chips.emission; emission.enabled = false;
             var shape = chips.shape; shape.enabled = false;

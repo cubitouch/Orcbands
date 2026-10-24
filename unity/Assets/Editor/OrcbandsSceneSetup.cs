@@ -244,7 +244,7 @@ namespace Orcbands.Editor
             var chopEffects = controllerObject.AddComponent<TreeChopEffects>();
             chopEffects.Controller = controller;
             var chipsMaterial = new Material(worldShader);
-            chipsMaterial.SetColor("_Color", new Color(.67f, .43f, .21f));
+            chipsMaterial.SetColor("_Color", new Color(.78f, .56f, .30f));
             chopEffects.ChipMaterial = SavedMaterial("WoodChipBark", chipsMaterial);
             var pathfinder = controllerObject.AddComponent<WorkerNavigation>();
             pathfinder.MapHalfExtent = layout.mapHalfExtent;
