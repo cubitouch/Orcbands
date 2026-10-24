@@ -48,8 +48,9 @@ source PNG. It also retains the navigation regressions.
 `tools/capture-finite-trees.mjs` runs against both real public and licensed WebGL
 players. It verifies zero initial wood, no preview awards, interruption/resumption,
 exact 12-wood depletion, stump/marker/idle state, released crown clearance,
-shadow repair, a second tree's exact cumulative 24 wood, and desktop/portrait
-counter captures. The existing strike-effects, navigation, RTS controls, music
+shadow repair, a second tree's exact cumulative 24 wood, and desktop/portrait/Retina
+counter captures. The native HUD scales with viewport height and fits narrow
+canvases, preserving its apparent size across browser device pixel ratios. The existing strike-effects, navigation, RTS controls, music
 and character checks remain enabled.
 
 Manual acceptance:

@@ -86,7 +86,10 @@ namespace Orcbands
                 detailStyle = new GUIStyle(GUI.skin.label) { fontSize = 12 };
                 detailStyle.normal.textColor = new Color(.82f, .87f, .77f);
             }
-            float scale = Mathf.Clamp(Screen.width / 1000f, .85f, 1.2f);
+            // Native GUI uses render pixels, including WebGL's device pixel ratio.
+            // A reference viewport preserves apparent size on Retina displays;
+            // the width limit also keeps the panel inside narrow canvases.
+            float scale = Mathf.Min(Screen.height / 560f, Screen.width / 256f);
             var matrix = GUI.matrix;
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
             var tree = Controller == null ? null : Controller.ChoppingTarget;

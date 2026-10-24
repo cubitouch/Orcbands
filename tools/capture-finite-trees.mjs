@@ -81,8 +81,26 @@ try {
  // Readability of the same native counter at a compact laptop/portrait viewport.
  await page.setViewportSize({width:390,height:844});await frames();
  await page.screenshot({path:resolve(output,'wood-mobile.png')});
+ // A fresh high-DPI context checks the same native HUD at real Retina resolution.
+ await page.close();
+ const retina=await browser.newPage({viewport:{width:1280,height:800},deviceScaleFactor:2});
+ retina.on('pageerror',e=>errors.push(e.message));
+ await retina.goto(process.argv[2]??'http://127.0.0.1:8765/');
+ await retina.waitForFunction(()=>window.orcbandsCharacterReport,null,{timeout:180000});
+ let retinaReady=false;
+ for(let i=0;i<160;i++){
+  const pending=retina.waitForEvent('console',{predicate:m=>m.text().includes('CHARACTER_REPORT:'),timeout:30000});
+  await retina.evaluate(()=>window.orcbandsCharacterReport());
+  const r=JSON.parse((await pending).text().split('CHARACTER_REPORT:')[1].split('\n')[0]);
+  if(r.gameTime>5){assert.equal(r.wood,0,'Fresh session did not reset wood');retinaReady=true;break;}
+  await retina.waitForTimeout(100);
+ }
+ assert(retinaReady,'Retina scene never rendered beyond the splash');
+ const dpi=await retina.evaluate(()=>({ratio:document.querySelector('canvas').width/document.querySelector('canvas').getBoundingClientRect().width}));
+ assert(dpi.ratio>1.9,'Retina capture did not use a high-resolution render surface');
+ await retina.screenshot({path:resolve(output,'wood-retina.png'),scale:'css'});
  assert.deepEqual(errors,[]);
- console.log('PASS: real tree strikes award exact finite wood; preview/interrupt/exhaustion guards; resume, two stumps, released crown clearance, repaired shadows and readable counter.');
+ console.log('PASS: real tree strikes award exact finite wood; preview/interrupt/exhaustion guards; resume, two stumps, released crown clearance, repaired shadows and desktop/portrait/Retina counter views.');
 } finally {
  await writeFile(resolve(output,'finite-trees-report.json'),JSON.stringify({traces,errors},null,2));
  await browser.close();
