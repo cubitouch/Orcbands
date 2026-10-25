@@ -138,7 +138,10 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
+          node tools/test-save-store.mjs
+          node tools/test-menu-host.mjs
           node tools/test-background-music.mjs
+          node tools/capture-menu-persistence.mjs
           node tools/capture-finite-trees.mjs
           node tools/capture-tree-chop-feedback.mjs
           node tools/capture-worker-navigation.mjs

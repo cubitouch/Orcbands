@@ -1,0 +1,16 @@
+import {strict as assert} from 'node:assert';
+import {SaveStore,envelope,decode} from '../unity/Assets/WebGLTemplates/Orcbands/TemplateData/save-store.mjs';
+const data=new Map();const store=new SaveStore({getItem:key=>data.get(key)??null,setItem:(key,v)=>data.set(key,v),removeItem:key=>data.delete(key)});
+const snapshot={version:1,map:'forest-2302-v1',wood:2,elapsed:12,trees:[10]};
+const save=envelope(snapshot,'Camp');store.write('slot1',save);
+assert.deepEqual(store.read('slot1').value,save);
+data.set('orcbands.save.v1.auto','{broken');
+assert(store.read('auto').error);assert.deepEqual(store.read('slot1').value,save);
+assert.equal(store.read('slot2').empty,true);assert.throws(()=>store.write('unknown',save));
+assert.throws(()=>decode(JSON.stringify({...save,version:99})));
+assert.throws(()=>decode('x'.repeat(131073)));
+assert.equal(envelope(snapshot,'a'.repeat(60)).name.length,40);
+const denied=new SaveStore({getItem(){throw Error('Denied');},setItem(){throw Error('Quota');}});
+assert(denied.read('slot1').error);assert.throws(()=>denied.write('auto',save),/Download a save/);
+store.remove('slot1');assert(store.read('slot1').empty);
+console.log('PASS: save roundtrip, independent corrupt slots, missing slots, bounded imports, unsupported versions, names, storage denial and deletion.');

@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 import { strict as assert } from 'node:assert';
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdir, readdir } from 'node:fs/promises';
@@ -56,6 +57,7 @@ try {
   const box = await page.locator('#unity-canvas').boundingBox();
   assert(box && box.width > 1050 && box.height > 390,
     'Unity should fill the approved wide landscape gallery');
+  await enterCamp(page);
   await page.screenshot({ path: screenshot, fullPage: true });
   // Guard against the stationary-camera forest flicker reproduced by PR #43.
   // This patch of distant pines used to change colour in ~20% of its pixels

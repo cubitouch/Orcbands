@@ -37,6 +37,13 @@ namespace Orcbands
         public int StrikeCount { get; private set; }
         private GUIStyle counterStyle, detailStyle, panelStyle;
 
+        public void RestoreCounters(int wood)
+        {
+            Wood = wood; StrikeCount = wood; DepletedTrees = 0;
+            LastDepletedTree = ""; LastTarget = null; LastStumpPosition = Vector3.zero;
+            cursor.Reset(); tracked = null; proxyTime = 0f;
+            foreach (var tree in Shadows.Trees) if (tree.IsDepleted) DepletedTrees++;
+        }
         private void LateUpdate()
         {
             var tree = Controller == null ? null : Controller.ChoppingTarget;

@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 // Real compiled Unity gameplay, in both public-proxy and licensed-character builds.
 import {strict as assert} from 'node:assert';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -12,6 +13,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.argv[2]??'http://127.0.0.1:8765/');
  await page.waitForFunction(()=>window.orcbandsCharacterReport,null,{timeout:180000});
+ await enterCamp(page);
  const report=async()=>{
   const pending=page.waitForEvent('console',{predicate:m=>m.text().includes('CHARACTER_REPORT:'),timeout:30000});
   await page.evaluate(()=>window.orcbandsCharacterReport());
@@ -87,6 +89,7 @@ try {
  retina.on('pageerror',e=>errors.push(e.message));
  await retina.goto(process.argv[2]??'http://127.0.0.1:8765/');
  await retina.waitForFunction(()=>window.orcbandsCharacterReport,null,{timeout:180000});
+ await enterCamp(retina);
  let retinaReady=false;
  for(let i=0;i<160;i++){
   const pending=retina.waitForEvent('console',{predicate:m=>m.text().includes('CHARACTER_REPORT:'),timeout:30000});

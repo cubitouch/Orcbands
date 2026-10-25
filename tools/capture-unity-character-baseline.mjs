@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 // Identical input sequence for baseline and candidate Unity WebGL builds.
 // node tools/capture-unity-character-baseline.mjs <player-directory> <output>
 import {createServer} from 'node:http';
@@ -21,6 +22,7 @@ try{
  const page=await browser.newPage({viewport:{width:1280,height:800}});page.setDefaultTimeout(120000);
  await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>{const c=document.querySelector('#unity-canvas'),l=document.querySelector('#unity-loading-bar');return c&&c.width>300&&(!l||getComputedStyle(l).display==='none')},null,{timeout:180000});
+ await enterCamp(page);
  await page.waitForTimeout(2500);
  const canvas=page.locator('#unity-canvas');
  await canvas.screenshot({path:resolve(output,'overall.png')});

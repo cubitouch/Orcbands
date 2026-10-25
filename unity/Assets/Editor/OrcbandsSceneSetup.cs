@@ -286,6 +286,9 @@ namespace Orcbands.Editor
             controller.Reveal = reveal;
             controller.MapHalfExtent = layout.mapHalfExtent;
             controller.WorkPositionExclusions = layout.workExclusions;
+            var session = controllerObject.AddComponent<GameSession>();
+            session.Controller = controller; session.Harvest = harvest;
+            session.Shadows = shadows; session.Effects = chopEffects;
             var review = controllerObject.AddComponent<CharacterReview>();
             review.Character = worker.GetComponent<CharacterPresentation>();
             review.View = camera; review.Ground = controller.Ground; review.Reveal = reveal;
@@ -453,6 +456,7 @@ namespace Orcbands.Editor
             NavigationChecks.Run();
             TreeChopChecks.Run();
             TreeHarvestChecks.Run();
+            GameSaveChecks.Run();
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             // GitHub Pages serves static files without Content-Encoding for
             // Unity's pre-compressed WebGL bundles. Emit uncompressed files.

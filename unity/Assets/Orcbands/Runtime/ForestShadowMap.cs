@@ -25,6 +25,18 @@ namespace Orcbands
             return new RectInt(Mathf.FloorToInt(centre.x - radius), Mathf.FloorToInt(centre.y - radius),
                 Mathf.CeilToInt(2f * radius) + 2, Mathf.CeilToInt(2f * radius) + 2);
         }
+        public void RestoreResources()
+        {
+            if (live != null) { GroundMaterial.SetTexture("_ForestShadowTex", Original); Destroy(live); live = null; }
+            Repairs = ChangedPixels = 0;
+            int count = 0;
+            foreach (var tree in Trees) if (tree.IsDepleted) count++;
+            if (count == 0) return;
+            if (count <= 8) { foreach (var tree in Trees) if (tree.IsDepleted) RemoveCanopy(tree); return; }
+            live = Instantiate(Original); live.name = "Restored pine ground shadows";
+            live.SetPixels32(RenderRegion(new RectInt(0, 0, Original.width, Original.height)));
+            live.Apply(true, false); GroundMaterial.SetTexture("_ForestShadowTex", live); Repairs = count;
+        }
         public void RemoveCanopy(WoodcuttingTarget felled)
         {
             if (live == null)
@@ -73,8 +85,12 @@ namespace Orcbands
                         Raster(projected[Source.triangles[i]], projected[Source.triangles[i + 1]], projected[Source.triangles[i + 2]], cast, width, height);
                 }
                 int radius = Mathf.CeilToInt(3f * canopySigma / Texel);
-                for (int y = 0; y < rect.height; y++)
-                    for (int x = 0; x < rect.width; x++)
+                int left = Mathf.Max(0, Mathf.FloorToInt(centre.x - radius) - rect.x);
+                int right = Mathf.Min(rect.width - 1, Mathf.CeilToInt(centre.x + radius) - rect.x);
+                int bottom = Mathf.Max(0, Mathf.FloorToInt(centre.y - radius) - rect.y - 2);
+                int top = Mathf.Min(rect.height - 1, Mathf.CeilToInt(centre.y + radius) - rect.y + 2);
+                for (int y = bottom; y <= top; y++)
+                    for (int x = left; x <= right; x++)
                     {
                         int px = x + rect.x, py = y + rect.y;
                         // Mirror the PNG producer's inclusive row/column limits exactly.

@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 // Capture an existing Unity WebGL build without changing its camera or lighting.
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
@@ -20,6 +21,7 @@ try{
  const page=await browser.newPage({viewport:{width:1280,height:800}});page.setDefaultTimeout(120000);
  await page.goto('http://127.0.0.1:'+server.address().port,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>{const c=document.querySelector('#unity-canvas'),l=document.querySelector('#unity-loading-bar');return c&&c.width>300&&(!l||getComputedStyle(l).display==='none')},null,{timeout:180000});
+ await enterCamp(page);
  await page.waitForTimeout(2500);
  await page.screenshot({path:resolve(output,'overall.png'),clip:await page.locator('#unity-canvas').boundingBox()});
  console.log('Captured default Unity RTS view:',output);

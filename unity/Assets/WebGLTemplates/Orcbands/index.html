@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102018">
   <title>Orcbands — Unity playable preview</title>
+  <link rel="stylesheet" href="TemplateData/menu.css">
+  <script type="module" src="TemplateData/menu.mjs"></script>
   <style>
     :root { color-scheme: dark; font-family: system-ui, -apple-system, sans-serif; }
     * { box-sizing: border-box; }
@@ -43,7 +45,7 @@
 <body>
   <header>
     <h1><span>ORC</span>BANDS</h1>
-    <span class="tag">UNITY · FIRST PLAYABLE PREVIEW</span>
+    <span class="tag">A PLACE TO CALL HOME</span>
   </header>
   <main id="viewport" aria-label="Orcbands Unity game">
     <canvas id="unity-canvas" tabindex="0" aria-label="Interactive Orcbands camp"></canvas>
@@ -52,10 +54,51 @@
       <div class="progress"><div id="unity-progress-bar-full"></div></div>
     </div>
     <div id="unity-warning" role="alert"></div>
+    <section id="session-overlay" role="dialog" aria-modal="true" aria-label="Orcbands menu">
+      <svg id="session-art" viewBox="844 461 828 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><image href="TemplateData/opening-storyboard.png" width="1672" height="941"/></svg>
+      <div class="session-page" data-page="home">
+        <p class="session-eyebrow">A small band. A new beginning.</p>
+        <h2 class="session-title">ORCBANDS</h2><p class="session-tagline">A place to call home.</p>
+        <nav class="session-nav" aria-label="Main menu">
+          <button id="resume-game" class="primary" hidden>Resume</button>
+          <button id="continue-game" class="primary" disabled>Continue</button>
+          <button id="new-game" disabled>New Game</button>
+          <button id="load-game" disabled>Load Game</button>
+          <button id="save-game" hidden>Save Game</button>
+          <button id="settings-game">Settings</button>
+        </nav>
+        <p class="session-note">A woodland survival story, one axe stroke at a time.<br>Saves stay in this browser. Download a copy to keep them.</p>
+      </div>
+      <div class="session-page" data-page="intro" hidden>
+        <button id="intro-skip">Skip introduction</button><span id="intro-count"></span>
+        <p id="intro-caption" aria-live="polite"></p>
+        <div class="session-actions intro-controls"><button id="intro-back">Back</button><button id="intro-next" class="primary">Next</button></div>
+        <label id="intro-auto"><input id="intro-autoplay" type="checkbox" checked> Advance automatically</label>
+      </div>
+      <div class="session-page" data-page="load" hidden>
+        <h2 id="load-title">Your camps</h2>
+        <label id="save-name-label" class="session-setting" hidden>Camp name <input id="save-name" maxlength="40" value="My camp"></label>
+        <div id="save-list"></div>
+        <div class="session-actions"><button id="load-back">Back</button><button id="import-save">Import save</button><button id="export-current" hidden>Download current camp</button></div>
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
+      </div>
+      <div class="session-page" data-page="settings" hidden>
+        <h2>Make yourself at home</h2>
+        <label class="session-setting"><input id="music-enabled" type="checkbox"> Background music</label>
+        <label class="session-setting">Volume <input id="music-volume" type="range" min="0" max="100" value="24"></label>
+        <p class="session-note">Select the worker with a click or a selection box. Right-click the ground to move, or a tree to chop.<br>Mouse edges to pan · Wheel to zoom · Q / E to rotate · R to reset the camera · Escape for the menu.</p>
+        <div class="session-actions"><button id="settings-back">Back</button><button id="replay-intro" disabled>Replay introduction</button></div>
+      </div>
+      <div class="session-page" data-page="confirm" hidden><h2>A new chapter?</h2><p id="session-dialog"></p><div class="session-actions"><button id="confirm-no">Cancel</button><button id="confirm-yes" class="primary">Confirm</button></div></div>
+      <p id="session-status" role="status" aria-live="polite" style="position:absolute;bottom:8px;left:clamp(20px,4vw,64px);right:20px;margin:0"></p>
+    </section>
+
   </main>
   <footer>
     <p>Select: left-click or drag a box · Move/chop: right-click ground/tree · Camera: mouse edges · Wheel: zoom · Q/E: rotate · R: reset · F: fog</p>
     <div class="footer-actions">
+      <button id="menu-toggle" disabled>Menu · Esc</button>
+      <span id="save-status" role="status"></span>
       <button id="music-toggle" type="button" aria-pressed="false" aria-controls="background-music">♫ Music: Off</button>
       <span id="music-status" role="status" aria-live="polite"></span>
       <a href="../">Compare with original Asset Lab ↗</a>
@@ -66,7 +109,10 @@
     const music = document.querySelector('#background-music');
     const musicButton = document.querySelector('#music-toggle');
     const musicStatus = document.querySelector('#music-status');
-    music.volume = .24;
+    let audioPreference = {enabled:true, volume:.24};
+    try { const stored=JSON.parse(localStorage.getItem('orcbands.audio.v1')); if(stored && typeof stored.enabled==='boolean' && Number.isFinite(stored.volume))audioPreference={enabled:stored.enabled,volume:Math.min(1,Math.max(0,stored.volume))}; } catch {}
+    const saveAudioPreference=()=>{try{localStorage.setItem('orcbands.audio.v1',JSON.stringify(audioPreference));}catch{}};
+    music.volume = audioPreference.volume;
     let musicWanted = false, musicPending = false, musicRequest = 0;
     const renderMusic = () => {
       const playing = musicWanted && !music.paused;
@@ -80,6 +126,7 @@
     musicButton.addEventListener('click', async () => {
       const request = ++musicRequest;
       musicWanted = !musicWanted; musicPending = musicWanted;
+      audioPreference.enabled = musicWanted; saveAudioPreference();
       musicStatus.textContent = '';
       if (!musicWanted) { music.pause(); renderMusic(); return; }
       if (music.error) music.load();
@@ -100,6 +147,12 @@
     music.addEventListener('playing', () => { if (!musicWanted) music.pause(); renderMusic(); });
     music.addEventListener('pause', renderMusic);
     music.addEventListener('error', () => { if (musicWanted) musicFailed(); });
+    window.orcbandsAudio = {
+      get enabled(){return audioPreference.enabled;},
+      startPreferred(){if(audioPreference.enabled && !musicWanted)musicButton.click();},
+      setEnabled(value){audioPreference.enabled=Boolean(value);saveAudioPreference();if(musicWanted!==Boolean(value))musicButton.click();},
+      setVolume(value){music.volume=Math.max(0,Math.min(1,value));audioPreference.volume=music.volume;saveAudioPreference();}
+    };
     const canvas = document.querySelector('#unity-canvas');
     const loading = document.querySelector('#unity-loading-bar');
     const progress = document.querySelector('#unity-progress-bar-full');
@@ -149,6 +202,8 @@
       }).then(instance => {
         loading.style.display = 'none';
         unity = instance;
+        window.orcbandsUnity = instance;
+        window.dispatchEvent(new Event('orcbands:unity'));
         instance.SendMessage('Orcbands Controller', 'PointerInside', pointerInside ? '1' : '0');
         window.orcbandsReview = preset => instance.SendMessage('Orcbands Controller', 'Capture', preset);
         window.orcbandsCarryReview = tuning => instance.SendMessage('Orcbands Controller', 'CarryReview', JSON.stringify(tuning));

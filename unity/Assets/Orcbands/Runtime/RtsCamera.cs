@@ -68,6 +68,12 @@ namespace Orcbands
             }
         }
 
+        public void RestoreView(Vector3 focus, Vector3 offset)
+        {
+            StopPointer(); Selecting = false; Focus = focus;
+            View.transform.position = focus + offset;
+            View.transform.LookAt(focus); View.fieldOfView = 38f;
+        }
         public void StopPointer()
         {
             PointerInsideCanvas = false;

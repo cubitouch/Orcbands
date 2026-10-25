@@ -24,6 +24,14 @@ namespace Orcbands
             if (remainingWood <= 0) return 0;
             remainingWood--; return 1;
         }
+        public void RestoreResource(int amount)
+        {
+            remainingWood = Mathf.Clamp(amount, 0, WoodPerTree);
+            if (IsDepleted) { ShowStump(); return; }
+            foreach (var renderer in GetComponentsInChildren<MeshRenderer>()) renderer.enabled = true;
+            foreach (var collider in GetComponentsInChildren<Collider>()) collider.enabled = true;
+            if (Stump != null) { Stump.SetActive(false); Destroy(Stump); Stump = null; }
+        }
         public void ShowStump()
         {
             foreach (var renderer in GetComponentsInChildren<MeshRenderer>()) renderer.enabled = false;

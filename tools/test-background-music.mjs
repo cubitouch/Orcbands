@@ -13,7 +13,8 @@ wave.writeUInt16LE(1,20);wave.writeUInt16LE(1,22);wave.writeUInt32LE(24000,24);w
 wave.writeUInt16LE(2,32);wave.writeUInt16LE(16,34);wave.write('data',36);wave.writeUInt32LE(samples*2,40);
 for(let i=0;i<samples;i++)wave.writeInt16LE(Math.round(Math.sin(i*2*Math.PI*220/24000)*300),44+i*2);
 const fixture=process.env.ORCBANDS_MUSIC_FIXTURE?await readFile(process.env.ORCBANDS_MUSIC_FIXTURE):wave;
-const server=createServer((req,res)=>{
+const server=createServer(async(req,res)=>{
+ if(req.url.startsWith('/TemplateData/')){const path=req.url.split('?')[0];try{const bytes=await readFile(new URL('../unity/Assets/WebGLTemplates/Orcbands'+path,import.meta.url));res.setHeader('Content-Type',path.endsWith('.mjs')?'application/javascript':path.endsWith('.css')?'text/css':'image/png');res.end(bytes);}catch{res.writeHead(404);res.end();}return;}
  const loader=req.url?.includes('mock.loader.js');res.setHeader('Content-Type',loader?'application/javascript':'text/html');
  res.end(loader?'window.createUnityInstance=async()=>({SendMessage(){}});':html);
 });

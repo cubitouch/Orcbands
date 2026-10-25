@@ -60,6 +60,14 @@ namespace Orcbands
         public WoodcuttingTarget ChoppingTarget => chopTarget;
         public bool IsMoving => hasDestination;
         private void Start() { animationDriver = Worker.GetComponent<WorkerAnimation>(); }
+        public void RestoreSelection(bool value)
+        {
+            selected = value;
+            if (SelectionRing != null) {
+                SelectionRing.gameObject.SetActive(selected);
+                SelectionRing.position = Worker.position + new Vector3(0f, .045f, 0f);
+            }
+        }
         public void CancelWorkerCommand()
         {
             hasDestination = false;
