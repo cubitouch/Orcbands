@@ -1,8 +1,8 @@
-#session-overlay { position:absolute; z-index:4; inset:0; color:#f5eddb; background:#17251e; overflow:auto; isolation:isolate; }
+#session-overlay { position:absolute; z-index:4; inset:0; color:#f5eddb; background:#17251e; overflow:hidden; isolation:isolate; display:grid; grid-template-rows:minmax(0,1fr) auto; }
 #session-overlay[hidden], #session-overlay [hidden] { display:none !important; }
 #session-art { position:absolute; z-index:-2; inset:0; width:100%; height:100%; opacity:.8; }
 #session-overlay::before { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,rgba(14,27,23,.97),rgba(14,27,23,.78) 36%,rgba(14,27,23,.08) 85%),linear-gradient(0deg,rgba(12,22,19,.65),transparent 45%); }
-.session-page { min-height:100%; padding:clamp(20px,4vw,64px); padding-bottom:54px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }
+.session-page { min-height:0; overflow:auto; padding:clamp(20px,4vw,64px); padding-bottom:24px; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; }
 .session-eyebrow { color:#d4bc85; font-size:11px; letter-spacing:.2em; text-transform:uppercase; margin:0 0 14px; }
 .session-title { font-family:Georgia,serif; font-size:clamp(42px,6vw,84px); font-weight:400; letter-spacing:.08em; margin:0; line-height:1; text-shadow:0 3px 30px #000; }
 .session-tagline { font-family:Georgia,serif; font-style:italic; color:#ded4b9; margin:12px 0 26px; font-size:clamp(16px,2vw,22px); }
@@ -15,7 +15,8 @@
 #session-overlay .primary:hover { background:#eddaa9; }
 #session-overlay h2:not(.session-title) { font:normal clamp(28px,4vw,44px) Georgia,serif; margin:0 0 18px; }
 .session-note { color:#cdc9b7; font-size:12px; line-height:1.6; max-width:410px; margin:18px 0 0; }
-#session-status { position:relative; font-size:13px; line-height:1.5; color:#ead3a1; max-width:560px; margin:12px 0; }
+#session-status { position:static !important; font-size:13px; line-height:1.5; color:#ead3a1; max-width:none; margin:0 !important; padding:8px clamp(20px,4vw,64px); background:#12231eee; }
+#session-status:empty { display:none; }
 .session-page[data-page=load], .session-page[data-page=settings], .session-page[data-page=confirm] { background:rgba(15,28,23,.84); }
 .session-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
 #save-list { width:min(750px,100%); display:grid; gap:9px; }

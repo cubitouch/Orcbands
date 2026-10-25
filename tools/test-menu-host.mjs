@@ -26,6 +26,10 @@ try{
  assert(await page.evaluate(()=>JSON.parse(localStorage.getItem('orcbands.save.v1.auto')).snapshot.wood===0));
  await page.locator('#menu-toggle').click();await page.locator('#save-game').click();await page.getByRole('button',{name:'Save here',exact:true}).first().click();
  assert(await page.evaluate(()=>localStorage.getItem('orcbands.save.v1.slot1')!==null));
+ await page.locator('#load-back').scrollIntoViewIfNeeded();
+ const savedMessage=await page.locator('#session-status').boundingBox(),backButton=await page.locator('#load-back').boundingBox();
+ assert(savedMessage.y>=backButton.y+backButton.height,'Saved message overlaps the menu controls');
+ await page.screenshot({path:'smoke-artifacts/menu-host/save-desktop.png'});
  await page.locator('#load-back').click();await page.locator('#settings-game').click();await page.locator('#replay-intro').click();
  await page.locator('#intro-skip').click();assert(await page.locator('#resume-game').isVisible());
  await page.locator('#new-game').click();await page.locator('#confirm-no').click();assert(await page.locator('#resume-game').isVisible());
@@ -48,6 +52,10 @@ try{
  await page.evaluate(()=>{Storage.prototype.setItem=function(){throw Error('Quota');};});
  await page.locator('#load-back').click();await page.locator('#save-game').click();await page.getByRole('button',{name:'Save here',exact:true}).last().click();
  await page.waitForFunction(()=>document.querySelector('#session-status').textContent.includes('Couldn’t save'));
+ await page.locator('#load-back').scrollIntoViewIfNeeded();
+ const failure=await page.locator('#session-status').boundingBox(),back=await page.locator('#load-back').boundingBox();
+ assert(failure.y>=back.y+back.height,'Storage error overlaps the mobile menu controls');
+ await page.screenshot({path:'smoke-artifacts/menu-host/storage-error-mobile.png'});
  const backup=page.waitForEvent('download');await page.locator('#export-current').click();assert.equal((await backup).suggestedFilename(),'orcbands-camp.json');
 
  assert.deepEqual(errors,[]);
