@@ -1,5 +1,5 @@
 #session-overlay { position:absolute; z-index:4; inset:0; color:#f5eddb; background:#17251e; overflow:auto; isolation:isolate; }
-#session-overlay[hidden], .session-page[hidden] { display:none !important; }
+#session-overlay[hidden], #session-overlay [hidden] { display:none !important; }
 #session-art { position:absolute; z-index:-2; inset:0; width:100%; height:100%; opacity:.8; }
 #session-overlay::before { content:''; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,rgba(14,27,23,.97),rgba(14,27,23,.78) 36%,rgba(14,27,23,.08) 85%),linear-gradient(0deg,rgba(12,22,19,.65),transparent 45%); }
 .session-page { min-height:100%; padding:clamp(20px,4vw,64px); padding-bottom:54px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }

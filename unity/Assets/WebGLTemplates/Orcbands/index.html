@@ -215,11 +215,13 @@
         // Click the canvas to direct keyboard controls to the game.
       }).catch(message => {
         warning.textContent = String(message);
+        window.dispatchEvent(new CustomEvent('orcbands:error',{detail:'Unable to start the game. Reload this page to try again. '+String(message)}));
         loading.textContent = 'Unable to start the WebGL preview.';
       });
     };
     script.onerror = () => {
       warning.textContent = 'Unable to download the Unity loader.';
+      window.dispatchEvent(new CustomEvent('orcbands:error',{detail:'Unable to download the game. Reload this page to try again.'}));
       loading.textContent = 'Unable to start the WebGL preview.';
     };
     document.body.appendChild(script);

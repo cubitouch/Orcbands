@@ -11,7 +11,7 @@ export function decode(text) {
   if (typeof text !== 'string' || text.length > 131072) throw new Error('The save file is too large.');
   const value = JSON.parse(text);
   if (value?.format !== 'orcbands-save' || value.version !== 1 || !Number.isFinite(Date.parse(value.savedAt)) ||
-      typeof value.name !== 'string') throw new Error('This is not a supported Orcbands save.');
+      typeof value.name !== 'string' || value.name.length > 40) throw new Error('This is not a supported Orcbands save.');
   envelope(value.snapshot, value.name);
   return value;
 }

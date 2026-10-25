@@ -58,6 +58,9 @@ namespace Orcbands
             var data = JsonUtility.FromJson<GameSaveData>(json);
             if (data == null) throw new ArgumentException("The save is empty.");
             data.Validate(Shadows.Trees, baseline ?? Controller.Pathfinder.Obstacles);
+            if (!Controller.Ground.Raycast(new Ray(new Vector3(data.worker.x, 45f, data.worker.z), Vector3.down),
+                out RaycastHit ground, 100f) || Mathf.Abs(data.worker.y - ground.point.y) > .1f)
+                throw new ArgumentException("The saved worker is not on the ground.");
             return data;
         }
         private void SetRunning(bool value)

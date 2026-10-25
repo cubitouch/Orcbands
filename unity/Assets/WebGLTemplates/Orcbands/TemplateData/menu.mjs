@@ -4,7 +4,7 @@ const overlay = $('#session-overlay');
 let storage; try { storage = window.localStorage; } catch { storage = {getItem(){throw Error('Browser storage is unavailable.');},setItem(){throw Error();}}; }
 const saves = new SaveStore(storage);
 let ready = false, started = false, busy = false, page = 'home', story = 0, replay = false, timer, confirmAction;
-let sequence = 0, lastFocus, live = false;
+let sequence = 0, live = false;
 const pending = new Map();
 const captions = [
   'Somewhere beyond the mountains, there had to be a place for us.',
@@ -77,6 +77,8 @@ function engineReady() {
   if (ready) { status('The valley is ready.'); refresh(); }
 }
 window.addEventListener('orcbands:unity',engineReady);
+window.addEventListener('orcbands:error',event=>status(event.detail));
+overlay.addEventListener('click',event=>{if(busy){event.preventDefault();event.stopImmediatePropagation();}},true);
 engineReady();
 function confirm(text, action) {
   confirmAction = action; $('#session-dialog').textContent = text; show('confirm');
@@ -127,11 +129,11 @@ async function load(value) {
 }
 async function pause() {
   if (!ready || !started || !live || busy) return;
-  lastFocus = document.activeElement;
   await run(async()=>{ const result=await command('pause');live=false;show('home',autosave(result.snapshot) || 'Camp paused and saved.'); });
 }
 $('#menu-toggle').onclick = pause;
 window.addEventListener('keydown',event=>{
+  if(busy && ['Escape','Enter',' '].includes(event.key)){event.preventDefault();event.stopImmediatePropagation();return;}
   if (event.key === 'Escape') {
     event.preventDefault();event.stopImmediatePropagation();
     if (overlay.hidden) void pause();

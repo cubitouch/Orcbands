@@ -16,6 +16,8 @@ namespace Orcbands.Editor
             Reject(session, data, "inconsistent wood");
             data.wood = 4; data.worker = new Vector3(999, 0, 0);
             Reject(session, data, "out-of-bounds worker");
+            data = session.Snapshot(); data.worker += Vector3.up * 5f;
+            Reject(session, data, "worker above the ground");
             data = session.Snapshot(); data.version = 99;
             Reject(session, data, "unsupported version");
             data = session.Snapshot(); data.cameraOffset = new Vector3(float.NaN, 0, 0);

@@ -55,7 +55,7 @@ try {
  await page.locator('#load-game').click();await page.getByRole('button',{name:'Load',exact:true}).nth(2).click();
  await page.waitForFunction(()=>document.querySelector('#session-overlay').hidden);await page.locator('#menu-toggle').click();await page.waitForFunction(()=>!document.querySelector('#session-overlay').hidden);
  const restoredFull=await snapshot();assert.equal(restoredFull.wood,12);assert.deepEqual(restoredFull.trees,full.trees);
- const stump=await report();assert.equal(stump.depletedTrees,1);assert.equal(stump.shadowRepairs,1);assert(stump.navigationClear);
+ const stump=await report();assert.equal(stump.depletedTrees,1);assert.equal(stump.shadowRepairs,1);assert(stump.navigationClear);assert(stump.stumpVisible);assert(stump.lastTreeClearance);
  await page.reload();await page.waitForFunction(()=>!document.querySelector('#continue-game').disabled,null,{timeout:180000});await attach();
  await page.locator('#continue-game').click();await page.waitForFunction(()=>document.querySelector('#session-overlay').hidden);
  await page.locator('#menu-toggle').click();await page.waitForFunction(()=>!document.querySelector('#session-overlay').hidden);const reloaded=await snapshot();assert.equal(reloaded.wood,12);assert.deepEqual(reloaded.trees,full.trees);

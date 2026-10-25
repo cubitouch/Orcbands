@@ -42,7 +42,10 @@ namespace Orcbands
             Wood = wood; StrikeCount = wood; DepletedTrees = 0;
             LastDepletedTree = ""; LastTarget = null; LastStumpPosition = Vector3.zero;
             cursor.Reset(); tracked = null; proxyTime = 0f;
-            foreach (var tree in Shadows.Trees) if (tree.IsDepleted) DepletedTrees++;
+            foreach (var tree in Shadows.Trees) if (tree.IsDepleted) {
+                DepletedTrees++; LastDepletedTree = tree.name;
+                LastStumpPosition = tree.transform.position; LastTarget = tree;
+            }
         }
         private void LateUpdate()
         {

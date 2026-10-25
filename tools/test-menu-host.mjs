@@ -36,6 +36,20 @@ try{
  assert(await page.locator('#resume-game').isVisible());
  await page.locator('#load-game').click();await page.screenshot({path:'smoke-artifacts/menu-host/load-mobile.png'});
  assert(await page.getByRole('button',{name:'Load',exact:true}).first().isVisible());
+ assert(await page.locator('#save-name-label').isHidden(),'Load screen exposed the Save-only name field');
+ // Download/import is a real browser file flow; a bad import must preserve the camp.
+ const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:'Download',exact:true}).first().click();
+ const download=await downloadEvent;const exported=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(exported.format,'orcbands-save');
+ await page.locator('#import-file').setInputFiles({name:'camp.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});
+ await page.waitForFunction(()=>document.querySelector('#session-status').textContent.includes('imported'));
+ await page.locator('#import-file').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{invalid')});
+ await page.waitForFunction(()=>document.querySelector('#session-status').textContent.length>0&&!document.querySelector('#session-status').textContent.includes('imported'));
+ // A blocked store does not report success and does not prevent a portable download.
+ await page.evaluate(()=>{Storage.prototype.setItem=function(){throw Error('Quota');};});
+ await page.locator('#load-back').click();await page.locator('#save-game').click();await page.getByRole('button',{name:'Save here',exact:true}).last().click();
+ await page.waitForFunction(()=>document.querySelector('#session-status').textContent.includes('Couldn’t save'));
+ const backup=page.waitForEvent('download');await page.locator('#export-current').click();assert.equal((await backup).suggestedFilename(),'orcbands-camp.json');
+
  assert.deepEqual(errors,[]);
  console.log('PASS: menu, four-panel controls, skip, pause/resume, named save, replay guard, new-game cancellation, reload/Continue and desktop/portrait UI.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}
