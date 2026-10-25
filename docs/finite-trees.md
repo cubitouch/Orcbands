@@ -11,8 +11,10 @@ existing stump art, clears the target marker and leaves the worker idle with
 “Tree exhausted · choose another tree”. Another tree requires a new order.
 A ground or different-tree order interrupts chopping immediately. Partial tree
 amounts remain intact for the current session; returning to a tree resumes its
-remaining supply. Exhausted trees cannot award more wood. Reloading starts a
-fresh session at zero; regrowth and save/load are not included.
+remaining supply. Exhausted trees cannot award more wood. The menu now offers
+autosave, named camps and portable save files; Continue restores partial and
+exhausted trees after a reload. New Game resets wood and trees. Regrowth is not
+included. See [menu and persistence](menu-persistence.md).
 
 ## Implementation
 
@@ -59,4 +61,4 @@ Manual acceptance:
 2. Interrupt halfway, then return. Its remaining wood must not reset.
 3. Finish the tree. Check the stump, lighter ground, idle worker and final total.
 4. Walk beside the stump through the former crown area; the stump stays solid.
-5. Choose another tree and confirm the total accumulates. Reload to reset.
+5. Choose another tree and confirm the total accumulates. Reload and Continue to restore; New Game resets the forest.

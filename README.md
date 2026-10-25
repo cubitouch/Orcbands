@@ -43,3 +43,7 @@ The user-supplied Mixamo idle, walking and chopping FBXs also stay in the privat
 Playable controls: left-click or drag a box to select; right-click ground/tree to move or chop. Move the pointer near the game edges to pan, use the wheel for bounded zoom, Q/E to orbit and R to reset. [Camera and selection details](docs/rts-controls.md).
 
 Trees contain 12 wood. Each axe strike adds one wood to the live counter; exhausted trees leave a stump and the worker stops. [Finite tree controls and limits](docs/finite-trees.md).
+
+## Saved camps and introduction
+
+The Unity browser player opens with an illustrated menu and skippable four-panel prologue. Continue restores your camp; Menu / Escape pauses the game and offers three named saves. Wood, partial/depleted trees, worker orders and camera persist in this browser, with JSON download/import for backups. Settings includes music preference and volume. [Controls, persistence and acceptance checks](docs/menu-persistence.md).
