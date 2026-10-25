@@ -32,7 +32,7 @@ namespace Orcbands
             }
             Require(wood == total, "The wood total does not match the forest.");
             Require(Finite(elapsed) && elapsed >= 0 && elapsed < 315360000f, "Invalid played time.");
-            Require(Finite(worker) && Mathf.Abs(worker.x) <= 109.3f && Mathf.Abs(worker.z) <= 109.3f && Mathf.Abs(worker.y) < 20f, "Invalid worker position.");
+            Require(Finite(worker) && Mathf.Abs(worker.x) <= 110f - WorkerNavigation.Clearance && Mathf.Abs(worker.z) <= 110f - WorkerNavigation.Clearance && Mathf.Abs(worker.y) < 20f, "Invalid worker position.");
             Require(Finite(forward) && Vector3.ProjectOnPlane(forward, Vector3.up).sqrMagnitude > .1f && forward.sqrMagnitude < 2f, "Invalid worker facing.");
             Require(Finite(focus) && Mathf.Abs(focus.x) <= 102.01f && Mathf.Abs(focus.z) <= 102.01f && Mathf.Abs(focus.y) < .01f, "Invalid camera focus.");
             Require(Finite(cameraOffset) && cameraOffset.magnitude >= 23.9f && cameraOffset.magnitude <= 55.1f && cameraOffset.y > 8f, "Invalid camera distance.");

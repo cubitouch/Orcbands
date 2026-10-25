@@ -29,7 +29,7 @@ namespace Orcbands
             public float cameraDistance, zoomMin, zoomMax;
             public bool animated, rootMotion, gripParentCorrect;
             public bool licensedGrip;
-            public bool selected;
+            public bool selected, sessionRunning, splashFinished, applicationFocused;
             public int frame;
             public string rayTarget, lastSelectionHit;
             public float groundError;
@@ -77,6 +77,7 @@ namespace Orcbands
             }
             var chopEffects = GetComponent<TreeChopEffects>();
             var harvest = GetComponent<WorkerHarvest>();
+            var session = GetComponent<GameSession>();
             var shadows = GetComponent<ForestShadowMap>();
             var lastTree = harvest == null ? null : harvest.LastTarget;
             var commandedTree = controller.ChoppingTarget;
@@ -88,6 +89,9 @@ namespace Orcbands
                     if (clip.name == "Chopping") choppingLength = clip.length;
                 }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                sessionRunning = session != null && session.Running,
+                splashFinished = UnityEngine.Rendering.SplashScreen.isFinished,
+                applicationFocused = Application.isFocused,
                 wood = harvest == null ? 0 : harvest.Wood,
                 remainingWood = controller.ChoppingTarget == null ? 0 : controller.ChoppingTarget.RemainingWood,
                 lastTreeRemaining = lastTree == null ? WoodcuttingTarget.WoodPerTree : lastTree.RemainingWood,

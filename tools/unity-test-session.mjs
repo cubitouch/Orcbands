@@ -1,5 +1,6 @@
 // Enter the live camp through the same controls a player uses.
 export async function enterCamp(page) {
+  await page.bringToFront();
   if (!await page.locator('#session-overlay').count()) return; // Earlier baseline players.
   await page.locator('#new-game').waitFor({state:'visible',timeout:180000});
   await page.waitForFunction(()=>!document.querySelector('#new-game').disabled,null,{timeout:180000});

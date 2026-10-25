@@ -7,7 +7,8 @@ import {chromium} from 'playwright';
 const output=resolve(process.argv[3]??'smoke-artifacts/unity-webgl/finite-trees');
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
-const traces=[],errors=[];
+const traces=[],errors=[],retinaTrace=[];
+let retinaStatus=null;
 try {
  const page=await browser.newPage({viewport:{width:1280,height:800}});
  page.on('pageerror',e=>errors.push(e.message));
@@ -90,21 +91,28 @@ try {
  await retina.goto(process.argv[2]??'http://127.0.0.1:8765/');
  await retina.waitForFunction(()=>window.orcbandsCharacterReport,null,{timeout:180000});
  await enterCamp(retina);
- let retinaReady=false;
+ let retinaReady=false,firstRetinaFrame;
  for(let i=0;i<160;i++){
   const pending=retina.waitForEvent('console',{predicate:m=>m.text().includes('CHARACTER_REPORT:'),timeout:30000});
   await retina.evaluate(()=>window.orcbandsCharacterReport());
   const r=JSON.parse((await pending).text().split('CHARACTER_REPORT:')[1].split('\n')[0]);
-  if(r.gameTime>5){assert.equal(r.wood,0,'Fresh session did not reset wood');retinaReady=true;break;}
+  retinaTrace.push(r);firstRetinaFrame??=r.frame;
+  // A rendered, playing HUD is the readiness signal; game time can advance
+  // slowly on a busy 2x software renderer and is not a splash-screen signal.
+  if(r.frame>=firstRetinaFrame+3 && r.splashFinished && r.sessionRunning){assert.equal(r.wood,0,'Fresh session did not reset wood');retinaReady=true;break;}
   await retina.waitForTimeout(100);
  }
- assert(retinaReady,'Retina scene never rendered beyond the splash');
+ if(!retinaReady){
+  retinaStatus=await retina.evaluate(()=>({focused:document.hasFocus(),visibility:document.visibilityState,menuHidden:document.querySelector('#session-overlay').hidden}));
+  await retina.screenshot({path:resolve(output,'retina-readiness-failure.png'),scale:'css'});
+ }
+ assert(retinaReady,'Retina HUD never became ready: '+JSON.stringify({last:retinaTrace.at(-1),browser:retinaStatus}));
  const dpi=await retina.evaluate(()=>({ratio:document.querySelector('canvas').width/document.querySelector('canvas').getBoundingClientRect().width}));
  assert(dpi.ratio>1.9,'Retina capture did not use a high-resolution render surface');
  await retina.screenshot({path:resolve(output,'wood-retina.png'),scale:'css'});
  assert.deepEqual(errors,[]);
  console.log('PASS: real tree strikes award exact finite wood; preview/interrupt/exhaustion guards; resume, two stumps, released crown clearance, repaired shadows and desktop/portrait/Retina counter views.');
 } finally {
- await writeFile(resolve(output,'finite-trees-report.json'),JSON.stringify({traces,errors},null,2));
+ await writeFile(resolve(output,'finite-trees-report.json'),JSON.stringify({traces,retinaTrace,retinaStatus,errors},null,2));
  await browser.close();
 }
