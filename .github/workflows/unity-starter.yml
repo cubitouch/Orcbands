@@ -21,6 +21,9 @@ on:
       - "tools/capture-worker-animations.mjs"
       - "tools/capture-rts-controls.mjs"
       - "tools/capture-worker-navigation.mjs"
+      - "tools/capture-finite-trees.mjs"
+      - "tools/capture-tree-chop-feedback.mjs"
+      - "tools/test-background-music.mjs"
       - ".github/workflows/unity-starter.yml"
   workflow_dispatch:
     inputs:
@@ -135,6 +138,12 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
+          node tools/test-save-store.mjs
+          node tools/test-menu-host.mjs
+          node tools/test-background-music.mjs
+          node tools/capture-menu-persistence.mjs
+          node tools/capture-finite-trees.mjs
+          node tools/capture-tree-chop-feedback.mjs
           node tools/capture-worker-navigation.mjs
           node tools/capture-rts-controls.mjs
           node tools/capture-unity-characters.mjs

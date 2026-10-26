@@ -3,6 +3,8 @@ Shader "Orcbands/WorldColorLit"
     Properties
     {
         _Color ("Albedo", Color) = (1,1,1,1)
+        [HideInInspector] _TreeBendPivot ("Tree strike pivot", Vector) = (0,0,0,0)
+        [HideInInspector] _TreeBend ("Tree strike bend", Vector) = (0,0,0,0)
         _SurfaceContrast ("Material tonal depth", Range(.85,1.35)) = 1
     }
     SubShader
@@ -12,13 +14,30 @@ Shader "Orcbands/WorldColorLit"
         Cull Off
         CGPROGRAM
         // Match the character path: no depth-competing point-light passes.
-        #pragma surface surf Lambert fullforwardshadows addshadow noforwardadd novertexlights finalcolor:FinalizeColor
+        #pragma surface surf Lambert fullforwardshadows addshadow vertex:AnimateTreeStrike noforwardadd novertexlights finalcolor:FinalizeColor
         #pragma target 3.0
         fixed4 _Color;
         half _SurfaceContrast;
         struct Input { float3 worldPos; float3 worldNormal; };
         #include "CampFirelight.cginc"
 
+        float4 _TreeBendPivot;
+        float4 _TreeBend;
+        // World-space deformation also works on statically batched pine meshes.
+        // Only struck-tree renderers receive these property overrides.
+        void AnimateTreeStrike(inout appdata_full v)
+        {
+            if (_TreeBendPivot.w < .5) return;
+            float3 world = mul(unity_ObjectToWorld, v.vertex).xyz;
+            float height = max(0, world.y - _TreeBendPivot.y);
+            float weight = saturate(height / .6);
+            world.xz += _TreeBend.xy * height * weight;
+            float derivative = weight + (height < .6 ? height / .6 : 0);
+            float3 normal = UnityObjectToWorldNormal(v.normal);
+            normal.y -= dot(normal.xz, _TreeBend.xy * derivative);
+            v.normal = normalize(mul(normal, (float3x3)unity_ObjectToWorld));
+            v.vertex = mul(unity_WorldToObject, float4(world, 1));
+        }
         float4 _CampRevealSources[6];
         float _CampFogEnabled;
         // Distance fog from the original Three.js scene (85–135m).

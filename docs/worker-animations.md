@@ -25,8 +25,10 @@ the requested new file; it does not provide a visibly different gait.
   move. The tree marker clears on a ground command.
 
 This is an animation interaction. Trees remain standing and no wood is awarded;
-resource harvesting, tree health and pathfinding are separate gameplay features.
-Walking speed is 3.0 world units per second, with the clip playing at 1.5×. The direct movement and terrain projection remain on the gameplay
+resource harvesting and tree health remain separate gameplay features.
+Movement now uses [obstacle navigation](worker-navigation.md), and
+[tree-hit feedback and background music](tree-hit-feedback.md) add presentation.
+Walking speed is 3.0 world units per second, with the clip playing at 1.5×. Movement and terrain projection remain on the gameplay
 root, with the original selection collider and ring.
 
 ## Retargeting and source boundaries

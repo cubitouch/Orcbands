@@ -13,7 +13,7 @@ import { createStoryGeometry } from '../preview/forest-story.js';
 import { buildCampfire } from '../preview/campfire.js';
 import { buildTorches } from '../preview/torches.js';
 import { resourceGeometry } from '../preview/resources.js';
-import { generateTreeShadowTexture } from './generate-unity-tree-shadows.mjs';
+import { generateTreeShadowTexture, originalPineTriangles } from './generate-unity-tree-shadows.mjs';
 
 const root = resolve(import.meta.dirname, '../unity/Assets/Orcbands/Generated');
 mkdirSync(root, { recursive: true });
@@ -22,6 +22,12 @@ if (layout.trees.length !== TREE_COUNT) throw new Error('Expected the expanded 1
 const shadowResult = generateTreeShadowTexture(layout.trees, resolve(root, 'approved-pine-shadows.png'));
 if (shadowResult.enhancedRoots < 80)
   throw new Error('Too few tree roots have ground-contact shading');
+// Original local pine geometry supports small runtime shadow repairs after felling.
+const shadowSource = originalPineTriangles();
+writeFileSync(resolve(root, 'pine-shadow-source.json'), JSON.stringify({
+  vertices: shadowSource.vertices.map(([x,y,z])=>({x:-x,y,z})),
+  triangles: shadowSource.triangles.flat(),
+}) + '\n');
 const expected = ['shelter/stocked', 'construction/roof', 'bush/full', 'wood/stump', 'stone/full'];
 for (const key of expected) if (!layout.resources.some(r => r.kind + '/' + r.state === key))
   throw new Error('Missing forest resource: ' + key);
@@ -135,6 +141,8 @@ exportAuthoredGroup('torches-art', torches.root, false);
 exportAuthoredGroup('torches-flames', torches.root, true);
 exportMesh('woodland-story', [{geom:createStoryGeometry(layout)}]);
 exportMesh('forest-patches', [{geom: createForestFloorPatches(layout)}]);
+
+exportMesh('harvest-stump', [{geom:resourceGeometry('wood','stump')}]);
 
 const resources = layout.resources.map(p => ({
   geom: resourceGeometry(p.kind, p.state),

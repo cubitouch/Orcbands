@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 // Runs against a real Unity player. No image synthesis or alternative renderer.
 import {strict as assert} from 'node:assert';
 import {chromium} from 'playwright';
@@ -11,6 +12,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.argv[2]??'http://127.0.0.1:8765/');
  await page.waitForFunction(()=>window.orcbandsReview,null,{timeout:180000});
+ await enterCamp(page);
  const report=async()=>{
   const received=page.waitForEvent('console',{predicate:m=>m.text().includes('CHARACTER_REPORT:'),timeout:15000});
   await page.evaluate(()=>window.orcbandsCharacterReport());

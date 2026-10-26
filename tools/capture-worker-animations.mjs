@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 // Real Unity WebGL: validate retargeting, root ownership and actual tree commands.
 import {strict as assert} from 'node:assert';
 import {chromium} from 'playwright';
@@ -35,6 +36,7 @@ const result={source:'Unity WebGL',previews:{},interaction:{}};
 try{
  await page.goto(process.argv[2]??'http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.orcbandsAnimationPreview,null,{timeout:180000});
+ await enterCamp(page);
  await frames();
  assert((await report()).animated,'Licensed humanoid Animator is missing');
  for(const mode of ['Idle','Walking','Chopping']){

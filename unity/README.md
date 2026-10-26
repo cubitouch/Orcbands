@@ -1,6 +1,6 @@
 # Orcbands — Unity starter (6.3 LTS)
 
-This is the **first playable engine bootstrap**, not resource gathering yet.
+This playable prototype includes finite tree chopping and an immediate wood counter.
 The historical Three.js Asset Lab remains intact in `preview/`.
 
 ## Open on your Mac
@@ -38,8 +38,8 @@ Run the menu command after a clean clone or when source assets change.
   shadows, low-lying terrain and a perspective RTS camera matching the
   reference Three.js angle.
 - An original faceted **temporary worker proxy** with selection and obstacle-aware click-to-move.
-  See [worker navigation](../docs/worker-navigation.md). There is no resource harvesting, storage
-  economy, construction simulation or persistent game state.
+  See [worker navigation](../docs/worker-navigation.md). Trees yield 12 wood each, collected immediately as they are chopped.
+  Hauling, storage delivery, construction simulation and persistent game state remain future work.
 
 If the imports have missing or flat-looking materials, fix the Unity import
 materials here rather than changing the approved original browser geometry.
@@ -74,8 +74,8 @@ license file or account credentials to the repository itself.
 
 ## Next milestone
 
-Real resource gathering, a worker task state machine, carrying/delivery,
-dynamic resource counters and persisted scene data. Obstacle routing is implemented;
+Carrying/delivery, construction spending and persisted scene data.
+Finite chopping and a live wood counter are implemented; see [finite trees](../docs/finite-trees.md). Obstacle routing is implemented;
 see [controls, limits and navigation checks](../docs/worker-navigation.md).
 
 ## Visual fidelity pass 2 — awaiting WebGL review

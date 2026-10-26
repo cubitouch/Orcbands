@@ -70,6 +70,10 @@ namespace Orcbands.Editor
             // hard tree darkening made the whole forest muddy.
             art.SetColor("_Tint", Color.white);
             art = SavedMaterial("ForestArt", art);
+            var shadowImporter = (TextureImporter)AssetImporter.GetAtPath(Generated + "approved-pine-shadows.png");
+            shadowImporter.isReadable = true;
+            shadowImporter.textureCompression = TextureImporterCompression.Uncompressed;
+            shadowImporter.SaveAndReimport();
             Texture2D pineShadowMap =
                 AssetDatabase.LoadAssetAtPath<Texture2D>(Generated + "approved-pine-shadows.png");
             if (pineShadowMap == null)
@@ -104,6 +108,10 @@ namespace Orcbands.Editor
             building.transform.rotation = Quaternion.Euler(0f, layout.hut.angle * Mathf.Rad2Deg, 0f);
             ApplyWorldMaterials(building, worldShader);
 
+            var stumpTemplate = ColoredMesh("Harvest stump template", "harvest-stump", art, true);
+            stumpTemplate.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.On;
+            stumpTemplate.SetActive(false);
+            var trees = new WoodcuttingTarget[layout.trees.Length];
             var forest = new GameObject("Expanded 1,220-pine forest");
             for (int i = 0; i < layout.trees.Length; i++)
             {
@@ -116,7 +124,13 @@ namespace Orcbands.Editor
                 float distance = Mathf.Sqrt(pos.x * pos.x + pos.z * pos.z);
                 ApplyWorldMaterials(tree, worldShader);
                 // Pine 01 is 2.72m wide before our seeded crown scaling.
-                tree.AddComponent<WoodcuttingTarget>().CrownRadius = 1.36f * pos.scale * pos.width;
+                var resource = tree.AddComponent<WoodcuttingTarget>();
+                trees[i] = resource;
+                resource.CrownRadius = 1.36f * pos.scale * pos.width;
+                resource.ObstacleIndex = i;
+                resource.StumpRadius = .46f * pos.scale * pos.width;
+                resource.StumpTemplate = stumpTemplate;
+                resource.ShadowScale = pos.scale; resource.ShadowWidth = pos.width; resource.ShadowHeight = pos.height;
                 // Pick the visible silhouette, including branches, rather than
                 // requiring a precise click on a partly hidden narrow trunk.
                 foreach (var mesh in tree.GetComponentsInChildren<MeshFilter>())
@@ -241,6 +255,19 @@ namespace Orcbands.Editor
                 reveal.Sources[i + 2] = new Vector4(layout.torches[i].x,
                     layout.torches[i].z, 6.2f, 0f);
             var controller = controllerObject.AddComponent<OrcbandsController>();
+            var chopEffects = controllerObject.AddComponent<TreeChopEffects>();
+            chopEffects.Controller = controller;
+            var chipsMaterial = new Material(worldShader);
+            chipsMaterial.SetColor("_Color", new Color(.78f, .56f, .30f));
+            chopEffects.ChipMaterial = SavedMaterial("WoodChipBark", chipsMaterial);
+            var harvest = controllerObject.AddComponent<WorkerHarvest>();
+            harvest.Controller = controller; harvest.Effects = chopEffects;
+            var shadows = controllerObject.AddComponent<ForestShadowMap>();
+            shadows.Trees = trees; shadows.GroundMaterial = terrainArt; shadows.Original = pineShadowMap;
+            shadows.HalfExtent = layout.mapHalfExtent;
+            shadows.Source = JsonUtility.FromJson<ForestShadowMap.SourceData>(
+                AssetDatabase.LoadAssetAtPath<TextAsset>(Generated + "pine-shadow-source.json").text);
+            harvest.Shadows = shadows;
             var pathfinder = controllerObject.AddComponent<WorkerNavigation>();
             pathfinder.MapHalfExtent = layout.mapHalfExtent;
             if (layout.navigationObstacles == null || layout.navigationObstacles.Length < layout.trees.Length)
@@ -259,6 +286,9 @@ namespace Orcbands.Editor
             controller.Reveal = reveal;
             controller.MapHalfExtent = layout.mapHalfExtent;
             controller.WorkPositionExclusions = layout.workExclusions;
+            var session = controllerObject.AddComponent<GameSession>();
+            session.Controller = controller; session.Harvest = harvest;
+            session.Shadows = shadows; session.Effects = chopEffects;
             var review = controllerObject.AddComponent<CharacterReview>();
             review.Character = worker.GetComponent<CharacterPresentation>();
             review.View = camera; review.Ground = controller.Ground; review.Reveal = reveal;
@@ -424,6 +454,9 @@ namespace Orcbands.Editor
         {
             GenerateScene();
             NavigationChecks.Run();
+            TreeChopChecks.Run();
+            TreeHarvestChecks.Run();
+            GameSaveChecks.Run();
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             // GitHub Pages serves static files without Content-Encoding for
             // Unity's pre-compressed WebGL bundles. Emit uncompressed files.

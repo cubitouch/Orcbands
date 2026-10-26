@@ -1,0 +1,63 @@
+import {strict as assert} from 'node:assert';
+import {readFile,mkdir} from 'node:fs/promises';
+import {createServer} from 'node:http';
+import {chromium} from 'playwright';
+const root=new URL('../unity/Assets/WebGLTemplates/Orcbands/',import.meta.url);
+let html=(await readFile(new URL('index.html',root),'utf8')).replaceAll(/\{\{\{\s*(\w+)\s*\}\}\}/g,(_,key)=>key==='LOADER_FILENAME'?'mock.loader.js':'mock');
+const mock=`window.createUnityInstance=async()=>{let started=false,running=false;const snapshot={version:1,map:'forest-2302-v1',wood:0,trees:[12],elapsed:0};const instance={SendMessage(o,m,text){if(m!=='SessionCommand')return;const c=JSON.parse(text);let ok=true,message='';if(c.action==='new'){started=true;running=true;snapshot.wood=0;}if(c.action==='load'){Object.assign(snapshot,JSON.parse(c.json));started=true;running=true;}if(c.action==='pause')running=false;if(c.action==='resume')running=true;if(c.action==='validate'&&JSON.parse(c.json).wood<0){ok=false;message='Invalid wood';}window.orcbandsSessionEvent(JSON.stringify({id:c.id,ok,started,running,message,snapshot:JSON.stringify(snapshot)}));}};setTimeout(()=>{window.orcbandsSessionEvent(JSON.stringify({id:'ready',ok:true,started,running}));},100);return instance;};`;
+const server=createServer(async(req,res)=>{try{if(req.url.includes('mock.loader.js')){res.setHeader('Content-Type','application/javascript');return res.end(mock);}if(req.url==='/'||req.url==='/index.html'){res.setHeader('Content-Type','text/html');return res.end(html);}const path=req.url.split('?')[0].slice(1);const bytes=await readFile(new URL(path,root));res.setHeader('Content-Type',path.endsWith('.mjs')?'application/javascript':path.endsWith('.css')?'text/css':'image/png');res.end(bytes);}catch{res.writeHead(404);res.end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await chromium.launch({args:['--no-sandbox']});
+try{
+ const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.route('https://audio-previews.elements.envatousercontent.com/**',r=>r.abort());
+ await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>!document.querySelector('#new-game').disabled);
+ await mkdir('smoke-artifacts/menu-host',{recursive:true});
+ await page.screenshot({path:'smoke-artifacts/menu-host/menu-desktop.png'});
+ assert(await page.locator('#continue-game').isDisabled());
+ await page.locator('#settings-game').click();await page.locator('#music-enabled').uncheck();await page.locator('#settings-back').click();
+ await page.locator('#new-game').click();await page.locator('#intro-autoplay').uncheck();
+ assert((await page.locator('#intro-caption').textContent()).includes('mountains'));
+ await page.locator('#intro-next').click();await page.locator('#intro-back').click();
+ assert((await page.locator('#intro-caption').textContent()).includes('mountains'));
+ await page.screenshot({path:'smoke-artifacts/menu-host/intro-desktop.png'});
+ await page.locator('#intro-skip').click();await page.waitForFunction(()=>document.querySelector('#session-overlay').hidden);
+ assert(await page.evaluate(()=>JSON.parse(localStorage.getItem('orcbands.save.v1.auto')).snapshot.wood===0));
+ await page.locator('#menu-toggle').click();await page.locator('#save-game').click();await page.getByRole('button',{name:'Save here',exact:true}).first().click();
+ assert(await page.evaluate(()=>localStorage.getItem('orcbands.save.v1.slot1')!==null));
+ await page.locator('#load-back').scrollIntoViewIfNeeded();
+ const savedMessage=await page.locator('#session-status').boundingBox(),backButton=await page.locator('#load-back').boundingBox();
+ assert(savedMessage.y>=backButton.y+backButton.height,'Saved message overlaps the menu controls');
+ await page.screenshot({path:'smoke-artifacts/menu-host/save-desktop.png'});
+ await page.locator('#load-back').click();await page.locator('#settings-game').click();await page.locator('#replay-intro').click();
+ await page.locator('#intro-skip').click();assert(await page.locator('#resume-game').isVisible());
+ await page.locator('#new-game').click();await page.locator('#confirm-no').click();assert(await page.locator('#resume-game').isVisible());
+ await page.reload();await page.waitForFunction(()=>!document.querySelector('#continue-game').disabled);await page.locator('#continue-game').click();
+ await page.waitForFunction(()=>document.querySelector('#session-overlay').hidden);
+ await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#session-overlay').hidden);
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'smoke-artifacts/menu-host/menu-mobile.png'});
+ assert(await page.locator('#resume-game').isVisible());
+ await page.locator('#load-game').click();await page.screenshot({path:'smoke-artifacts/menu-host/load-mobile.png'});
+ assert(await page.getByRole('button',{name:'Load',exact:true}).first().isVisible());
+ assert(await page.locator('#save-name-label').isHidden(),'Load screen exposed the Save-only name field');
+ // Download/import is a real browser file flow; a bad import must preserve the camp.
+ const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:'Download',exact:true}).first().click();
+ const download=await downloadEvent;const exported=JSON.parse(await readFile(await download.path(),'utf8'));assert.equal(exported.format,'orcbands-save');
+ await page.locator('#import-file').setInputFiles({name:'camp.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});
+ await page.waitForFunction(()=>document.querySelector('#session-status').textContent.includes('imported'));
+ await page.locator('#import-file').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{invalid')});
+ await page.waitForFunction(()=>document.querySelector('#session-status').textContent.length>0&&!document.querySelector('#session-status').textContent.includes('imported'));
+ // A blocked store does not report success and does not prevent a portable download.
+ await page.evaluate(()=>{Storage.prototype.setItem=function(){throw Error('Quota');};});
+ await page.locator('#load-back').click();await page.locator('#save-game').click();await page.getByRole('button',{name:'Save here',exact:true}).last().click();
+ await page.waitForFunction(()=>document.querySelector('#session-status').textContent.includes('Couldn’t save'));
+ await page.locator('#load-back').scrollIntoViewIfNeeded();
+ const failure=await page.locator('#session-status').boundingBox(),back=await page.locator('#load-back').boundingBox();
+ assert(failure.y>=back.y+back.height,'Storage error overlaps the mobile menu controls');
+ await page.screenshot({path:'smoke-artifacts/menu-host/storage-error-mobile.png'});
+ const backup=page.waitForEvent('download');await page.locator('#export-current').click();assert.equal((await backup).suggestedFilename(),'orcbands-camp.json');
+
+ assert.deepEqual(errors,[]);
+ console.log('PASS: menu, four-panel controls, skip, pause/resume, named save, replay guard, new-game cancellation, reload/Continue and desktop/portrait UI.');
+}finally{await browser.close();await new Promise(r=>server.close(r));}

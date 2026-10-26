@@ -1,3 +1,4 @@
+import {enterCamp} from './unity-test-session.mjs';
 // Actual Unity WebGL input: edge pan, wheel limits and click/box selection.
 import {strict as assert} from 'node:assert';
 import {mkdir,writeFile} from 'node:fs/promises';
@@ -11,6 +12,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.argv[2]??'http://127.0.0.1:8765/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.orcbandsCharacterReport,null,{timeout:180000});
+ await enterCamp(page);
  const report=async()=>{const m=page.waitForEvent('console',{predicate:m=>m.text().includes('CHARACTER_REPORT:'),timeout:30000});await page.evaluate(()=>window.orcbandsCharacterReport());return JSON.parse((await m).text().split('CHARACTER_REPORT:')[1].split('\n')[0]);};
  const frames=async(n=3)=>{const first=(await report()).frame;for(let i=0;i<150;i++){await page.waitForTimeout(100);if((await report()).frame>=first+n)return;}throw Error('Unity frames stalled');};
  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);

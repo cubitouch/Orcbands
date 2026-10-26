@@ -3,12 +3,46 @@ using UnityEngine;
 
 namespace Orcbands
 {
-    /// <summary>Animation interaction only; this does not fell trees or award wood.</summary>
+    /// <summary>A finite tree resource with a reusable stump and a stable navigation footprint.</summary>
     public sealed class WoodcuttingTarget : MonoBehaviour
     {
         [System.Serializable] public struct WorkExclusion
         {
             public float x, z, radius;
+        }
+        public const int WoodPerTree = 12;
+        [SerializeField] private int remainingWood = WoodPerTree;
+        public int RemainingWood => remainingWood;
+        public bool IsDepleted => remainingWood == 0;
+        public int ObstacleIndex;
+        public GameObject StumpTemplate;
+        public GameObject Stump { get; private set; }
+        public float StumpRadius = .46f;
+        public float ShadowScale = 1f, ShadowWidth = 1f, ShadowHeight = 1f;
+        public int TakeWood()
+        {
+            if (remainingWood <= 0) return 0;
+            remainingWood--; return 1;
+        }
+        public void RestoreResource(int amount)
+        {
+            remainingWood = Mathf.Clamp(amount, 0, WoodPerTree);
+            if (IsDepleted) { ShowStump(); return; }
+            foreach (var renderer in GetComponentsInChildren<MeshRenderer>()) renderer.enabled = true;
+            foreach (var collider in GetComponentsInChildren<Collider>()) collider.enabled = true;
+            if (Stump != null) { Stump.SetActive(false); Destroy(Stump); Stump = null; }
+        }
+        public void ShowStump()
+        {
+            foreach (var renderer in GetComponentsInChildren<MeshRenderer>()) renderer.enabled = false;
+            foreach (var collider in GetComponentsInChildren<Collider>()) collider.enabled = false;
+            if (Stump == null && StumpTemplate != null)
+            {
+                Stump = Instantiate(StumpTemplate, transform.position, transform.rotation, transform.parent);
+                Stump.name = name + " stump";
+                Stump.transform.localScale = transform.localScale;
+                Stump.SetActive(true);
+            }
         }
         [Min(.1f)] public float CrownRadius = 1.36f;
         [Min(0f)] public float WorkerClearance = .65f;
