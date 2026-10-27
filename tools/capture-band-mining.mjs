@@ -31,7 +31,15 @@ try {
  const first=await report();assert.equal(first.band.length,3);assert.equal(first.stone,0);
  assert(first.band.every(u=>u.visibleTools===1&&!u.miningTool));
  await page.screenshot({path:resolve(output,'three-starting-orcs.png')});
- await click(first.band[1].screen);
+ await click(first.band[0].screen);
+ await page.keyboard.down('Shift');await click((await report()).band[1].screen);await click((await report()).band[2].screen);await page.keyboard.up('Shift');
+ let grouped=await report();assert(grouped.band.every(u=>u.selected));
+ await click(grouped.destinationScreen,'right');
+ grouped=await until(r=>r.band.every(u=>!u.moving),'group movement');
+ assert(grouped.band.every((u,i)=>Math.hypot(u.feet.x-first.band[i].feet.x,u.feet.z-first.band[i].feet.z)>.5),'A selected orc did not follow the group movement order');
+ for(let i=0;i<3;i++)for(let j=0;j<i;j++)assert(Math.hypot(grouped.band[i].feet.x-grouped.band[j].feet.x,grouped.band[i].feet.z-grouped.band[j].feet.z)>=1.29,'Group members overlap');
+ await page.screenshot({path:resolve(output,'group-movement.png')});
+ await click(grouped.band[1].screen);
  let r=await report();assert.deepEqual(r.band.map(u=>u.selected),[false,true,false]);
  await click(r.mineScreen,'right');
  r=await until(r=>r.stone>=2,'companion mines stone');
@@ -70,5 +78,5 @@ try {
  await page.screenshot({path:resolve(output,'outcrop-exhausted.png')});
  assert.deepEqual(errors,[]);
  await writeFile(resolve(output,'report.json'),JSON.stringify({pass:true,first,final,traces,errors},null,2));
- console.log('BAND_MINING_BROWSER: PASS companion selection, actual mining/tool switch, parallel work, shared finite supply, three-worker orders and save/load');
+ console.log('BAND_MINING_BROWSER: PASS companion selection, group movement, actual mining/tool switch, parallel work, shared finite supply, three-worker orders and save/load');
 } finally {await browser.close();}

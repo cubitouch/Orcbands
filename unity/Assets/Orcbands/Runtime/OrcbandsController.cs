@@ -33,6 +33,7 @@ namespace Orcbands
         private readonly List<Vector3> route = new List<Vector3>();
         private int waypoint, routeRevision;
         private float feedbackUntil;
+        private string bandFeedback;
         public string LastCommandResult { get; private set; } = "Ready";
         public int RemainingWaypoints => hasDestination ? route.Count - waypoint : 0;
         public Vector3 Destination => destination;
@@ -164,22 +165,27 @@ namespace Orcbands
             destination = hasDestination ? route[route.Count - 1] : Worker.position;
             routeRevision = Pathfinder.Revision;
             SetChoppingTarget(tree);
-            LastCommandResult = message;
-            feedbackUntil = Time.time + 3f;
+            Feedback(message);
         }
         public void FinishTree()
         {
             CancelWorkerCommand();
-            LastCommandResult = "Resource exhausted · choose another target";
-            feedbackUntil = Time.time + 4f;
+            Feedback("Resource exhausted · choose another target", 4f);
         }
 
         private bool RejectCommand(string message = "No clear route to that destination")
         {
             CancelWorkerCommand();
-            LastCommandResult = message;
-            feedbackUntil = Time.time + 3f;
+            Feedback(message);
             return false;
+        }
+
+        private void Feedback(string message, float duration = 3f)
+        {
+            LastCommandResult = message;
+            var owner = Band == null ? this : Band[0];
+            owner.bandFeedback = (OwnsInput ? "" : Worker.name + ": ") + message;
+            owner.feedbackUntil = Time.time + duration;
         }
 
         private void SetChoppingTarget(WoodcuttingTarget tree)
@@ -236,7 +242,7 @@ namespace Orcbands
                         }
                     }
                     if (!moved && blockedFor > 5f) {
-                        CancelWorkerCommand(); LastCommandResult = "Route occupied · give a new order"; feedbackUntil = Time.time + 4f;
+                        CancelWorkerCommand(); Feedback("Route occupied · give a new order", 4f);
                     }
                     break;
                 }
@@ -321,11 +327,11 @@ namespace Orcbands
 
         private void OnGUI()
         {
-            if (Time.time < feedbackUntil && (OwnsInput || selected))
-            {
-                GUI.Box(new Rect(Screen.width / 2f - 170f, Screen.height - 46f, 340f, 28f), LastCommandResult);
-            }
             if (!OwnsInput) return;
+            if (Time.time < feedbackUntil)
+            {
+                GUI.Box(new Rect(Screen.width / 2f - 170f, Screen.height - 46f, 340f, 28f), bandFeedback ?? LastCommandResult);
+            }
             if (boxSelecting && Event.current.type == EventType.Repaint)
             {
                 Rect rect = SelectionRect;

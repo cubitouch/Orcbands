@@ -6,7 +6,7 @@ props. The visual layout is unchanged. These footprints are exported from the
 same seeded placements as the rendered forest, including its reflected X axis.
 
 Select the worker and right-click ground as before. Clear ground is reached
-exactly. A click inside scenery resolves to the closest clear grid point within
+exactly when the destination is unoccupied. Group orders receive spaced goals; occupied destinations resolve to nearby separate slots. A click inside scenery resolves to the closest clear grid point within
 four metres; if that point cannot be reached, the command is rejected. Destinations
 outside the map clamp to its boundary with body clearance. A short on-screen
 message explains an adjusted or rejected command. Rejection cancels the previous
@@ -29,10 +29,7 @@ clearance test succeeds. The same sweep guards every movement step, including
 long frames. Terrain elevation, three-unit/second travel, root-motion ownership,
 the hand-held axe and existing animation rates are preserved.
 
-Footprints describe the current static map. Future construction/felling code
-must update `Obstacles` and call `Rebuild()`; active commands then replan against
-the new revision. This pass does not add unit-to-unit avoidance, movable physics
-objects, resource harvesting, slope/cliff navigation or dynamic fog exploration.
+Footprints describe the current static map. Felling updates `Obstacles` and calls `Rebuild()` immediately, replacing the crown with the narrow stump core; active commands then replan against the new revision. The three-worker band also uses reserved work positions, swept unit separation and short lateral avoidance. Persistent crowding stops safely with feedback. Movable physics objects, slope/cliff navigation and dynamic fog exploration remain outside this implementation. See [band, mining and tree-cleared paths](band-mining.md).
 Sub-grid gaps can be rejected conservatively. The four-metre blocked-click
 projection does not search every alternative reachable point; a nearby isolated
 point may cause a safe rejection instead.
@@ -63,3 +60,4 @@ Manual review before merge:
 4. Click inside the hut or stockpile; check the adjusted-destination feedback.
 5. Try a narrow gap and a distant woodland destination. The orc must avoid
    clipping; unreachable orders should stop safely with feedback.
+
