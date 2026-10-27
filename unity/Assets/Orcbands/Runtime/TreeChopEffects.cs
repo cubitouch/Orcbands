@@ -98,6 +98,7 @@ namespace Orcbands
             {
                 float fan = (float)random.NextDouble() * 1.6f - .8f;
                 var emit = new ParticleSystem.EmitParams {
+                    startColor = new Color(.78f, .56f, .30f),
                     position = LastChipOrigin + side * fan * .06f,
                     velocity = towardWorker * (.9f + (float)random.NextDouble() * .8f) +
                         side * fan + Vector3.up * (1f + (float)random.NextDouble() * 1.1f),
@@ -106,6 +107,20 @@ namespace Orcbands
                     rotation3D = new Vector3(random.Next(360), random.Next(360), random.Next(360))
                 };
                 chips.Emit(emit, 1);
+            }
+        }
+        public void PlayMiningStrike(StoneMiningTarget rock, float phase)
+        {
+            EnsureChipPool();
+            Vector3 toward = Vector3.ProjectOnPlane(Controller.Worker.position - rock.transform.position, Vector3.up).normalized;
+            Vector3 point = rock.transform.position + toward * (rock.Radius * .75f) + Vector3.up * .9f;
+            for (int i = 0; i < 8; i++) {
+                float angle = i * 2.399f;
+                chips.Emit(new ParticleSystem.EmitParams {
+                    position = point, startColor = new Color(.68f,.72f,.70f),
+                    velocity = toward * .8f + new Vector3(Mathf.Sin(angle)*.6f, .8f+(i%3)*.3f, Mathf.Cos(angle)*.6f),
+                    startLifetime = .4f+(i%3)*.1f, startSize = .055f+(i%3)*.02f
+                }, 1);
             }
         }
         private void EnsureChipPool()
@@ -159,3 +174,4 @@ namespace Orcbands
         private void OnDestroy() { if (chipMesh != null) Destroy(chipMesh); }
     }
 }
+

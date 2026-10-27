@@ -71,11 +71,6 @@ namespace Orcbands.Editor
                     if (role == 1) Part(model, "Broad pauldron", new Vector3(side*.43f,1.03f,0), new Vector3(.38f,.22f,.39f), materials[3]);
                 }
                 Part(model, "Faction sash", new Vector3(.21f,.83f,.23f), new Vector3(.12f,.38f,.035f), materials[5]);
-                if (role == 0)
-                {
-                    Part(model,"Tool haft",new Vector3(-.51f,.46f,.20f),new Vector3(.07f,.53f,.07f),materials[2]);
-                    Part(model,"Tool head",new Vector3(-.60f,.67f,.20f),new Vector3(.28f,.15f,.10f),materials[3]);
-                }
                 if (role == 1) Part(model,"Shield",new Vector3(-.62f,.75f,.16f),new Vector3(.14f,.65f,.51f),materials[1]);
                 if (role == 2)
                 {
@@ -87,6 +82,16 @@ namespace Orcbands.Editor
                 CombineRole(model, materials);
                 model.gameObject.SetActive(role == 0);
             }
+            var tools = root.AddComponent<WorkerTools>();
+            var hand = new GameObject("Worker axe grip").transform;
+            hand.SetParent(presentation.ReviewRoles[0], false); hand.localPosition = new Vector3(.48f, .61f, .11f);
+            tools.Axe = new GameObject("Proxy axe"); tools.Axe.transform.SetParent(hand, false);
+            Part(tools.Axe.transform, "Haft", new Vector3(0f,-.15f,0f), new Vector3(.06f,.65f,.06f), materials[2]);
+            Part(tools.Axe.transform, "Head", new Vector3(.10f,.14f,0f), new Vector3(.3f,.17f,.08f), materials[3]);
+            tools.Pickaxe = new GameObject("Proxy pickaxe"); tools.Pickaxe.transform.SetParent(hand, false);
+            Part(tools.Pickaxe.transform, "Haft", new Vector3(0f,-.15f,0f), new Vector3(.06f,.65f,.06f), materials[2]);
+            Part(tools.Pickaxe.transform, "Pick head", new Vector3(0f,.16f,0f), new Vector3(.65f,.08f,.07f), materials[3]);
+            tools.Equip(false);
             return root;
         }
 
@@ -147,3 +152,4 @@ namespace Orcbands.Editor
         }
     }
 }
+

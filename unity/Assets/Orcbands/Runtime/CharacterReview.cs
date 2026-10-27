@@ -12,8 +12,18 @@ namespace Orcbands
         public Vector3 CampfireFeet;
         private Vector3 originalFeet;
         private void Awake() { originalFeet = Character.transform.position; }
+        [System.Serializable] private class BandReport
+        {
+            public Vector3 feet, screen, destination;
+            public bool selected, moving, miningTool;
+            public string order;
+            public int visibleTools;
+        }
         [System.Serializable] private class ReportData
         {
+            public BandReport[] band;
+            public int stone, mineRemaining;
+            public Vector3 mineScreen;
             public Vector3 feet, unitScreen, destinationScreen, camera, facing, gripInHand, axeUp, gripEuler;
             public Vector3 leftFoot, rightFoot, rightHand, chopScreen, returnScreen, targetFeet;
             public float targetDistance, targetStandOff, walkingClipLength, choppingClipLength;
@@ -88,7 +98,24 @@ namespace Orcbands
                     if (clip.name == "Walking") walkingLength = clip.length;
                     if (clip.name == "Chopping") choppingLength = clip.length;
                 }
+            var bandReport = new BandReport[controller.Band.Length];
+            for (int i = 0; i < bandReport.Length; i++) {
+                var member = controller.Band[i]; var tools = member.Worker.GetComponent<WorkerTools>();
+                bandReport[i] = new BandReport { feet = member.Worker.position, screen = View.WorldToViewportPoint(member.Worker.position + Vector3.up),
+                    destination = member.Destination, selected = member.IsWorkerSelected, moving = member.IsMoving,
+                    miningTool = tools != null && tools.Mining, visibleTools = tools == null ? 0 : (tools.Axe.activeInHierarchy ? 1 : 0) + (tools.Pickaxe.activeInHierarchy ? 1 : 0),
+                    order = member.MiningTarget != null ? "mine" : member.ChoppingTarget != null ? "chop" : member.IsMoving ? "move" : "idle" };
+            }
+            Vector3 mineScreen = Vector3.zero;
+            foreach (var mine in harvest.Mines) if (!mine.IsDepleted) {
+                foreach (float height in new[] { .8f, 1.2f, .5f, 1.5f }) {
+                    Vector3 screen = View.WorldToViewportPoint(mine.transform.position + Vector3.up * height);
+                    if (screen.z <= 0f || screen.x < .05f || screen.x > .95f || screen.y < .05f || screen.y > .95f) continue;
+                    if (Physics.Raycast(View.ViewportPointToRay(screen), out RaycastHit minePick, 300f) && minePick.collider.GetComponentInParent<StoneMiningTarget>() == mine) { mineScreen = screen; break; }
+                }
+            }
             Debug.Log("CHARACTER_REPORT:" + JsonUtility.ToJson(new ReportData {
+                band = bandReport, stone = harvest.Stone, mineRemaining = harvest.Mines.Length == 0 ? 0 : harvest.Mines[0].Remaining, mineScreen = mineScreen,
                 sessionRunning = session != null && session.Running,
                 splashFinished = UnityEngine.Rendering.SplashScreen.isFinished,
                 applicationFocused = Application.isFocused,
@@ -316,3 +343,4 @@ namespace Orcbands
         }
     }
 }
+

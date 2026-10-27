@@ -17,7 +17,7 @@ namespace Orcbands
         public int ObstacleIndex;
         public GameObject StumpTemplate;
         public GameObject Stump { get; private set; }
-        public float StumpRadius = .46f;
+        public float StumpRadius = .265f;
         public float ShadowScale = 1f, ShadowWidth = 1f, ShadowHeight = 1f;
         public int TakeWood()
         {
@@ -78,3 +78,4 @@ namespace Orcbands
         }
     }
 }
+

@@ -2,7 +2,7 @@ export const SLOTS = ['auto', 'slot1', 'slot2', 'slot3'];
 const prefix = 'orcbands.save.v1.';
 export function envelope(snapshot, name = 'My camp', now = new Date()) {
   if (typeof snapshot === 'string') snapshot = JSON.parse(snapshot);
-  if (!snapshot || snapshot.version !== 1 || snapshot.map !== 'forest-2302-v1' || !Array.isArray(snapshot.trees) ||
+  if (!snapshot || ![1,2].includes(snapshot.version) || snapshot.map !== 'forest-2302-v1' || !Array.isArray(snapshot.trees) ||
       !Number.isSafeInteger(snapshot.wood) || snapshot.wood < 0 || !Number.isFinite(snapshot.elapsed))
     throw new Error('This is not a supported Orcbands save.');
   return {format:'orcbands-save', version:1, name:String(name).trim().slice(0,40) || 'My camp', savedAt:now.toISOString(), snapshot};
@@ -31,3 +31,4 @@ export class SaveStore {
   }
   remove(slot) { this.storage.removeItem(this.key(slot)); }
 }
+

@@ -20,7 +20,8 @@ namespace Orcbands.Editor
         private const string HutPath = "Assets/Orcbands/Art/timber-hut-01.obj";
 
         [Serializable] public class P { public float x, z, scale = 1f, angle, width = 1f, height = 1f; }
-        [Serializable] public class Grove { public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; public WoodcuttingTarget.WorkExclusion[] workExclusions; public WorkerNavigation.Footprint[] navigationObstacles; }
+        [Serializable] public class Mine { public float x, z, angle, radius, scale; public int obstacleIndex; }
+        [Serializable] public class Grove { public Mine[] mines; public P[] trees; public P hut, campfire; public P[] torches; public int resourceCount; public float mapHalfExtent; public WoodcuttingTarget.WorkExclusion[] workExclusions; public WorkerNavigation.Footprint[] navigationObstacles; }
         private const string Generated = "Assets/Orcbands/Generated/";
         private static readonly Dictionary<string, Material> Shades = new Dictionary<string, Material>();
 
@@ -128,7 +129,7 @@ namespace Orcbands.Editor
                 trees[i] = resource;
                 resource.CrownRadius = 1.36f * pos.scale * pos.width;
                 resource.ObstacleIndex = i;
-                resource.StumpRadius = .46f * pos.scale * pos.width;
+                resource.StumpRadius = .265f * pos.scale * pos.width;
                 resource.StumpTemplate = stumpTemplate;
                 resource.ShadowScale = pos.scale; resource.ShadowWidth = pos.width; resource.ShadowHeight = pos.height;
                 // Pick the visible silhouette, including branches, rather than
@@ -258,7 +259,7 @@ namespace Orcbands.Editor
             var chopEffects = controllerObject.AddComponent<TreeChopEffects>();
             chopEffects.Controller = controller;
             var chipsMaterial = new Material(worldShader);
-            chipsMaterial.SetColor("_Color", new Color(.78f, .56f, .30f));
+            chipsMaterial.SetColor("_Color", Color.white);
             chopEffects.ChipMaterial = SavedMaterial("WoodChipBark", chipsMaterial);
             var harvest = controllerObject.AddComponent<WorkerHarvest>();
             harvest.Controller = controller; harvest.Effects = chopEffects;
@@ -286,6 +287,50 @@ namespace Orcbands.Editor
             controller.Reveal = reveal;
             controller.MapHalfExtent = layout.mapHalfExtent;
             controller.WorkPositionExclusions = layout.workExclusions;
+            var mines = new List<StoneMiningTarget>();
+            foreach (var location in layout.mines) {
+                var node = new GameObject("Stone outcrop " + (mines.Count + 1));
+                node.transform.position = Surface(ground, location.x, location.z) - Vector3.up * .012f;
+                node.transform.rotation = Quaternion.Euler(0f, location.angle * Mathf.Rad2Deg, 0f);
+                node.transform.localScale = Vector3.one * (location.scale > 0f ? location.scale : 1f);
+                var quarry = node.AddComponent<StoneMiningTarget>();
+                quarry.ObstacleIndex = location.obstacleIndex; quarry.Radius = location.radius;
+                quarry.Full = ColoredMesh("Standing mineable stone", "mine-full", art, true);
+                quarry.Depleted = ColoredMesh("Exhausted stone outcrop", "mine-depleted", art, true);
+                quarry.Full.transform.SetParent(node.transform, false); quarry.Depleted.transform.SetParent(node.transform, false);
+                quarry.RestoreResource(StoneMiningTarget.StonePerOutcrop); mines.Add(quarry);
+            }
+            harvest.Mines = mines.ToArray();
+            var band = new OrcbandsController[3]; band[0] = controller;
+            pathfinder.Rebuild();
+            for (int i = 1; i < band.Length; i++) {
+                var memberObject = new GameObject("Band member " + (i + 1));
+                var member = memberObject.AddComponent<OrcbandsController>(); band[i] = member;
+                var body = UnityEngine.Object.Instantiate(worker);
+                body.name = "Orc " + (i + 1);
+                bool placed = false;
+                for (int attempt = 0; attempt < 72 && !placed; attempt++) {
+                    float angle = (i * 1.8f + attempt * .45f);
+                    Vector3 candidate = worker.transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * (3f + attempt / 12);
+                    var route = new List<Vector3>();
+                    if (!pathfinder.TryMoveRoute(worker.transform.position, candidate, route, out bool adjusted)) continue;
+                    candidate = route[route.Count - 1];
+                    placed = true;
+                    for (int j = 0; j < i; j++) if (Vector2.Distance(WorkerNavigation.Flat(candidate), WorkerNavigation.Flat(band[j].Worker.position)) < 2f) placed = false;
+                    if (placed) body.transform.position = Surface(ground, candidate.x, candidate.z);
+                }
+                if (!placed) throw new InvalidOperationException("Cannot place the starting band safely");
+                member.Worker = body.transform; member.BandIndex = i;
+                member.Pathfinder = pathfinder; member.GameCamera = camera; member.Ground = controller.Ground;
+                member.Navigation = navigation; member.Reveal = reveal; member.MapHalfExtent = layout.mapHalfExtent;
+                member.WorkPositionExclusions = layout.workExclusions;
+                member.SelectionRing = UnityEngine.Object.Instantiate(ringObject).transform;
+                member.TreeTargetRing = UnityEngine.Object.Instantiate(targetRing).transform;
+                var effect = memberObject.AddComponent<TreeChopEffects>(); effect.Controller = member; effect.ChipMaterial = chopEffects.ChipMaterial;
+                var gather = memberObject.AddComponent<WorkerHarvest>(); gather.Controller = member; gather.Effects = effect;
+                gather.Shadows = shadows; gather.Shared = harvest; gather.Mines = harvest.Mines;
+            }
+            foreach (var member in band) member.Band = band;
             var session = controllerObject.AddComponent<GameSession>();
             session.Controller = controller; session.Harvest = harvest;
             session.Shadows = shadows; session.Effects = chopEffects;
@@ -457,6 +502,7 @@ namespace Orcbands.Editor
             TreeChopChecks.Run();
             TreeHarvestChecks.Run();
             GameSaveChecks.Run();
+            BandMiningChecks.Run();
             BuildTarget target = EditorUserBuildSettings.activeBuildTarget;
             // GitHub Pages serves static files without Content-Encoding for
             // Unity's pre-compressed WebGL bundles. Emit uncompressed files.
@@ -492,3 +538,4 @@ namespace Orcbands.Editor
         }
     }
 }
+

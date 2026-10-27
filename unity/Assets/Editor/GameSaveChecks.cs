@@ -25,6 +25,7 @@ namespace Orcbands.Editor
             // Navigation accepts exact clear endpoints up to halfExtent - body clearance.
             // Saving must accept those same positions rather than rounding the bound down.
             var edge = session.Snapshot(); edge.trees = new int[0]; edge.wood = 0;
+            edge.version = 1; edge.target = -1; edge.order = "idle";
             var noTrees = new WoodcuttingTarget[0]; var noObstacles = new WorkerNavigation.Footprint[0];
             foreach (var point in new[] { new Vector3(109.35f, 0f, 0f), new Vector3(-109.35f, 0f, 0f),
                 new Vector3(0f, 0f, 109.35f), new Vector3(0f, 0f, -109.35f),
@@ -50,3 +51,4 @@ namespace Orcbands.Editor
         }
     }
 }
+

@@ -12,5 +12,8 @@ assert.throws(()=>decode('x'.repeat(131073)));
 assert.equal(envelope(snapshot,'a'.repeat(60)).name.length,40);
 const denied=new SaveStore({getItem(){throw Error('Denied');},setItem(){throw Error('Quota');}});
 assert(denied.read('slot1').error);assert.throws(()=>denied.write('auto',save),/Download a save/);
+const bandSave=envelope({...snapshot,version:2,stone:3,mines:[21],companions:[{order:'mine'},{order:'idle'}]},'Band');
+store.write('slot2',bandSave);assert.deepEqual(decode(JSON.stringify(store.read('slot2').value)),bandSave);
 store.remove('slot1');assert(store.read('slot1').empty);
 console.log('PASS: save roundtrip, independent corrupt slots, missing slots, bounded imports, unsupported versions, names, storage denial and deletion.');
+

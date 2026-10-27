@@ -47,3 +47,8 @@ Trees contain 12 wood. Each axe strike adds one wood to the live counter; exhaus
 ## Saved camps and introduction
 
 The Unity browser player opens with an illustrated menu and skippable four-panel prologue. Continue restores your camp; Menu / Escape pauses the game and offers three named saves. Wood, partial/depleted trees, worker orders and camera persist in this browser, with JSON download/import for backups. Settings includes music preference and volume. [Controls, persistence and acceptance checks](docs/menu-persistence.md).
+
+
+## Starting band and mining
+
+Three controllable orcs now start together. Shift-click or drag to select several; right-click the tall stone outcrop to equip pickaxes and collect stone, or a tree to equip axes and collect wood. Saves retain the whole band and resource supplies. Felled trees release their crown area for movement around the small stump core. [Controls, limits and manual checks](docs/band-mining.md).

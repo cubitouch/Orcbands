@@ -10,7 +10,7 @@ assert.equal(grove.torches.length, 4);
 assert.equal(grove.workExclusions.length,22,'Camp work-position footprint export');
 for(const p of grove.workExclusions)assert([p.x,p.z,p.radius].every(Number.isFinite)&&p.radius>0);
 assert(grove.resourceCount >= 15);
-for (const name of ['harvest-stump', 'woodland-story', 'terrain', 'resource-art', 'stone-props', 'grass-props', 'forest-patches', 'hearth-art', 'hearth-flames', 'torches-art', 'torches-flames']) {
+for (const name of ['mine-full', 'mine-depleted', 'harvest-stump', 'woodland-story', 'terrain', 'resource-art', 'stone-props', 'grass-props', 'forest-patches', 'hearth-art', 'hearth-flames', 'torches-art', 'torches-flames']) {
   const file = resolve(root, name + '.bytes');
   const data = readFileSync(file);
   const count = data.readInt32LE(0);
@@ -33,3 +33,10 @@ const shadowSource = JSON.parse(readFileSync(resolve(root, 'pine-shadow-source.j
 assert(shadowSource.vertices.length > 50 && shadowSource.triangles.length > 300);
 for (const v of shadowSource.vertices) assert([v.x,v.y,v.z].every(Number.isFinite));
 for (const i of shadowSource.triangles) assert(Number.isInteger(i) && i>=0 && i<shadowSource.vertices.length);
+
+
+assert(grove.mines.length > 0, "No mineable outcrops exported");
+for (const mine of grove.mines) {
+ const obstacle = grove.navigationObstacles[mine.obstacleIndex];
+ assert.equal(obstacle.x, mine.x); assert.equal(obstacle.z, mine.z); assert.equal(obstacle.radius, mine.radius);
+}

@@ -142,6 +142,7 @@ jobs:
           node tools/test-menu-host.mjs
           node tools/test-background-music.mjs
           node tools/capture-menu-persistence.mjs
+          node tools/capture-band-mining.mjs
           node tools/capture-finite-trees.mjs
           node tools/capture-tree-chop-feedback.mjs
           node tools/capture-worker-navigation.mjs
@@ -209,3 +210,4 @@ jobs:
           name: orcbands-unity-macos
           path: build/StandaloneOSX/Orcbands.app/
           if-no-files-found: error
+
