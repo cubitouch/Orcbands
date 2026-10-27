@@ -80,7 +80,7 @@ namespace Orcbands
         public void CancelWorkerCommand()
         {
             hasDestination = false;
-            route.Clear(); waypoint = 0;
+            route.Clear(); waypoint = 0; blockedFor = 0f;
             MiningTarget = null; SetChoppingTarget(null);
             if (animationDriver != null) animationDriver.Request(WorkerAnimation.Mode.Idle);
         }
@@ -88,8 +88,17 @@ namespace Orcbands
         public bool CommandMove(Vector3 point)
         {
             CancelWorkerCommand();
-            if (Pathfinder == null || !Pathfinder.TryMoveRoute(Worker.position, point, route, out bool adjusted))
-                return RejectCommand();
+            if (Pathfinder == null || !Pathfinder.TryMoveRoute(Worker.position, point, route, out bool adjusted)) return RejectCommand();
+            if (!WorkSlotClear(route[route.Count - 1])) {
+                bool found = false;
+                for (int i = 0; i < 48 && !found; i++) {
+                    float angle = i * 2.399f;
+                    Vector3 nearby = point + new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) * (1.6f + i / 12);
+                    found = Pathfinder.TryMoveRoute(Worker.position, nearby, route, out bool snapped) && WorkSlotClear(route[route.Count - 1]);
+                }
+                if (!found) return RejectCommand();
+                adjusted = true;
+            }
             BeginRoute(null, adjusted ? "Moving to nearby clear ground" : "Moving");
             return true;
         }
@@ -100,6 +109,7 @@ namespace Orcbands
             var candidates = new List<Vector3>();
             tree.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
             ReserveWorkPoints(candidates);
+            if (candidates.Count == 0) return RejectCommand("No free work position · clear space or choose another target");
             if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
             if (tools == null) tools = Worker.GetComponent<WorkerTools>();
             if (tools != null) tools.Equip(false);
@@ -113,6 +123,7 @@ namespace Orcbands
             var candidates = new List<Vector3>();
             rock.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
             ReserveWorkPoints(candidates);
+            if (candidates.Count == 0) return RejectCommand("No free work position · clear space or choose another target");
             if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
             MiningTarget = rock;
             if (tools == null) tools = Worker.GetComponent<WorkerTools>();
@@ -123,14 +134,17 @@ namespace Orcbands
         private void ReserveWorkPoints(List<Vector3> points)
         {
             if (Band == null) return;
-            points.RemoveAll(point => {
-                foreach (var other in Band) {
-                    if (other == this) continue;
-                    Vector3 reserved = other.IsMoving ? other.Destination : other.Worker.position;
-                    if (Vector2.Distance(WorkerNavigation.Flat(point), WorkerNavigation.Flat(reserved)) < UnitSpacing + .1f) return true;
-                }
-                return false;
-            });
+            points.RemoveAll(point => !WorkSlotClear(point));
+        }
+        private bool WorkSlotClear(Vector3 point)
+        {
+            if (Band == null) return true;
+            foreach (var other in Band) {
+                if (other == this) continue;
+                Vector3 reserved = other.IsMoving ? other.Destination : other.Worker.position;
+                if (Vector2.Distance(WorkerNavigation.Flat(point), WorkerNavigation.Flat(reserved)) < UnitSpacing + .1f) return false;
+            }
+            return true;
         }
         public bool UnitStepClear(Vector3 start, Vector3 end)
         {
@@ -160,10 +174,10 @@ namespace Orcbands
             feedbackUntil = Time.time + 4f;
         }
 
-        private bool RejectCommand()
+        private bool RejectCommand(string message = "No clear route to that destination")
         {
             CancelWorkerCommand();
-            LastCommandResult = "No clear route to that destination";
+            LastCommandResult = message;
             feedbackUntil = Time.time + 3f;
             return false;
         }

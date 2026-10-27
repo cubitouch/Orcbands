@@ -23,8 +23,20 @@ namespace Orcbands.Editor
             var mine = session.Harvest.Mines[0];
             Require(leader.CommandMine(mine) && leader.MiningTarget == mine, "reachable mining order");
             Require(leader.Worker.GetComponent<WorkerTools>().Mining, "mining order equips pickaxe");
-            Require(leader.Band[1].CommandMine(mine), "second miner can reach another work spot");
+            // The authored quarry initially has one camp-side work spot. Other
+            // miners must reject safely until the player cuts an access path.
+            bool secondAccepted = leader.Band[1].CommandMine(mine);
+            if (secondAccepted) Require(Vector2.Distance(WorkerNavigation.Flat(leader.Destination), WorkerNavigation.Flat(leader.Band[1].Destination)) >= OrcbandsController.UnitSpacing, "miners overlap at crowded quarry");
+            else Require(!leader.Band[1].IsMoving && !leader.Band[1].IsWorking, "rejected miner retained a stale order");
+            var originalObstacles = (WorkerNavigation.Footprint[])leader.Pathfinder.Obstacles.Clone();
+            foreach (var tree in session.Shadows.Trees) if (Vector3.Distance(tree.transform.position, mine.transform.position) < 7f) {
+                var footprint = leader.Pathfinder.Obstacles[tree.ObstacleIndex]; footprint.radius = tree.StumpRadius;
+                leader.Pathfinder.Obstacles[tree.ObstacleIndex] = footprint;
+            }
+            leader.Pathfinder.Rebuild();
+            Require(leader.Band[1].CommandMine(mine), "clearing trees opens another quarry work position");
             Require(Vector2.Distance(WorkerNavigation.Flat(leader.Destination), WorkerNavigation.Flat(leader.Band[1].Destination)) >= OrcbandsController.UnitSpacing, "miners reserve distinct work spots");
+            leader.Pathfinder.Obstacles = originalObstacles; leader.Pathfinder.Rebuild();
             foreach (var member in leader.Band) member.CancelWorkerCommand();
             bool treeReachable = false;
             foreach (var tree in session.Shadows.Trees) if (Vector3.Distance(tree.transform.position, leader.Worker.position) < 15f && leader.CommandTree(tree)) { treeReachable = true; break; }

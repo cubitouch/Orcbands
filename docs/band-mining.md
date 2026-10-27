@@ -6,7 +6,7 @@ The Unity camp starts with three controllable orcs. The other three band members
 - Right-click ground to move the selected orcs. Group destinations are spaced apart.
 - Right-click a standing tree to equip the axe and chop. Each tree still contains 12 wood.
 - Right-click the tall harvestable stone outcrop near camp to equip the purchased Synty pickaxe and mine. It contains 24 stone shared by all miners. Small decorative rocks and the pre-existing depleted rock remain scenery.
-- Resources enter the shared camp totals immediately. Each worker has an independent order and work position. Depleted resources stop all workers assigned to that node; choose another target.
+- Resources enter the shared camp totals immediately. Each worker has an independent order and work position. The authored quarry initially has room for one miner from the camp side; clearing nearby trees opens more approaches. Extra workers reject safely when no separate reachable work position is available. Depleted resources stop all workers assigned to that node; choose another target.
 - Felling removes the crown's selection colliders, repairs its shadow and rebuilds navigation immediately. Only the stump's narrow 0.265m core (scaled with the tree) remains solid; low roots do not reserve the old crown area. Clearing adjacent trees can open a new route.
 - Saves now include all three orcs, selections, tools, orders, stone and partial/exhausted outcrops. Version 1 camps are validated and upgraded with two safely placed idle companions before the live world changes.
 

@@ -114,7 +114,7 @@ namespace Orcbands
             if (counterStyle == null)
             {
                 panelStyle = new GUIStyle(GUI.skin.box);
-                counterStyle = new GUIStyle(GUI.skin.label) { fontSize = 21, fontStyle = FontStyle.Bold };
+                counterStyle = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold };
                 counterStyle.normal.textColor = new Color(.82f, .91f, .65f);
                 detailStyle = new GUIStyle(GUI.skin.label) { fontSize = 12 };
                 detailStyle.normal.textColor = new Color(.82f, .87f, .77f);
@@ -128,9 +128,10 @@ namespace Orcbands
             var tree = Controller == null ? null : Controller.ChoppingTarget;
             var rock = Controller == null ? null : Controller.MiningTarget;
             GUI.Box(new Rect(14, 14, 228, 126), GUIContent.none, panelStyle);
-            GUI.Label(new Rect(26, 20, 208, 30), "Wood  " + Wood + "   Stone  " + Stone, counterStyle);
+            GUI.Label(new Rect(26, 20, 110, 30), "Wood  " + Wood, counterStyle);
+            GUI.Label(new Rect(138, 20, 104, 30), "Stone  " + Stone, counterStyle);
             GUI.Label(new Rect(26, 50, 208, 22), "Band: 3 / 6 · right-click to work", detailStyle);
-            string task = "Select an orc · Shift adds to selection";
+            string task = "Shift-click: add/remove orcs";
             int selected = 0;
             if (Controller.Band != null) foreach (var member in Controller.Band) if (member.IsWorkerSelected) {
                 selected++;

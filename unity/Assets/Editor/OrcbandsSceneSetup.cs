@@ -259,8 +259,10 @@ namespace Orcbands.Editor
             var chopEffects = controllerObject.AddComponent<TreeChopEffects>();
             chopEffects.Controller = controller;
             var chipsMaterial = new Material(worldShader);
-            chipsMaterial.SetColor("_Color", Color.white);
+            chipsMaterial.SetColor("_Color", new Color(.78f, .56f, .30f));
             chopEffects.ChipMaterial = SavedMaterial("WoodChipBark", chipsMaterial);
+            var stoneChipMaterial = new Material(worldShader); stoneChipMaterial.SetColor("_Color", new Color(.68f,.72f,.70f));
+            chopEffects.StoneChipMaterial = SavedMaterial("StoneChips", stoneChipMaterial);
             var harvest = controllerObject.AddComponent<WorkerHarvest>();
             harvest.Controller = controller; harvest.Effects = chopEffects;
             var shadows = controllerObject.AddComponent<ForestShadowMap>();
@@ -326,7 +328,7 @@ namespace Orcbands.Editor
                 member.WorkPositionExclusions = layout.workExclusions;
                 member.SelectionRing = UnityEngine.Object.Instantiate(ringObject).transform;
                 member.TreeTargetRing = UnityEngine.Object.Instantiate(targetRing).transform;
-                var effect = memberObject.AddComponent<TreeChopEffects>(); effect.Controller = member; effect.ChipMaterial = chopEffects.ChipMaterial;
+                var effect = memberObject.AddComponent<TreeChopEffects>(); effect.Controller = member; effect.ChipMaterial = chopEffects.ChipMaterial; effect.StoneChipMaterial = chopEffects.StoneChipMaterial;
                 var gather = memberObject.AddComponent<WorkerHarvest>(); gather.Controller = member; gather.Effects = effect;
                 gather.Shadows = shadows; gather.Shared = harvest; gather.Mines = harvest.Mines;
             }
