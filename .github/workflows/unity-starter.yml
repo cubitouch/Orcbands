@@ -22,6 +22,7 @@ on:
       - "tools/capture-rts-controls.mjs"
       - "tools/capture-worker-navigation.mjs"
       - "tools/capture-finite-trees.mjs"
+      - "tools/capture-band-mining.mjs"
       - "tools/capture-tree-chop-feedback.mjs"
       - "tools/test-background-music.mjs"
       - ".github/workflows/unity-starter.yml"

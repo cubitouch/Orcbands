@@ -49,7 +49,10 @@ try {
  assert(r.band[1].miningTool&&r.band[1].visibleTools===1);assert.equal(r.band[1].order,'mine');
  await page.screenshot({path:resolve(output,'pickaxe-mining.png')});
  // Independently command the first worker to chop while its companion keeps mining.
- await click(r.band[0].screen);r=await report();await click(r.chopScreen,'right');
+ await click(r.band[0].screen);r=await report();
+ // Use the known camp-edge tree: the nearest visible tree after movement
+ // may be inside a closed forest pocket that must first be cleared.
+ await click(first.chopScreen,'right');assert.equal((await report()).chopTarget,first.chopScreenTarget);
  r=await until(r=>r.wood>=2&&r.stone>=3,'parallel mining and chopping');
  assert(!r.band[0].miningTool&&r.band[1].miningTool);
  assert(r.band.every(u=>u.visibleTools===1));

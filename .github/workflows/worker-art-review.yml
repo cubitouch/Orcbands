@@ -3,7 +3,7 @@ name: Licensed Unity PR Visual Review
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", "tools/capture-tree-chop-feedback.mjs", "tools/capture-finite-trees.mjs", ".github/workflows/worker-art-review.yml"]
+    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", "tools/capture-tree-chop-feedback.mjs", "tools/capture-finite-trees.mjs", "tools/capture-band-mining.mjs", ".github/workflows/worker-art-review.yml"]
 
 permissions:
   contents: read
