@@ -6,7 +6,8 @@ import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 
 const root = resolve(import.meta.dirname, '..');
-const site = resolve(root, 'build/WebGL/Orcbands');
+const site = process.env.ORCBANDS_PLAYER_DIR ? resolve(process.env.ORCBANDS_PLAYER_DIR) : resolve(root, 'build/WebGL/Orcbands');
+const quick = process.env.ORCBANDS_SMOKE_QUICK === '1';
 const screenshot = resolve(root, 'smoke-artifacts/unity-webgl/starter.png');
 const files = await readdir(resolve(site, 'Build'));
 assert(files.some(x => x.endsWith('.wasm')), 'Missing uncompressed WASM');
@@ -49,7 +50,7 @@ try {
       (!loader || window.getComputedStyle(loader).display === 'none');
   }, null, { timeout: 180000 });
   assert(await loaded.jsonValue(), 'Unity never completed WebGL initialization');
-  await page.waitForTimeout(2500);
+  if (!quick) await page.waitForTimeout(2500);
   // Review the same broad landscape presentation as the original Asset Lab,
   // not Unity's default white 960x600 player chrome.
   const viewport = page.locator('#viewport');
@@ -59,6 +60,27 @@ try {
     'Unity should fill the approved wide landscape gallery');
   await enterCamp(page);
   await page.screenshot({ path: screenshot, fullPage: true });
+  if (quick) {
+    const report = async () => {
+      const pending = page.waitForEvent('console', {predicate:m=>m.text().includes('CHARACTER_REPORT:'), timeout:30000});
+      await page.evaluate(()=>window.orcbandsCharacterReport());
+      return JSON.parse((await pending).text().split('CHARACTER_REPORT:')[1].split('\n')[0]);
+    };
+    const frames = async count => {
+      const first = await report();
+      for (let i = 0; i < 60; i++) {
+        const current = await report();
+        if (current.splashFinished && current.sessionRunning && current.frame >= first.frame + count) return current;
+        await page.waitForTimeout(100);
+      }
+      throw Error('Unity did not render live gameplay frames');
+    };
+    const ready = await frames(3);
+    await page.mouse.move(box.x + ready.unitScreen.x * box.width, box.y + (1-ready.unitScreen.y) * box.height);
+    await page.mouse.down(); await frames(2); await page.mouse.up();
+    assert((await frames(2)).selected, 'Worker selection did not reach the live player');
+    console.log('QUICK_UNITY_SMOKE: PASS real rendered frames, running session and pointer selection');
+  } else {
   // Guard against the stationary-camera forest flicker reproduced by PR #43.
   // This patch of distant pines used to change colour in ~20% of its pixels
   // over 3 seconds while the player was completely untouched. The hearth,
@@ -178,9 +200,11 @@ try {
   await page.keyboard.press('f');
   await page.keyboard.press('r');
   await page.waitForTimeout(350);
+  }
   assert.deepEqual(errors, [], 'Browser errors occurred while loading Unity WebGL');
   console.log('Unity WebGL loaded successfully; review screenshot: ' + screenshot);
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
 }
+
