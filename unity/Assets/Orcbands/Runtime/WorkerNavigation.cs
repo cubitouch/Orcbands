@@ -20,6 +20,8 @@ namespace Orcbands
         // Keep numerical tangencies outside the body clearance, including smoothed segments.
         private const float CollisionSkin = .01f;
         private float limit;
+        private Vector3[] occupied;
+        private Vector2 routeOrigin;
         private int width, binWidth, query, search;
         private List<int>[] bins;
         private int[] tested, visited, closed, parent;
@@ -71,9 +73,31 @@ namespace Orcbands
             EnsureReady();
             return SegmentClearUnchecked(Flat(a), Flat(b));
         }
+        // Temporary agent positions participate in the same exact tests as scenery.
+        // The static grid and revision remain unchanged; queries run sequentially.
+        public bool TryMoveRouteAvoiding(Vector3 start, Vector3 requested, List<Vector3> route, out bool adjusted, Vector3[] units)
+        {
+            EnsureReady(); occupied = units; routeOrigin = Flat(start);
+            try { return TryMoveRoute(start, requested, route, out adjusted); }
+            finally { occupied = null; }
+        }
+        public bool TryRouteAvoiding(Vector3 start, List<Vector3> goals, List<Vector3> route, Vector3[] units)
+        {
+            EnsureReady(); occupied = units; routeOrigin = Flat(start);
+            try { return TryRoute(start, goals, route); }
+            finally { occupied = null; }
+        }
         private bool SegmentClearUnchecked(Vector2 a, Vector2 b)
         {
             if (!InBounds(a) || !InBounds(b)) return false;
+            if (occupied != null) foreach (var unit in occupied) {
+                Vector2 centre = Flat(unit), delta = b - a;
+                float t = delta.sqrMagnitude < .000001f ? 0f : Mathf.Clamp01(Vector2.Dot(centre - a, delta) / delta.sqrMagnitude);
+                // Give planned paths a small margin. At a close start, permit
+                // escape from the existing separation without moving another unit.
+                float radius = Mathf.Min(OrcbandsController.UnitSpacing + .05f, Vector2.Distance(routeOrigin, centre) - .0001f);
+                if ((a + delta * t - centre).sqrMagnitude < radius * radius) return false;
+            }
             if (++query == int.MaxValue) { Array.Clear(tested, 0, tested.Length); query = 1; }
             for (int z = Bin(Mathf.Min(a.y, b.y)); z <= Bin(Mathf.Max(a.y, b.y)); z++)
                 for (int x = Bin(Mathf.Min(a.x, b.x)); x <= Bin(Mathf.Max(a.x, b.x)); x++)
@@ -143,7 +167,7 @@ namespace Orcbands
                     {
                         int n = z * width + x;
                         float d = (Point(n) - goal).sqrMagnitude;
-                        if (walkable[n] && d < best) { best = d; found = n; }
+                        if (walkable[n] && d < best && SegmentClearUnchecked(Point(n), Point(n))) { best = d; found = n; }
                     }
                 if (found < 0) { route.Clear(); adjusted = false; return false; }
                 goal = Point(found);
@@ -249,3 +273,4 @@ namespace Orcbands
         }
     }
 }
+

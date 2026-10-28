@@ -12,7 +12,7 @@ The Unity camp starts with three controllable orcs. The other three band members
 
 The pickaxe shares the existing right-hand socket and uses the existing overhead work swing; this increment does not require a new animation source. Public builds have original switchable proxy tools. Licensed models remain private.
 
-Unit separation uses swept checks and short lateral avoidance. A persistently occupied narrow route stops with feedback rather than letting units overlap; this is not a formation or crowd simulation.
+Unit separation uses routes planned around other workers and swept separation checks. A persistently occupied narrow route stops with feedback rather than letting units overlap; this is not a formation or crowd simulation.
 
 ## Manual acceptance
 

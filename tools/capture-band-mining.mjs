@@ -36,6 +36,7 @@ try {
  let grouped=await report();assert(grouped.band.every(u=>u.selected));
  await click(grouped.destinationScreen,'right');
  grouped=await until(r=>r.band.every(u=>!u.moving),'group movement');
+ assert(grouped.band.every(u=>Math.hypot(u.feet.x-u.destination.x,u.feet.z-u.destination.z)<.08),'A group order stopped before arrival');
  assert(grouped.band.every((u,i)=>Math.hypot(u.feet.x-first.band[i].feet.x,u.feet.z-first.band[i].feet.z)>.5),'A selected orc did not follow the group movement order');
  for(let i=0;i<3;i++)for(let j=0;j<i;j++)assert(Math.hypot(grouped.band[i].feet.x-grouped.band[j].feet.x,grouped.band[i].feet.z-grouped.band[j].feet.z)>=1.29,'Group members overlap');
  await page.screenshot({path:resolve(output,'group-movement.png')});

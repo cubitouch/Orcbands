@@ -14,7 +14,7 @@ namespace Orcbands
         public bool IsWorking => chopTarget != null || MiningTarget != null;
         public Vector3 ResourcePosition => MiningTarget != null ? MiningTarget.transform.position : chopTarget.transform.position;
         private WorkerTools tools;
-        private float blockedFor;
+        private float blockedFor, nextReplan;
         public const float UnitSpacing = 1.3f;
         public Camera GameCamera;
         public Collider Ground;
@@ -89,13 +89,13 @@ namespace Orcbands
         public bool CommandMove(Vector3 point)
         {
             CancelWorkerCommand();
-            if (Pathfinder == null || !Pathfinder.TryMoveRoute(Worker.position, point, route, out bool adjusted)) return RejectCommand();
+            if (Pathfinder == null || !Pathfinder.TryMoveRouteAvoiding(Worker.position, point, route, out bool adjusted, OccupiedPositions())) return RejectCommand();
             if (!WorkSlotClear(route[route.Count - 1])) {
                 bool found = false;
                 for (int i = 0; i < 48 && !found; i++) {
                     float angle = i * 2.399f;
                     Vector3 nearby = point + new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) * (1.6f + i / 12);
-                    found = Pathfinder.TryMoveRoute(Worker.position, nearby, route, out bool snapped) && WorkSlotClear(route[route.Count - 1]);
+                    found = Pathfinder.TryMoveRouteAvoiding(Worker.position, nearby, route, out bool snapped, OccupiedPositions()) && WorkSlotClear(route[route.Count - 1]);
                 }
                 if (!found) return RejectCommand();
                 adjusted = true;
@@ -111,7 +111,7 @@ namespace Orcbands
             tree.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
             ReserveWorkPoints(candidates);
             if (candidates.Count == 0) return RejectCommand("No free work position · clear space or choose another target");
-            if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
+            if (!Pathfinder.TryRouteAvoiding(Worker.position, candidates, route, OccupiedPositions())) return RejectCommand();
             if (tools == null) tools = Worker.GetComponent<WorkerTools>();
             if (tools != null) tools.Equip(false);
             BeginRoute(tree, "Approaching tree");
@@ -125,7 +125,7 @@ namespace Orcbands
             rock.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
             ReserveWorkPoints(candidates);
             if (candidates.Count == 0) return RejectCommand("No free work position · clear space or choose another target");
-            if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
+            if (!Pathfinder.TryRouteAvoiding(Worker.position, candidates, route, OccupiedPositions())) return RejectCommand();
             MiningTarget = rock;
             if (tools == null) tools = Worker.GetComponent<WorkerTools>();
             if (tools != null) tools.Equip(true);
@@ -145,6 +145,29 @@ namespace Orcbands
                 Vector3 reserved = other.IsMoving ? other.Destination : other.Worker.position;
                 if (Vector2.Distance(WorkerNavigation.Flat(point), WorkerNavigation.Flat(reserved)) < UnitSpacing + .1f) return false;
             }
+            return true;
+        }
+        private Vector3[] OccupiedPositions()
+        {
+            if (Band == null) return new Vector3[0];
+            var positions = new List<Vector3>();
+            foreach (var other in Band) if (other != this) positions.Add(other.Worker.position);
+            return positions.ToArray();
+        }
+        private bool ReplanAroundBand()
+        {
+            var replacement = new List<Vector3>();
+            bool found;
+            if (IsWorking) {
+                var goals = new List<Vector3>();
+                if (MiningTarget != null) MiningTarget.WorkPoints(Worker.position, WorkPositionExclusions, goals);
+                else chopTarget.WorkPoints(Worker.position, WorkPositionExclusions, goals);
+                ReserveWorkPoints(goals);
+                found = Pathfinder.TryRouteAvoiding(Worker.position, goals, replacement, OccupiedPositions());
+            } else found = Pathfinder.TryMoveRouteAvoiding(Worker.position, destination, replacement, out bool adjusted, OccupiedPositions());
+            if (!found) return false;
+            route.Clear(); route.AddRange(replacement); waypoint = 0;
+            destination = route[route.Count - 1]; routeRevision = Pathfinder.Revision;
             return true;
         }
         public bool UnitStepClear(Vector3 start, Vector3 end)
@@ -232,16 +255,11 @@ namespace Orcbands
                 if (!UnitStepClear(Worker.position, next))
                 {
                     blockedFor += Time.deltaTime;
-                    Vector3 side = Vector3.Cross(Vector3.up, flat.normalized);
-                    bool moved = false;
-                    foreach (float sign in new[] { 1f, -1f }) {
-                        Vector3 detour = Worker.position + (side * sign + flat.normalized * .2f).normalized * Mathf.Min(remaining, .12f);
-                        if (Pathfinder.SegmentClear(Worker.position, detour) && UnitStepClear(Worker.position, detour) &&
-                            Ground.Raycast(new Ray(detour + Vector3.up * 45f, Vector3.down), out RaycastHit floor, 100f)) {
-                            detour.y = floor.point.y; Worker.position = detour; moved = true; break;
-                        }
+                    if (Time.time >= nextReplan) {
+                        nextReplan = Time.time + .5f;
+                        if (!ReplanAroundBand()) Feedback("Route occupied · waiting for space");
                     }
-                    if (!moved && blockedFor > 5f) {
+                    if (blockedFor > 5f) {
                         CancelWorkerCommand(); Feedback("Route occupied · give a new order", 4f);
                     }
                     break;
