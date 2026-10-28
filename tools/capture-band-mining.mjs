@@ -7,8 +7,9 @@ const output=resolve('smoke-artifacts/unity-webgl/band-mining');
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({args:['--no-sandbox','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
 const traces=[],errors=[];
+let page;
 try {
- const page=await browser.newPage({viewport:{width:1280,height:800}});
+ page=await browser.newPage({viewport:{width:1280,height:800}});
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(process.argv[2]??'http://127.0.0.1:8765/');
  await page.waitForFunction(()=>window.orcbandsCharacterReport,null,{timeout:180000});
@@ -69,9 +70,20 @@ try {
  assert.equal(restored.wood,snapshot.wood);assert.equal(restored.stone,snapshot.stone);assert.deepEqual(restored.mines,snapshot.mines);
  assert.deepEqual(restored.companions.map(u=>u.worker),snapshot.companions.map(u=>u.worker));
  await command('resume');
- // Shift-click selects all three, then a shared quarry order reserves separated endpoints.
- r=await report();await click(r.band[0].screen);
- await page.keyboard.down('Shift');await click((await report()).band[1].screen);await click((await report()).band[2].screen);await page.keyboard.up('Shift');
+ // Box-select all three at their work sites, then issue a shared quarry order.
+ r=await report();
+ const bounds=await page.locator('#unity-canvas').boundingBox();
+ // Direct session commands clear Unity's pointer ownership. Re-enter the
+ // canvas as a player does after clicking Resume outside it.
+ await page.mouse.move(bounds.x-8,bounds.y+10);await frames();
+ const left=Math.min(...r.band.map(u=>u.screen.x))-.03,right=Math.max(...r.band.map(u=>u.screen.x))+.03;
+ const bottom=Math.min(...r.band.map(u=>u.screen.y))-.03,top=Math.max(...r.band.map(u=>u.screen.y))+.03;
+ // Workers can be occluded by the outcrop. Box selection uses their world
+ // positions, as the player's ordinary drag selection does.
+ await page.mouse.move(bounds.x+left*bounds.width,bounds.y+(1-bottom)*bounds.height);
+ await page.mouse.down();await frames();
+ await page.mouse.move(bounds.x+right*bounds.width,bounds.y+(1-top)*bounds.height,{steps:6});await frames();
+ await page.mouse.up();await frames();
  r=await report();assert(r.band.every(u=>u.selected));await click(r.mineScreen,'right');
  r=await until(r=>r.stone===24,'shared outcrop exhaustion');
  assert.equal(r.mineRemaining,0);assert(r.band.every(u=>u.order==='idle'&&!u.moving));
@@ -80,4 +92,8 @@ try {
  assert.deepEqual(errors,[]);
  await writeFile(resolve(output,'report.json'),JSON.stringify({pass:true,first,final,traces,errors},null,2));
  console.log('BAND_MINING_BROWSER: PASS companion selection, group movement, actual mining/tool switch, parallel work, shared finite supply, three-worker orders and save/load');
+} catch(error) {
+ await writeFile(resolve(output,'report.json'),JSON.stringify({pass:false,failure:String(error),traces,errors},null,2));
+ if(page)await page.screenshot({path:resolve(output,'failure.png'),timeout:30000}).catch(()=>{});
+ throw error;
 } finally {await browser.close();}

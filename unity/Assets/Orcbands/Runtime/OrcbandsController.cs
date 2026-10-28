@@ -14,7 +14,7 @@ namespace Orcbands
         public bool IsWorking => chopTarget != null || MiningTarget != null;
         public Vector3 ResourcePosition => MiningTarget != null ? MiningTarget.transform.position : chopTarget.transform.position;
         private WorkerTools tools;
-        private float blockedFor, nextReplan;
+        private float blockedFor, nextReplan, yieldAfter;
         public const float UnitSpacing = 1.3f;
         public Camera GameCamera;
         public Collider Ground;
@@ -170,6 +170,32 @@ namespace Orcbands
             destination = route[route.Count - 1]; routeRevision = Pathfinder.Revision;
             return true;
         }
+        /// <summary>An idle friendly unit can move to nearby clear ground instead of sealing a passage.</summary>
+        public bool RequestSpace()
+        {
+            if (Band == null) return false;
+            foreach (var other in Band) {
+                if (other == this || other.IsMoving || other.IsWorking || Time.time < other.yieldAfter ||
+                    Vector2.Distance(WorkerNavigation.Flat(Worker.position), WorkerNavigation.Flat(other.Worker.position)) > UnitSpacing + .8f) continue;
+                Vector3 away = Vector3.ProjectOnPlane(other.Worker.position - Worker.position, Vector3.up).normalized;
+                if (away.sqrMagnitude < .01f) continue;
+                foreach (float angle in new[] { 0f, 45f, -45f, 90f, -90f, 135f, -135f, 180f }) {
+                    Vector3 candidate = other.Worker.position + Quaternion.AngleAxis(angle, Vector3.up) * away * 1.8f;
+                    var trial = new List<Vector3>();
+                    if (!Pathfinder.TryMoveRouteAvoiding(other.Worker.position, candidate, trial, out bool adjusted, other.OccupiedPositions())) continue;
+                    Vector3 end = trial[trial.Count - 1];
+                    Vector2 a = WorkerNavigation.Flat(Worker.position), b = WorkerNavigation.Flat(destination), delta = b - a;
+                    float t = delta.sqrMagnitude < .000001f ? 0f : Mathf.Clamp01(Vector2.Dot(WorkerNavigation.Flat(end) - a, delta) / delta.sqrMagnitude);
+                    if (Vector2.Distance(a + delta * t, WorkerNavigation.Flat(end)) < UnitSpacing + .15f ||
+                        Vector2.Distance(WorkerNavigation.Flat(end), WorkerNavigation.Flat(other.Worker.position)) < .8f || !other.WorkSlotClear(end)) continue;
+                    if (!other.CommandMove(end)) continue;
+                    other.yieldAfter = Time.time + 2f;
+                    other.Feedback("Moving aside for the band");
+                    return true;
+                }
+            }
+            return false;
+        }
         public bool UnitStepClear(Vector3 start, Vector3 end)
         {
             if (Band == null) return true;
@@ -257,6 +283,7 @@ namespace Orcbands
                     blockedFor += Time.deltaTime;
                     if (Time.time >= nextReplan) {
                         nextReplan = Time.time + .5f;
+                        RequestSpace();
                         if (!ReplanAroundBand()) Feedback("Route occupied · waiting for space");
                     }
                     if (blockedFor > 5f) {

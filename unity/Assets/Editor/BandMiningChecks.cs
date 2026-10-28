@@ -53,6 +53,18 @@ namespace Orcbands.Editor
             mine.RestoreResource(0); Require(!mine.Full.activeSelf && mine.Depleted.activeSelf, "depleted rock art");
             mine.RestoreResource(24);
             foreach (var member in leader.Band) { member.Worker.GetComponent<WorkerTools>().Equip(false); member.RestoreSelection(false); }
+            var traffic = new GameObject("Band passage check");
+            try {
+                var nav = traffic.AddComponent<WorkerNavigation>(); nav.MapHalfExtent = 6f; nav.Rebuild();
+                var a = traffic.AddComponent<OrcbandsController>(); var b = new GameObject("Idle bandmate").AddComponent<OrcbandsController>();
+                b.transform.SetParent(traffic.transform); a.Worker = new GameObject("Moving worker").transform; a.Worker.SetParent(traffic.transform);
+                b.Worker = new GameObject("Yielding worker").transform; b.Worker.SetParent(traffic.transform);
+                a.Worker.position = new Vector3(-1.5f,0f,0f); b.Worker.position = Vector3.zero;
+                a.Pathfinder = b.Pathfinder = nav; a.Band = b.Band = new[] { a, b }; b.BandIndex = 1;
+                Require(a.CommandMove(new Vector3(3f,0f,0f)), "passage test route");
+                Require(a.RequestSpace() && b.IsMoving && Mathf.Abs(b.Destination.z) > 1.5f, "idle orc moves aside on a planned route");
+                Require(nav.IsClear(b.Destination), "yield destination is clear of scenery");
+            } finally { UnityEngine.Object.DestroyImmediate(traffic); }
             var data = session.Snapshot(); data.stone = 3; data.mines[0] -= 3;
             session.Parse(JsonUtility.ToJson(data));
             data.companions[0].worker = data.worker;
