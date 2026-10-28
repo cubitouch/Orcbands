@@ -147,11 +147,11 @@ namespace Orcbands
             }
             return true;
         }
-        private Vector3[] OccupiedPositions()
+        private Vector3[] OccupiedPositions(bool includeMoving = false)
         {
             if (Band == null) return new Vector3[0];
             var positions = new List<Vector3>();
-            foreach (var other in Band) if (other != this) positions.Add(other.Worker.position);
+            foreach (var other in Band) if (other != this && (includeMoving || !other.IsMoving)) positions.Add(other.Worker.position);
             return positions.ToArray();
         }
         private bool ReplanAroundBand()
@@ -163,8 +163,8 @@ namespace Orcbands
                 if (MiningTarget != null) MiningTarget.WorkPoints(Worker.position, WorkPositionExclusions, goals);
                 else chopTarget.WorkPoints(Worker.position, WorkPositionExclusions, goals);
                 ReserveWorkPoints(goals);
-                found = Pathfinder.TryRouteAvoiding(Worker.position, goals, replacement, OccupiedPositions());
-            } else found = Pathfinder.TryMoveRouteAvoiding(Worker.position, destination, replacement, out bool adjusted, OccupiedPositions());
+                found = Pathfinder.TryRouteAvoiding(Worker.position, goals, replacement, OccupiedPositions(true));
+            } else found = Pathfinder.TryMoveRouteAvoiding(Worker.position, destination, replacement, out bool adjusted, OccupiedPositions(true));
             if (!found) return false;
             route.Clear(); route.AddRange(replacement); waypoint = 0;
             destination = route[route.Count - 1]; routeRevision = Pathfinder.Revision;

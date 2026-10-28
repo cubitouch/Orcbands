@@ -20,6 +20,11 @@ namespace Orcbands.Editor
                 tools.Equip(true); Require(!tools.Axe.activeSelf && tools.Pickaxe.activeSelf, "pickaxe equip");
                 tools.Equip(false); Require(tools.Axe.activeSelf && !tools.Pickaxe.activeSelf, "axe equip");
             }
+            // A moving bandmate is not a permanent wall at its old position.
+            Require(leader.CommandMove(new Vector3(5.02f,0f,4.38f)), "leader accepts group destination");
+            Require(leader.Band[1].CommandMove(new Vector3(3.7f,0f,3.3f)), "second orc accepts group destination after leader moves");
+            Require(leader.Band[2].CommandMove(new Vector3(2.38f,0f,2.22f)), "third orc accepts group destination after peers move");
+            foreach (var member in leader.Band) member.CancelWorkerCommand();
             var mine = session.Harvest.Mines[0];
             Require(leader.CommandMine(mine) && leader.MiningTarget == mine, "reachable mining order");
             Require(leader.Worker.GetComponent<WorkerTools>().Mining, "mining order equips pickaxe");
