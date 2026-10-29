@@ -40,12 +40,16 @@ try {
  await page.evaluate(()=>window.orcbandsReview('normal'));await frames(2);
  let r=await report();await click(r.band[0].screen);
  await page.keyboard.down('Shift');await click((await report()).band[1].screen);await click((await report()).band[2].screen);await page.keyboard.up('Shift');
- r=await report();assert(r.band.every(u=>u.selected));await click(r.destinationScreen,'right');
+ r=await report();assert(r.band.every(u=>u.selected));
+ const moveTraceStart=traces.length;await click(r.destinationScreen,'right');
  const walking=new Set();
  await until(r=>{
   r.band.forEach((u,i)=>{if(u.animation==='Walking')walking.add(i);});
   return r.band.every(u=>!u.moving);
  },'all three models walk to the group destination');
+ // A short route can finish during the pointer helper's frame waits.
+ // Include those real input frames when checking every animation driver.
+ for(const r of traces.slice(moveTraceStart))r.band.forEach((u,i)=>{if(u.animation==='Walking')walking.add(i);});
  assert.equal(walking.size,3,'A model did not enter its walking state');
  r=await report();await click(r.band[0].screen);await click(first.chopScreen,'right');
  const depleted=await until(r=>r.depletedTrees>=1,'first tree depleted');
