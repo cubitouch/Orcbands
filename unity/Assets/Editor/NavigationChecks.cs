@@ -69,6 +69,17 @@ namespace Orcbands.Editor
                 Require(nav.TryMoveRoute(P(-4, 0), P(500, 0), route, out adjusted) && adjusted, "outside command clamps to map");
                 CheckRoute(nav, P(-4, 0), route);
                 Require(!nav.TryMoveRoute(P(12, 0), P(4, 0), route, out adjusted), "blocked start must not teleport");
+                nav.Obstacles = new WorkerNavigation.Footprint[0]; nav.Rebuild();
+                var units = new[] { P(0, 0) };
+                Require(nav.TryMoveRouteAvoiding(P(-4, 0), P(4, 0), route, out adjusted, units) && route.Count > 1, "idle band member requires a planned detour");
+                Vector2 last = new Vector2(-4, 0);
+                foreach (var waypoint in route) {
+                    Vector2 next = WorkerNavigation.Flat(waypoint), delta = next - last;
+                    float t = delta.sqrMagnitude < .000001f ? 0f : Mathf.Clamp01(Vector2.Dot(-last, delta) / delta.sqrMagnitude);
+                    Require((last + delta * t).magnitude >= OrcbandsController.UnitSpacing, "unit detour smoothing loses separation");
+                    last = next;
+                }
+                Require(nav.TryMoveRoute(P(-4,0), P(4,0), route, out adjusted) && route.Count == 1, "temporary unit footprints leaked into subsequent static routes");
             }
             finally { UnityEngine.Object.DestroyImmediate(go); }
 
@@ -98,3 +109,4 @@ namespace Orcbands.Editor
         }
     }
 }
+

@@ -177,7 +177,10 @@ assert(!/^  pull_request_target:/m.test(visualReview));
 assert(!/^  push:/m.test(visualReview));
 assert(visualReview.includes('node tools/capture-unity-characters.mjs'));
 assert(visualReview.includes('node tools/capture-worker-animations.mjs'));
-assert.match(publicPrCi, /name: Capture character art review[^\n]*\n        if: github\.event_name == 'pull_request'/);
+assert.match(publicPrCi, /name: Full Unity regression and art review \(opt-in\)[\s\S]*unity-full-review/);
+assert.match(visualReview, /name: Full licensed regression and art review \(opt-in\)\n        if: contains\(github\.event\.pull_request\.labels\.\*\.name, 'unity-full-review'\)/);
+assert.match(publicPrCi, /ORCBANDS_SMOKE_QUICK/);
+assert.match(visualReview, /name: Focused band and resource playthrough/);
 
 // Characters keep diffuse firelight in their base pass so moving skin does not
 // accumulate depth-competing ForwardAdd draws. The forest retains real lights.
@@ -191,3 +194,4 @@ assert.match(worldShader, /noforwardadd novertexlights/);
 assert.match(worldShader, /#include "CampFirelight.cginc"/);
 assert.match(worldShader, /o\.Emission = o\.Albedo \* CampFirelight/);
 assert.match(sceneCode, /CampCharacterLighting/);
+

@@ -166,7 +166,7 @@ function showSlots(saving=false) {
     const el=document.createElement('div');el.className='save-row';
     const info=document.createElement('div');info.className='save-info';
     const title=document.createElement('strong');title.textContent=row.value?.name || (row.error?'Unreadable save':'Empty camp');
-    const detail=document.createElement('small');detail.textContent=`${row.slot==='auto'?'Autosave':`Camp ${SLOTS.indexOf(row.slot)}`} · `+(row.value?`${row.value.snapshot.wood} wood · ${new Date(row.value.savedAt).toLocaleString()}`:row.error || 'Ready for a new story');
+    const detail=document.createElement('small');detail.textContent=`${row.slot==='auto'?'Autosave':`Camp ${SLOTS.indexOf(row.slot)}`} · `+(row.value?`${row.value.snapshot.wood} wood · ${row.value.snapshot.stone ?? 0} stone · ${new Date(row.value.savedAt).toLocaleString()}`:row.error || 'Ready for a new story');
     info.append(title,detail);el.append(info);
     const button=(label,click)=>{const b=document.createElement('button');b.textContent=label;b.onclick=click;el.append(b);return b;};
     if(saving && row.slot!=='auto') button('Save here',()=>{
@@ -199,3 +199,4 @@ $('#settings-game').onclick=()=>{
 $('#music-enabled').onchange=event=>window.orcbandsAudio?.setEnabled(event.target.checked);
 $('#music-volume').oninput=event=>window.orcbandsAudio?.setVolume(Number(event.target.value)/100);
 show('home','Preparing the valley…');
+

@@ -7,6 +7,15 @@ namespace Orcbands
     public sealed class OrcbandsController : MonoBehaviour
     {
         public Transform Worker;
+        public OrcbandsController[] Band;
+        public int BandIndex;
+        public bool OwnsInput => BandIndex == 0;
+        public StoneMiningTarget MiningTarget { get; private set; }
+        public bool IsWorking => chopTarget != null || MiningTarget != null;
+        public Vector3 ResourcePosition => MiningTarget != null ? MiningTarget.transform.position : chopTarget.transform.position;
+        private WorkerTools tools;
+        private float blockedFor, nextReplan, yieldAfter;
+        public const float UnitSpacing = 1.3f;
         public Camera GameCamera;
         public Collider Ground;
         public Transform SelectionRing;
@@ -24,6 +33,7 @@ namespace Orcbands
         private readonly List<Vector3> route = new List<Vector3>();
         private int waypoint, routeRevision;
         private float feedbackUntil;
+        private string bandFeedback;
         public string LastCommandResult { get; private set; } = "Ready";
         public int RemainingWaypoints => hasDestination ? route.Count - waypoint : 0;
         public Vector3 Destination => destination;
@@ -59,7 +69,7 @@ namespace Orcbands
         private WorkerAnimation animationDriver;
         public WoodcuttingTarget ChoppingTarget => chopTarget;
         public bool IsMoving => hasDestination;
-        private void Start() { animationDriver = Worker.GetComponent<WorkerAnimation>(); }
+        private void Start() { animationDriver = Worker.GetComponent<WorkerAnimation>(); tools = Worker.GetComponent<WorkerTools>(); }
         public void RestoreSelection(bool value)
         {
             selected = value;
@@ -71,16 +81,25 @@ namespace Orcbands
         public void CancelWorkerCommand()
         {
             hasDestination = false;
-            route.Clear(); waypoint = 0;
-            SetChoppingTarget(null);
+            route.Clear(); waypoint = 0; blockedFor = 0f;
+            MiningTarget = null; SetChoppingTarget(null);
             if (animationDriver != null) animationDriver.Request(WorkerAnimation.Mode.Idle);
         }
 
         public bool CommandMove(Vector3 point)
         {
             CancelWorkerCommand();
-            if (Pathfinder == null || !Pathfinder.TryMoveRoute(Worker.position, point, route, out bool adjusted))
-                return RejectCommand();
+            if (Pathfinder == null || !Pathfinder.TryMoveRouteAvoiding(Worker.position, point, route, out bool adjusted, OccupiedPositions())) return RejectCommand();
+            if (!WorkSlotClear(route[route.Count - 1])) {
+                bool found = false;
+                for (int i = 0; i < 48 && !found; i++) {
+                    float angle = i * 2.399f;
+                    Vector3 nearby = point + new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle)) * (1.6f + i / 12);
+                    found = Pathfinder.TryMoveRouteAvoiding(Worker.position, nearby, route, out bool snapped, OccupiedPositions()) && WorkSlotClear(route[route.Count - 1]);
+                }
+                if (!found) return RejectCommand();
+                adjusted = true;
+            }
             BeginRoute(null, adjusted ? "Moving to nearby clear ground" : "Moving");
             return true;
         }
@@ -90,8 +109,103 @@ namespace Orcbands
             if (tree == null || tree.IsDepleted || Pathfinder == null) return RejectCommand();
             var candidates = new List<Vector3>();
             tree.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
-            if (!Pathfinder.TryRoute(Worker.position, candidates, route)) return RejectCommand();
+            ReserveWorkPoints(candidates);
+            if (candidates.Count == 0) return RejectCommand("No free work position · clear space or choose another target");
+            if (!Pathfinder.TryRouteAvoiding(Worker.position, candidates, route, OccupiedPositions())) return RejectCommand();
+            if (tools == null) tools = Worker.GetComponent<WorkerTools>();
+            if (tools != null) tools.Equip(false);
             BeginRoute(tree, "Approaching tree");
+            return true;
+        }
+        public bool CommandMine(StoneMiningTarget rock)
+        {
+            CancelWorkerCommand();
+            if (rock == null || rock.IsDepleted || Pathfinder == null) return RejectCommand();
+            var candidates = new List<Vector3>();
+            rock.WorkPoints(Worker.position, WorkPositionExclusions, candidates);
+            ReserveWorkPoints(candidates);
+            if (candidates.Count == 0) return RejectCommand("No free work position · clear space or choose another target");
+            if (!Pathfinder.TryRouteAvoiding(Worker.position, candidates, route, OccupiedPositions())) return RejectCommand();
+            MiningTarget = rock;
+            if (tools == null) tools = Worker.GetComponent<WorkerTools>();
+            if (tools != null) tools.Equip(true);
+            BeginRoute(null, "Approaching stone outcrop");
+            return true;
+        }
+        private void ReserveWorkPoints(List<Vector3> points)
+        {
+            if (Band == null) return;
+            points.RemoveAll(point => !WorkSlotClear(point));
+        }
+        private bool WorkSlotClear(Vector3 point)
+        {
+            if (Band == null) return true;
+            foreach (var other in Band) {
+                if (other == this) continue;
+                Vector3 reserved = other.IsMoving ? other.Destination : other.Worker.position;
+                if (Vector2.Distance(WorkerNavigation.Flat(point), WorkerNavigation.Flat(reserved)) < UnitSpacing + .1f) return false;
+            }
+            return true;
+        }
+        private Vector3[] OccupiedPositions(bool includeMoving = false)
+        {
+            if (Band == null) return new Vector3[0];
+            var positions = new List<Vector3>();
+            foreach (var other in Band) if (other != this && (includeMoving || !other.IsMoving)) positions.Add(other.Worker.position);
+            return positions.ToArray();
+        }
+        private bool ReplanAroundBand()
+        {
+            var replacement = new List<Vector3>();
+            bool found;
+            if (IsWorking) {
+                var goals = new List<Vector3>();
+                if (MiningTarget != null) MiningTarget.WorkPoints(Worker.position, WorkPositionExclusions, goals);
+                else chopTarget.WorkPoints(Worker.position, WorkPositionExclusions, goals);
+                ReserveWorkPoints(goals);
+                found = Pathfinder.TryRouteAvoiding(Worker.position, goals, replacement, OccupiedPositions(true));
+            } else found = Pathfinder.TryMoveRouteAvoiding(Worker.position, destination, replacement, out bool adjusted, OccupiedPositions(true));
+            if (!found) return false;
+            route.Clear(); route.AddRange(replacement); waypoint = 0;
+            destination = route[route.Count - 1]; routeRevision = Pathfinder.Revision;
+            return true;
+        }
+        /// <summary>An idle friendly unit can move to nearby clear ground instead of sealing a passage.</summary>
+        public bool RequestSpace()
+        {
+            if (Band == null) return false;
+            foreach (var other in Band) {
+                if (other == this || other.IsMoving || other.IsWorking || Time.time < other.yieldAfter ||
+                    Vector2.Distance(WorkerNavigation.Flat(Worker.position), WorkerNavigation.Flat(other.Worker.position)) > UnitSpacing + .8f) continue;
+                Vector3 away = Vector3.ProjectOnPlane(other.Worker.position - Worker.position, Vector3.up).normalized;
+                if (away.sqrMagnitude < .01f) continue;
+                foreach (float angle in new[] { 0f, 45f, -45f, 90f, -90f, 135f, -135f, 180f }) {
+                    Vector3 candidate = other.Worker.position + Quaternion.AngleAxis(angle, Vector3.up) * away * 1.8f;
+                    var trial = new List<Vector3>();
+                    if (!Pathfinder.TryMoveRouteAvoiding(other.Worker.position, candidate, trial, out bool adjusted, other.OccupiedPositions())) continue;
+                    Vector3 end = trial[trial.Count - 1];
+                    Vector2 a = WorkerNavigation.Flat(Worker.position), b = WorkerNavigation.Flat(destination), delta = b - a;
+                    float t = delta.sqrMagnitude < .000001f ? 0f : Mathf.Clamp01(Vector2.Dot(WorkerNavigation.Flat(end) - a, delta) / delta.sqrMagnitude);
+                    if (Vector2.Distance(a + delta * t, WorkerNavigation.Flat(end)) < UnitSpacing + .15f ||
+                        Vector2.Distance(WorkerNavigation.Flat(end), WorkerNavigation.Flat(other.Worker.position)) < .8f || !other.WorkSlotClear(end)) continue;
+                    if (!other.CommandMove(end)) continue;
+                    other.yieldAfter = Time.time + 2f;
+                    other.Feedback("Moving aside for the band");
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool UnitStepClear(Vector3 start, Vector3 end)
+        {
+            if (Band == null) return true;
+            Vector2 a = WorkerNavigation.Flat(start), b = WorkerNavigation.Flat(end), ab = b - a;
+            foreach (var other in Band) {
+                if (other == this) continue;
+                Vector2 centre = WorkerNavigation.Flat(other.Worker.position);
+                float t = ab.sqrMagnitude < .000001f ? 0f : Mathf.Clamp01(Vector2.Dot(centre - a, ab) / ab.sqrMagnitude);
+                if ((a + ab * t - centre).sqrMagnitude < UnitSpacing * UnitSpacing) return false;
+            }
             return true;
         }
         private void BeginRoute(WoodcuttingTarget tree, string message)
@@ -100,31 +214,36 @@ namespace Orcbands
             destination = hasDestination ? route[route.Count - 1] : Worker.position;
             routeRevision = Pathfinder.Revision;
             SetChoppingTarget(tree);
-            LastCommandResult = message;
-            feedbackUntil = Time.time + 3f;
+            Feedback(message);
         }
         public void FinishTree()
         {
             CancelWorkerCommand();
-            LastCommandResult = "Tree exhausted · choose another tree";
-            feedbackUntil = Time.time + 4f;
+            Feedback("Resource exhausted · choose another target", 4f);
         }
 
-        private bool RejectCommand()
+        private bool RejectCommand(string message = "No clear route to that destination")
         {
             CancelWorkerCommand();
-            LastCommandResult = "No clear route to that destination";
-            feedbackUntil = Time.time + 3f;
+            Feedback(message);
             return false;
+        }
+
+        private void Feedback(string message, float duration = 3f)
+        {
+            LastCommandResult = message;
+            var owner = Band == null ? this : Band[0];
+            owner.bandFeedback = (OwnsInput ? "" : Worker.name + ": ") + message;
+            owner.feedbackUntil = Time.time + duration;
         }
 
         private void SetChoppingTarget(WoodcuttingTarget tree)
         {
             chopTarget = tree;
             if (TreeTargetRing == null) return;
-            TreeTargetRing.gameObject.SetActive(tree != null);
-            if (tree == null) return;
-            if (Ground.Raycast(new Ray(tree.transform.position + Vector3.up * 45f, Vector3.down),
+            TreeTargetRing.gameObject.SetActive(tree != null || MiningTarget != null);
+            if (!IsWorking) return;
+            if (Ground.Raycast(new Ray(ResourcePosition + Vector3.up * 45f, Vector3.down),
                 out RaycastHit surface, 100f))
                 TreeTargetRing.position = surface.point + Vector3.up * .055f;
         }
@@ -134,57 +253,17 @@ namespace Orcbands
             if (Worker == null || GameCamera == null || Ground == null) return;
             // Review/debug control; the six static light sources remain the
             // baseline until gameplay-driven exploration is implemented.
-            if (Reveal != null && Input.GetKeyDown(KeyCode.F))
+            if (OwnsInput && Reveal != null && Input.GetKeyDown(KeyCode.F))
                 Reveal.SetFogOfWar(!Reveal.FogOfWarVisible);
 
-            Vector3 pointer = Input.mousePosition;
-            bool inside = pointer.x >= 0f && pointer.x < Screen.width && pointer.y >= 0f && pointer.y < Screen.height;
-            if (Application.platform == RuntimePlatform.WebGLPlayer && Navigation != null)
-                inside &= Navigation.PointerInsideCanvas;
-            if (inside && Input.GetMouseButtonDown(0))
-            {
-                selectionStart = pointer;
-                selectionPressed = true;
-                boxSelecting = false;
-            }
-            if (selectionPressed)
-            {
-                if (Vector2.Distance(selectionStart, pointer) >= 6f) boxSelecting = true;
-                if (Input.GetMouseButtonUp(0))
-                {
-                    if (boxSelecting)
-                    {
-                        Vector3 centre = GameCamera.WorldToScreenPoint(Worker.position + Vector3.up * 1.05f);
-                        selected = centre.z > GameCamera.nearClipPlane && centre.z < GameCamera.farClipPlane && SelectionRect.Contains(centre);
-                        LastSelectionHit = selected ? "Worker (box)" : "empty box";
-                    }
-                    else
-                    {
-                        Ray ray = GameCamera.ScreenPointToRay(pointer);
-                        selected = Physics.Raycast(ray, out RaycastHit hit, 300f) && hit.collider != null && hit.collider.transform == Worker;
-                        LastSelectionHit = hit.collider == null ? "none" : hit.collider.name;
-                    }
-                    selectionPressed = boxSelecting = false;
-                }
-            }
-            if (Navigation != null) Navigation.Selecting = selectionPressed;
-
-            if (inside && !selectionPressed && selected && Input.GetMouseButtonDown(1))
-            {
-                Ray ray = GameCamera.ScreenPointToRay(Input.mousePosition);
-                if (animationDriver != null) animationDriver.Preview("Gameplay");
-                if (Physics.Raycast(ray, out RaycastHit targetHit, 300f) &&
-                    targetHit.collider.GetComponentInParent<WoodcuttingTarget>() is WoodcuttingTarget tree)
-                {
-                    CommandTree(tree);
-                }
-                else if (Ground.Raycast(ray, out RaycastHit hit, 300f)) CommandMove(hit.point);
-            }
+            if (OwnsInput) HandleBandInput();
+            if (IsWorking && (chopTarget != null && chopTarget.IsDepleted || MiningTarget != null && MiningTarget.IsDepleted)) FinishTree();
 
             if (hasDestination && Pathfinder.Revision != routeRevision)
             {
                 // Future construction/felling rebuilds invalidate outstanding routes.
                 if (chopTarget != null) CommandTree(chopTarget);
+                else if (MiningTarget != null) CommandMine(MiningTarget);
                 else CommandMove(destination);
             }
             float remaining = MoveSpeed * Time.deltaTime;
@@ -199,6 +278,20 @@ namespace Orcbands
                 if (!Pathfinder.SegmentClear(Worker.position, next) ||
                     !Ground.Raycast(new Ray(new Vector3(next.x, 45f, next.z), Vector3.down), out RaycastHit elevation, 100f))
                 { RejectCommand(); break; }
+                if (!UnitStepClear(Worker.position, next))
+                {
+                    blockedFor += Time.deltaTime;
+                    if (Time.time >= nextReplan) {
+                        nextReplan = Time.time + .5f;
+                        RequestSpace();
+                        if (!ReplanAroundBand()) Feedback("Route occupied · waiting for space");
+                    }
+                    if (blockedFor > 5f) {
+                        CancelWorkerCommand(); Feedback("Route occupied · give a new order", 4f);
+                    }
+                    break;
+                }
+                blockedFor = 0f;
                 next.y = elevation.point.y;
                 Worker.position = next;
                 if (distance > .000001f) Worker.rotation = Quaternion.LookRotation(flat / distance, Vector3.up);
@@ -209,18 +302,18 @@ namespace Orcbands
                     if (waypoint >= route.Count)
                     {
                         hasDestination = false;
-                        LastCommandResult = chopTarget == null ? "Arrived" : "Chopping";
+                        LastCommandResult = MiningTarget != null ? "Mining" : chopTarget == null ? "Arrived" : "Chopping";
                     }
                 }
             }
 
-            if (!hasDestination && chopTarget != null)
+            if (!hasDestination && IsWorking)
             {
-                Vector3 facing = Vector3.ProjectOnPlane(chopTarget.transform.position - Worker.position, Vector3.up);
+                Vector3 facing = Vector3.ProjectOnPlane(ResourcePosition - Worker.position, Vector3.up);
                 if (facing.sqrMagnitude > .01f) Worker.rotation = Quaternion.LookRotation(facing, Vector3.up);
             }
             if (animationDriver != null) animationDriver.Request(hasDestination ? WorkerAnimation.Mode.Walking
-                : chopTarget != null ? WorkerAnimation.Mode.Chopping : WorkerAnimation.Mode.Idle);
+                : IsWorking ? WorkerAnimation.Mode.Chopping : WorkerAnimation.Mode.Idle);
 
             if (SelectionRing != null)
             {
@@ -230,11 +323,59 @@ namespace Orcbands
 
         }
 
+        private void HandleBandInput()
+        {
+            var members = Band ?? new[] { this };
+            Vector3 pointer = Input.mousePosition;
+            bool inside = pointer.x >= 0f && pointer.x < Screen.width && pointer.y >= 0f && pointer.y < Screen.height;
+            if (Application.platform == RuntimePlatform.WebGLPlayer && Navigation != null) inside &= Navigation.PointerInsideCanvas;
+            if (inside && Input.GetMouseButtonDown(0)) { selectionStart = pointer; selectionPressed = true; boxSelecting = false; }
+            if (selectionPressed) {
+                if (Vector2.Distance(selectionStart, pointer) >= 6f) boxSelecting = true;
+                if (Input.GetMouseButtonUp(0)) {
+                    bool additive = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                    Transform hitUnit = null;
+                    if (!boxSelecting && Physics.Raycast(GameCamera.ScreenPointToRay(pointer), out RaycastHit hit, 300f)) hitUnit = hit.collider.transform;
+                    foreach (var member in members) {
+                        Vector3 screen = GameCamera.WorldToScreenPoint(member.Worker.position + Vector3.up * 1.05f);
+                        bool picked = boxSelecting ? screen.z > GameCamera.nearClipPlane && screen.z < GameCamera.farClipPlane && SelectionRect.Contains(screen) : hitUnit == member.Worker;
+                        member.RestoreSelection(additive ? (picked ? !member.selected : member.selected) : picked);
+                    }
+                    LastSelectionHit = boxSelecting ? "Band (box)" : hitUnit == null ? "none" : hitUnit.name;
+                    selectionPressed = boxSelecting = false;
+                }
+            }
+            if (Navigation != null) Navigation.Selecting = selectionPressed;
+            if (!inside || selectionPressed || !Input.GetMouseButtonDown(1)) return;
+            var chosen = new List<OrcbandsController>();
+            foreach (var member in members) if (member.selected) chosen.Add(member);
+            if (chosen.Count == 0) return;
+            Ray ray = GameCamera.ScreenPointToRay(pointer);
+            Physics.Raycast(ray, out RaycastHit resourceHit, 300f);
+            var tree = resourceHit.collider == null ? null : resourceHit.collider.GetComponentInParent<WoodcuttingTarget>();
+            var rock = resourceHit.collider == null ? null : resourceHit.collider.GetComponentInParent<StoneMiningTarget>();
+            bool hasGround = Ground.Raycast(ray, out RaycastHit groundHit, 300f);
+            for (int i = 0; i < chosen.Count; i++) {
+                var member = chosen[i];
+                var driver = member.Worker.GetComponent<WorkerAnimation>();
+                if (driver != null) driver.Preview("Gameplay");
+                if (tree != null) member.CommandTree(tree);
+                else if (rock != null) member.CommandMine(rock);
+                else if (hasGround) {
+                    Vector3 point = groundHit.point;
+                    // One member retains exact click behavior; a group receives spaced goals.
+                    if (chosen.Count > 1) point += GameCamera.transform.right * ((i - (chosen.Count - 1) * .5f) * 1.7f);
+                    member.CommandMove(point);
+                }
+            }
+        }
+
         private void OnGUI()
         {
+            if (!OwnsInput) return;
             if (Time.time < feedbackUntil)
             {
-                GUI.Box(new Rect(Screen.width / 2f - 170f, Screen.height - 46f, 340f, 28f), LastCommandResult);
+                GUI.Box(new Rect(Screen.width / 2f - 170f, Screen.height - 46f, 340f, 28f), bandFeedback ?? LastCommandResult);
             }
             if (boxSelecting && Event.current.type == EventType.Repaint)
             {
@@ -266,3 +407,4 @@ namespace Orcbands
         }
     }
 }
+

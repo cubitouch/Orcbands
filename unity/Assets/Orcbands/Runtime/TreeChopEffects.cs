@@ -8,7 +8,7 @@ namespace Orcbands
     public sealed class TreeChopEffects : MonoBehaviour
     {
         public OrcbandsController Controller;
-        public Material ChipMaterial;
+        public Material ChipMaterial, StoneChipMaterial;
         public const float SettleTime = .65f;
         public const int ChipsPerHit = 9;
         private sealed class Pulse
@@ -23,7 +23,7 @@ namespace Orcbands
         private readonly List<Pulse> pulses = new List<Pulse>(4);
         private WorkerAnimation driver;
         private Transform axeGrip;
-        private ParticleSystem chips;
+        private ParticleSystem chips, stoneChips;
         private Mesh chipMesh;
         private static readonly int PivotId = Shader.PropertyToID("_TreeBendPivot");
         private static readonly int BendId = Shader.PropertyToID("_TreeBend");
@@ -108,6 +108,27 @@ namespace Orcbands
                 chips.Emit(emit, 1);
             }
         }
+        public void PlayMiningStrike(StoneMiningTarget rock, float phase)
+        {
+            EnsureChipPool();
+            if (stoneChips == null) {
+                var pool = Instantiate(chips.gameObject, transform); pool.name = "Pooled stone fragments";
+                stoneChips = pool.GetComponent<ParticleSystem>();
+                stoneChips.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                pool.GetComponent<ParticleSystemRenderer>().sharedMaterial = StoneChipMaterial;
+            }
+            if (!stoneChips.isPlaying) stoneChips.Play();
+            Vector3 toward = Vector3.ProjectOnPlane(Controller.Worker.position - rock.transform.position, Vector3.up).normalized;
+            Vector3 point = rock.transform.position + toward * (rock.Radius * .75f) + Vector3.up * .9f;
+            for (int i = 0; i < 8; i++) {
+                float angle = i * 2.399f;
+                stoneChips.Emit(new ParticleSystem.EmitParams {
+                    position = point,
+                    velocity = toward * .8f + new Vector3(Mathf.Sin(angle)*.6f, .8f+(i%3)*.3f, Mathf.Cos(angle)*.6f),
+                    startLifetime = .4f+(i%3)*.1f, startSize = .055f+(i%3)*.02f
+                }, 1);
+            }
+        }
         private void EnsureChipPool()
         {
             if (chips != null) { if (!chips.isPlaying) chips.Play(); return; }
@@ -155,7 +176,9 @@ namespace Orcbands
             foreach (var pulse in pulses) Restore(pulse);
             pulses.Clear(); CurrentBend = 0f;
             if (chips != null) chips.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            if (stoneChips != null) stoneChips.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
         private void OnDestroy() { if (chipMesh != null) Destroy(chipMesh); }
     }
 }
+

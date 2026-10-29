@@ -103,7 +103,7 @@ namespace Orcbands.Editor
             presentation.Apply();
             presentation.FitRestPose(presentation.TargetHeight);
             // Add the tool after fitting, so the axe cannot distort character height/feet.
-            AttachWorkerAxe(presentation.ReviewRoles[0], rest, shader, sharedMaterials);
+            AttachWorkerAxe(root, presentation.ReviewRoles[0], rest, shader, sharedMaterials);
             if (animated) WorkerAnimationFactory.Configure(root, presentation.ReviewRoles[0], bodyAvatar);
             Debug.Log("Orcbands: using licensed Synty mini-orc with original gameplay root.");
             return root;
@@ -111,7 +111,7 @@ namespace Orcbands.Editor
 
 
         /// <summary>Attach the actual POLYGON MINI axe prefab to the goblin hand_r bone.</summary>
-        private static void AttachWorkerAxe(Transform worker, WorkerRestProfile rest, Shader shader,
+        private static void AttachWorkerAxe(GameObject root, Transform worker, WorkerRestProfile rest, Shader shader,
             Dictionary<Material, Material> sharedMaterials)
         {
             const string axePath =
@@ -156,6 +156,29 @@ namespace Orcbands.Editor
                 renderer.shadowCastingMode = ShadowCastingMode.On;
                 renderer.receiveShadows = true;
             }
+            const string pickaxePath = "Assets/Synty/PolygonGeneric/Prefabs/Weapons/SM_Gen_Wep_Pickaxe_01.prefab";
+            var pickaxePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(pickaxePath);
+            if (pickaxePrefab == null) throw new InvalidOperationException("Purchased Synty pickaxe is missing");
+            var pickaxe = (GameObject)PrefabUtility.InstantiatePrefab(pickaxePrefab, grip);
+            pickaxe.name = "Worker hand pickaxe (Synty)";
+            // The generic pickaxe is Y-up, with its shaft grip at the authored origin.
+            // Scale the imported mesh to 90 cm before the model mount's inherited scale.
+            const float pickaxeAuthoredLength = .73740099f;
+            float pickScale = .90f / (pickaxeAuthoredLength * inheritedScale);
+            pickaxe.transform.localScale = Vector3.one * pickScale;
+            pickaxe.transform.localPosition = Vector3.zero; pickaxe.transform.localRotation = Quaternion.identity;
+            foreach (var c in pickaxe.GetComponentsInChildren<Collider>(true)) UnityEngine.Object.DestroyImmediate(c);
+            foreach (var renderer in pickaxe.GetComponentsInChildren<Renderer>(true)) {
+                var originals = renderer.sharedMaterials; var replacements = new Material[originals.Length];
+                for (int i = 0; i < originals.Length; i++) {
+                    if (!sharedMaterials.TryGetValue(originals[i], out var mapped)) {
+                        mapped = AdaptAtlas(originals[i], shader); sharedMaterials.Add(originals[i], mapped);
+                    }
+                    replacements[i] = mapped;
+                }
+                renderer.sharedMaterials = replacements; renderer.shadowCastingMode = ShadowCastingMode.On; renderer.receiveShadows = true;
+            }
+            var tools = root.AddComponent<WorkerTools>(); tools.Axe = axe; tools.Pickaxe = pickaxe; tools.Equip(false);
         }
 
         private static Material AdaptAtlas(Material original, Shader shader)
@@ -209,3 +232,4 @@ namespace Orcbands.Editor
         }
     }
 }
+

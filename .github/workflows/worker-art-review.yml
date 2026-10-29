@@ -3,13 +3,13 @@ name: Licensed Unity PR Visual Review
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", "tools/capture-tree-chop-feedback.mjs", "tools/capture-finite-trees.mjs", ".github/workflows/worker-art-review.yml"]
+    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", "tools/capture-tree-chop-feedback.mjs", "tools/capture-finite-trees.mjs", "tools/capture-band-mining.mjs", ".github/workflows/worker-art-review.yml"]
 
 permissions:
   contents: read
 
 concurrency:
-  group: licensed-unity-review-${{ github.event.pull_request.number }}
+  group: licensed-unity-review-${{ (github.event.label.name && github.event.label.name != 'unity-visual-review' && github.event.label.name != 'unity-full-review') && github.run_id || github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -21,9 +21,12 @@ jobs:
       github.event.pull_request.state == 'open' &&
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      contains(github.event.pull_request.labels.*.name, 'unity-visual-review')
+      ((github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
+       github.event.label.name == 'unity-visual-review' || github.event.label.name == 'unity-full-review') &&
+      (contains(github.event.pull_request.labels.*.name, 'unity-visual-review') ||
+       contains(github.event.pull_request.labels.*.name, 'unity-full-review'))
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: ${{ contains(github.event.pull_request.labels.*.name, 'unity-full-review') && 90 || 30 }}
     steps:
       - uses: actions/checkout@v4
       - name: Check out privately licensed Synty assets
@@ -73,11 +76,27 @@ jobs:
             echo "::error::Unity WebGL payload requires compression headers unsupported by GitHub Pages."
             exit 1
           fi
-      - name: Validate real licensed character in WebGL
+      - name: Install browser checks
         run: |
           npm install --no-save --ignore-scripts playwright@1.56.1
           npx playwright install --with-deps chromium
-          node tools/smoke-unity-webgl.mjs
+      - name: Check save storage and menu host
+        run: |
+          node tools/test-save-store.mjs
+          node tools/test-menu-host.mjs
+      - name: Verify licensed WebGL boots
+        env:
+          ORCBANDS_SMOKE_QUICK: ${{ contains(github.event.pull_request.labels.*.name, 'unity-full-review') && '0' || '1' }}
+        run: node tools/smoke-unity-webgl.mjs
+      - name: Focused band and resource playthrough
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          node tools/capture-band-mining.mjs
+      - name: Full licensed regression and art review (opt-in)
+        if: contains(github.event.pull_request.labels.*.name, 'unity-full-review')
+        run: |
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID"' EXIT
@@ -94,3 +113,4 @@ jobs:
           name: orcbands-licensed-character-review
           path: smoke-artifacts/unity-webgl/
           if-no-files-found: ignore
+

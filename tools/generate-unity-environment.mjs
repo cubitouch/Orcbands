@@ -57,6 +57,8 @@ writeFileSync(resolve(root, 'grove-layout.json'), JSON.stringify({
   hut: { ...HUT_PLACEMENT, x: -HUT_PLACEMENT.x, angle: -HUT_PLACEMENT.angle },
   campfire: { ...layout.campfire, x: -layout.campfire.x },
   torches: TORCH_PLACEMENTS.map(p => ({ ...p, x: -p.x })),
+  mines: layout.resources.map((p,i)=>({...p,obstacleIndex:layout.trees.length+layout.resources.slice(0,i).filter(r=>r.state!=='chips').length}))
+    .filter(p=>p.kind==='stone'&&p.state==='full').map(p=>({...p,x:-p.x,angle:-(p.angle??0)})),
   resourceCount: layout.resources.length,
   story: layout.story.map(p => ({...p,x:-p.x,angle:-p.angle})),
 }, null, 2) + '\n');
@@ -144,7 +146,9 @@ exportMesh('forest-patches', [{geom: createForestFloorPatches(layout)}]);
 
 exportMesh('harvest-stump', [{geom:resourceGeometry('wood','stump')}]);
 
-const resources = layout.resources.map(p => ({
+exportMesh('mine-full', [{geom:resourceGeometry('stone','full')}]);
+exportMesh('mine-depleted', [{geom:resourceGeometry('stone','depleted')}]);
+const resources = layout.resources.filter(p=>!(p.kind==='stone'&&p.state==='full')).map(p => ({
   geom: resourceGeometry(p.kind, p.state),
   position: [p.x, groundHeight(p.x, p.z) - .012, p.z],
   scale: p.scale ?? 1,
@@ -166,3 +170,4 @@ exportMesh('grass-props', layout.plants.map(p => ({
 })));
 console.log('Exported the woodland:', layout.trees.length, 'pines,', layout.resources.length,
   'resource placements,', layout.plants.length, 'plants,', layout.rocks.length, 'rocks');
+

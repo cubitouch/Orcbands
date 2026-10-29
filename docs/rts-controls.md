@@ -12,11 +12,10 @@ use closer or overhead cameras for diagnostics; normal wheel input restores the
 playable limits.
 
 Left-click selects on release. Drag at least six pixels to show a translucent
-selection rectangle; release to select the worker if its projected collider centre
-is inside the box. Either drag direction works. An empty click/box deselects.
+selection rectangle; release to select all workers whose projected collider centres
+are inside the box. Shift-click toggles an individual worker; Shift-drag toggles the workers inside the box. Either drag direction works. An empty click/box deselects.
 Edge scrolling pauses while holding the selection button. Focus loss cancels a
-pending drag; releasing outside the canvas cancels it. Only the existing worker
-is selectable in this prototype; no extra units are created.
+pending drag; releasing outside the canvas cancels it. The starting band contains three selectable workers. Right-click ground issues spaced movement orders to a selected group; right-click a tree or mineable outcrop assigns work and equips axes or pickaxes. See [band and mining controls](band-mining.md).
 
 The WebGL host forwards pointer enter/leave/focus to Unity, including releases
 outside the captured canvas. `RtsCamera` owns navigation; `OrcbandsController`
@@ -28,3 +27,4 @@ against the actual Unity player. It checks click/box/reverse/empty selection,
 drag-scroll suppression, all four edges, leave-canvas stop, zoom bounds and reset,
 and saves selection/zoom screenshots plus the report. Public PR CI runs it before
 character captures. Main deployment retains its shorter smoke path.
+
