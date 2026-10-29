@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 namespace Orcbands.Editor
 {
     public static class BandMiningChecks
@@ -12,14 +13,32 @@ namespace Orcbands.Editor
             var session = UnityEngine.Object.FindFirstObjectByType<GameSession>();
             var leader = session.Controller;
             Require(leader.Band.Length == 3, "three starting orcs");
+            var modelSources = new HashSet<string>();
             foreach (var member in leader.Band) {
+                var presentation = member.Worker.GetComponent<CharacterPresentation>();
+                Require(presentation.StartingRole == member.BandIndex, "stable distinct band appearance");
+                var model = presentation.ReviewRoles[presentation.StartingRole];
+                int visibleModels = 0;
+                foreach (var role in presentation.ReviewRoles) if (role.gameObject.activeSelf) visibleModels++;
+                Require(visibleModels == 1 && model.gameObject.activeSelf, "exactly one chosen model visible");
+                var source = PrefabUtility.GetCorrespondingObjectFromSource(model.gameObject);
+                if (source != null) {
+                    modelSources.Add(AssetDatabase.GetAssetPath(source));
+                    var animation = member.Worker.GetComponent<WorkerAnimation>();
+                    Require(animation != null && animation.Body.transform == model && animation.Body.avatar.isValid &&
+                        animation.Body.avatar.isHuman && !animation.Body.applyRootMotion, "selected character has its own valid animated rig");
+                }
                 Require(leader.Pathfinder.IsClear(member.Worker.position), "blocked spawn");
                 Require(member.GetComponent<WorkerHarvest>().Wood == 0 && member.GetComponent<WorkerHarvest>().Stone == 0, "shared initial counters");
                 var tools = member.Worker.GetComponent<WorkerTools>();
                 Require(tools != null && tools.Axe != null && tools.Pickaxe != null, "both tools present");
+                Require(tools.Axe.transform.IsChildOf(model) && tools.Pickaxe.transform.IsChildOf(model), "tools belong to the visible model");
+                if (source != null) Require(tools.Axe.transform.parent.parent.name == "hand_r", "visible character holds tools in its right hand");
                 tools.Equip(true); Require(!tools.Axe.activeSelf && tools.Pickaxe.activeSelf, "pickaxe equip");
                 tools.Equip(false); Require(tools.Axe.activeSelf && !tools.Pickaxe.activeSelf, "axe equip");
             }
+            if (Environment.GetEnvironmentVariable("ORCBANDS_REQUIRE_PRIVATE_ASSETS") == "1")
+                Require(modelSources.Count == 3, "three distinct purchased Synty prefabs");
             // A moving bandmate is not a permanent wall at its old position.
             Require(leader.CommandMove(new Vector3(5.02f,0f,4.38f)), "leader accepts group destination");
             Require(leader.Band[1].CommandMove(new Vector3(3.7f,0f,3.3f)), "second orc accepts group destination after leader moves");
@@ -89,7 +108,69 @@ namespace Orcbands.Editor
                 Require(nav.TryMoveRoute(start, end, route, out adjusted) && !adjusted && route.Count == 1, "cutting trees opens direct walking path");
                 Require(!nav.IsClear(new Vector3(0f,0f,1f)), "stump core remains solid");
             } finally { UnityEngine.Object.DestroyImmediate(fixture); }
+            CheckNearbyContinuation();
             Debug.Log("BAND_MINING_CHECKS: PASS three orcs, tools, separate work reservations, finite stone, depleted art, save migration/overlap guards, tree-cleared corridor");
         }
+        private static void CheckNearbyContinuation()
+        {
+            var fixture = new GameObject("Nearby resource continuation checks");
+            try {
+                var nav = fixture.AddComponent<WorkerNavigation>(); nav.MapHalfExtent = 24f; nav.Rebuild();
+                var controller = fixture.AddComponent<OrcbandsController>();
+                controller.Worker = new GameObject("Fixture worker").transform;
+                controller.Worker.SetParent(fixture.transform); controller.Worker.position = new Vector3(-2f, 0f, 0f);
+                controller.Pathfinder = nav; controller.Band = new[] { controller };
+                var tools = controller.Worker.gameObject.AddComponent<WorkerTools>();
+                tools.Axe = new GameObject("Fixture axe"); tools.Pickaxe = new GameObject("Fixture pickaxe");
+                tools.Axe.transform.SetParent(controller.Worker); tools.Pickaxe.transform.SetParent(controller.Worker);
+                var harvest = fixture.AddComponent<WorkerHarvest>(); harvest.Controller = controller;
+                var shadows = fixture.AddComponent<ForestShadowMap>(); harvest.Shadows = shadows;
+                WoodcuttingTarget Tree(string name, Vector3 at) {
+                    var go = new GameObject(name); go.transform.SetParent(fixture.transform); go.transform.position = at;
+                    return go.AddComponent<WoodcuttingTarget>();
+                }
+                StoneMiningTarget Mine(string name, Vector3 at) {
+                    var go = new GameObject(name); go.transform.SetParent(fixture.transform); go.transform.position = at;
+                    var mine = go.AddComponent<StoneMiningTarget>();
+                    mine.Full = new GameObject("Full"); mine.Depleted = new GameObject("Depleted");
+                    mine.Full.transform.SetParent(go.transform); mine.Depleted.transform.SetParent(go.transform); return mine;
+                }
+                var origin = Tree("Depleted origin", Vector3.zero);
+                var depleted = Tree("Already depleted", Vector3.right);
+                var blocked = Tree("Closest but blocked", Vector3.right * 4f);
+                var nearby = Tree("Reachable neighbor", Vector3.forward * 5f);
+                var distant = Tree("Too far", Vector3.left * 9f);
+                for (int i = 0; i < 12; i++) depleted.TakeWood();
+                shadows.Trees = new[] { origin, distant, depleted, blocked, nearby };
+                nav.Obstacles = new[] { new WorkerNavigation.Footprint { x = 4f, radius = 3.4f } }; nav.Rebuild();
+                Require(controller.CommandTree(origin), "fixture initial tree order");
+                for (int i = 0; i < 12; i++) origin.TakeWood();
+                controller.FinishTree();
+                Require(controller.ChoppingTarget == nearby && !tools.Mining, "continue nearest reachable tree; skip exhausted, blocked and distant nodes");
+                controller.CancelWorkerCommand();
+                Require(!controller.IsWorking, "manual move/cancel interrupts continuation");
+                for (int i = 0; i < 12; i++) nearby.TakeWood();
+                controller.CommandTree(nearby); // Rejected exhausted-node order must stay idle.
+                Require(!controller.IsWorking, "depleted manual target remains rejected");
+                Require(!harvest.TryContinueNearby(origin, null), "stop when no nearby reachable tree remains");
+                nav.Obstacles = new WorkerNavigation.Footprint[0]; nav.Rebuild();
+                controller.Worker.position = new Vector3(-18f,0f,0f);
+                Require(!harvest.TryContinueNearby(origin, null) && !controller.IsWorking, "local center cannot trigger a long walking detour");
+                controller.Worker.position = new Vector3(-2f,0f,0f);
+                var mineOrigin = Mine("Mine origin", Vector3.zero);
+                var nextMine = Mine("Nearby mine", Vector3.right * 4f);
+                var farMine = Mine("Distant mine", Vector3.forward * 9f);
+                harvest.Mines = new[] { farMine, mineOrigin, nextMine };
+                Require(controller.CommandMine(mineOrigin), "fixture initial mine order");
+                for (int i = 0; i < 24; i++) mineOrigin.TakeStone();
+                controller.FinishTree();
+                Require(controller.MiningTarget == nextMine && tools.Mining, "continue nearby stone with pickaxe, never switch to trees");
+                for (int i = 0; i < 24; i++) nextMine.TakeStone();
+                controller.FinishTree();
+                Require(!controller.IsWorking && !controller.IsMoving, "stop when only distant outcrops remain");
+                Require(harvest.Wood == 0 && harvest.Stone == 0, "retargeting never awards resources");
+            } finally { UnityEngine.Object.DestroyImmediate(fixture); }
+        }
+
     }
 }

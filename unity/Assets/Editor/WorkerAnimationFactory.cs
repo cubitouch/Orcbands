@@ -54,8 +54,9 @@ namespace Orcbands.Editor
                 if (avatar == null || !avatar.isValid || !avatar.isHuman)
                     throw new InvalidOperationException("Cannot build the worker's mapped humanoid avatar");
                 avatar.name = "Worker body retarget avatar";
-                AssetDatabase.DeleteAsset(Generated + "WorkerBodyAvatar.asset");
-                AssetDatabase.CreateAsset(avatar, Generated + "WorkerBodyAvatar.asset");
+                string path = Generated + "WorkerBodyAvatar-" + modelName.Replace(" ", "-") + ".asset";
+                AssetDatabase.DeleteAsset(path);
+                AssetDatabase.CreateAsset(avatar, path);
                 return avatar;
             }
             finally { UnityEngine.Object.DestroyImmediate(reference); }
@@ -70,11 +71,31 @@ namespace Orcbands.Editor
             return found == files.Length;
         }
 
+        public static void ResetController()
+        {
+            AssetDatabase.DeleteAsset(Generated + "WorkerAnimations.controller");
+        }
+
         public static void Configure(GameObject root, Transform model, Avatar avatar)
         {
-            var clips = new[] { LoadClip("Idle"), LoadClip("Walking"), LoadClip("Chopping") };
             string path = Generated + "WorkerAnimations.controller";
-            AssetDatabase.DeleteAsset(path);
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+            if (controller == null) controller = CreateController(path);
+            var animator = model.GetComponent<Animator>();
+            if (animator == null) animator = model.gameObject.AddComponent<Animator>();
+            animator.avatar = avatar;
+            animator.runtimeAnimatorController = controller;
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.enabled = true;
+            root.AddComponent<WorkerAnimation>().Body = animator;
+            model.gameObject.AddComponent<WorkerCarryPose>().Body = animator;
+            Debug.Log("WORKER_ANIMATIONS: valid mapped humanoid avatar, Idle/Walking/Chopping; root motion off");
+        }
+
+        private static AnimatorController CreateController(string path)
+        {
+            var clips = new[] { LoadClip("Idle"), LoadClip("Walking"), LoadClip("Chopping") };
             var controller = AnimatorController.CreateAnimatorControllerAtPath(path);
             var layers = controller.layers;
             layers[0].iKPass = true;
@@ -90,16 +111,7 @@ namespace Orcbands.Editor
                 state.writeDefaultValues = false;
                 if (clip.name == "Idle") machine.defaultState = state;
             }
-            var animator = model.GetComponent<Animator>();
-            if (animator == null) animator = model.gameObject.AddComponent<Animator>();
-            animator.avatar = avatar;
-            animator.runtimeAnimatorController = controller;
-            animator.applyRootMotion = false;
-            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            animator.enabled = true;
-            root.AddComponent<WorkerAnimation>().Body = animator;
-            model.gameObject.AddComponent<WorkerCarryPose>().Body = animator;
-            Debug.Log("WORKER_ANIMATIONS: valid mapped humanoid avatar, Idle/Walking/Chopping; root motion off");
+            return controller;
         }
 
         private static AnimationClip LoadClip(string name)
@@ -139,3 +151,4 @@ namespace Orcbands.Editor
         }
     }
 }
+

@@ -136,7 +136,7 @@ assert.match(licensedFactory, /Assets\/Synty\/PolygonMiniFantasyCharacters\/Pref
 assert.match(licensedFactory, /ORCBANDS_REQUIRE_PRIVATE_ASSETS/);
 assert.match(licensedFactory, /_Albedo_Map/);
 assert.match(licensedFactory, /FitRestPose\(presentation.TargetHeight\)/);
-assert.match(file('unity/Assets/Editor/CharacterSceneFactory.cs'), /LicensedCharacterFactory\.TryCreate\(feet\)/);
+assert.match(file('unity/Assets/Editor/CharacterSceneFactory.cs'), /LicensedCharacterFactory\.TryCreate\(feet, startingRole\)/);
 assert.match(file('unity/.gitignore'), /\/Assets\/Synty\//);
 const trustedDeploy = file('.github/workflows/deploy-preview.yml');
 const publicPrCi = file('.github/workflows/unity-starter.yml');

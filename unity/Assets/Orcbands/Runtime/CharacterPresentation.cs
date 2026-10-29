@@ -11,6 +11,7 @@ namespace Orcbands
         public Vector3 PivotOffset;
         [Min(.1f)] public float TargetHeight = 1.525f;
         public Transform[] ReviewRoles;
+        [Range(0, 2)] public int StartingRole;
 
         private void Awake() { Apply(); }
         private void OnValidate() { Apply(); }
@@ -75,3 +76,4 @@ namespace Orcbands
         }
     }
 }
+

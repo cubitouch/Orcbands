@@ -7,10 +7,10 @@ namespace Orcbands.Editor
 {
     internal static class CharacterSceneFactory
     {
-        public static GameObject Create(Vector3 feet)
+        public static GameObject Create(Vector3 feet, int startingRole = 0)
         {
             // Keep public PR builds and local clones usable without licensed art.
-            var licensed = LicensedCharacterFactory.TryCreate(feet);
+            var licensed = LicensedCharacterFactory.TryCreate(feet, startingRole);
             if (licensed != null) return licensed;
 
             const string path = "Assets/Orcbands/CharacterPalette.asset";
@@ -31,8 +31,9 @@ namespace Orcbands.Editor
                 string materialPath = "Assets/Orcbands/Generated/Character-" + names[i] + ".mat";
                 var material = new Material(shader) { name = "Character-" + names[i], color = colors[i] };
                 material.SetFloat("_SurfaceContrast", palette.TonalDepth);
-                AssetDatabase.DeleteAsset(materialPath);
-                AssetDatabase.CreateAsset(material, materialPath);
+                var existing = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+                if (existing == null) AssetDatabase.CreateAsset(material, materialPath);
+                else { EditorUtility.CopySerialized(material, existing); UnityEngine.Object.DestroyImmediate(material); material = existing; }
                 materials[i] = material;
             }
             var root = new GameObject("Worker");
@@ -44,6 +45,7 @@ namespace Orcbands.Editor
             presentation.ModelMount = new GameObject("Model mount — replace with licensed prefab").transform;
             presentation.ModelMount.SetParent(root.transform, false);
             presentation.ReviewRoles = new Transform[3];
+            presentation.StartingRole = startingRole;
             for (int role = 0; role < 3; role++)
             {
                 var model = new GameObject(new[] { "Worker proxy", "Warrior proxy", "Shaman proxy" }[role]).transform;
@@ -80,11 +82,11 @@ namespace Orcbands.Editor
                     Part(model,"Headdress",new Vector3(0,1.56f,0),new Vector3(.37f,.19f,.33f),materials[4]);
                 }
                 CombineRole(model, materials);
-                model.gameObject.SetActive(role == 0);
+                model.gameObject.SetActive(role == startingRole);
             }
             var tools = root.AddComponent<WorkerTools>();
             var hand = new GameObject("Worker axe grip").transform;
-            hand.SetParent(presentation.ReviewRoles[0], false); hand.localPosition = new Vector3(.48f, .61f, .11f);
+            hand.SetParent(presentation.ReviewRoles[startingRole], false); hand.localPosition = new Vector3(.48f, .61f, .11f);
             tools.Axe = new GameObject("Proxy axe"); tools.Axe.transform.SetParent(hand, false);
             Part(tools.Axe.transform, "Haft", new Vector3(0f,-.15f,0f), new Vector3(.06f,.65f,.06f), materials[2]);
             Part(tools.Axe.transform, "Head", new Vector3(.10f,.14f,0f), new Vector3(.3f,.17f,.08f), materials[3]);
@@ -109,7 +111,7 @@ namespace Orcbands.Editor
                 var mesh = new Mesh { name = model.name + " " + material.name };
                 mesh.CombineMeshes(combine.ToArray());
                 string path = "Assets/Orcbands/Generated/Combined-" + model.name.Replace(" ", "-") + "-" + material.name + ".asset";
-                AssetDatabase.DeleteAsset(path); AssetDatabase.CreateAsset(mesh, path);
+                mesh = SaveMesh(mesh, path);
                 var group = new GameObject(material.name); group.transform.SetParent(model, false);
                 group.AddComponent<MeshFilter>().sharedMesh = mesh;
                 var renderer = group.AddComponent<MeshRenderer>(); renderer.sharedMaterial = material;
@@ -137,13 +139,24 @@ namespace Orcbands.Editor
             mesh.SetVertices(vertices); mesh.SetTriangles(indices,0); mesh.RecalculateNormals(); mesh.RecalculateBounds();
             // Persist meshes: procedural scene builds must survive scene reload by BuildPipeline.
             string path = "Assets/Orcbands/Generated/CharacterPart-" + parent.name.Replace(" ","-") + "-" + name.Replace(" ","-") + "-" + parent.childCount + ".asset";
-            AssetDatabase.DeleteAsset(path); AssetDatabase.CreateAsset(mesh,path);
+            mesh = SaveMesh(mesh, path);
             var part = new GameObject(name); part.transform.SetParent(parent,false);
             part.transform.localPosition = at; part.transform.localScale = size;
             part.AddComponent<MeshFilter>().sharedMesh = mesh;
             var renderer = part.AddComponent<MeshRenderer>(); renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.On; renderer.receiveShadows = true;
             return part.transform;
+        }
+        private static Mesh SaveMesh(Mesh mesh, string path)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if (existing == null) AssetDatabase.CreateAsset(mesh, path);
+            else {
+                EditorUtility.CopySerialized(mesh, existing);
+                Object.DestroyImmediate(mesh);
+                mesh = existing;
+            }
+            return mesh;
         }
         private static void Triangle(List<Vector3> vertices, List<int> indices, Vector3 a, Vector3 b, Vector3 c)
         {
