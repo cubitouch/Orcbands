@@ -111,3 +111,6 @@ InitTestScene*.unity*
 # Local WebGL smoke dependencies and generated captures
 /node_modules/
 /smoke-artifacts/
+
+# Encrypted, generated Unity CI cache; never commit imported vendor assets.
+/.unity-ci-cache/

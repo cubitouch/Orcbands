@@ -3,28 +3,52 @@ name: Licensed Unity PR Visual Review
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    paths: ["unity/**", "tools/capture-unity-characters.mjs", "tools/capture-worker-animations.mjs", "tools/capture-worker-navigation.mjs", "tools/capture-tree-chop-feedback.mjs", "tools/capture-finite-trees.mjs", "tools/capture-band-mining.mjs", ".github/workflows/worker-art-review.yml"]
 
 permissions:
   contents: read
 
 concurrency:
-  group: licensed-unity-review-${{ (github.event.label.name && github.event.label.name != 'unity-visual-review' && github.event.label.name != 'unity-full-review') && github.run_id || github.event.pull_request.number }}
+  group: licensed-unity-review-${{ (github.event.label.name && github.event.label.name != 'unity-visual-review' && github.event.label.name != 'unity-full-review' && github.event.label.name != 'unity-gameplay-review') && github.run_id || github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    if: >-
+      (github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
+      github.event.label.name == 'unity-visual-review' || github.event.label.name == 'unity-full-review' || github.event.label.name == 'unity-gameplay-review'
+    runs-on: ubuntu-latest
+    outputs:
+      player: ${{ steps.paths.outputs.player }}
+      bridge: ${{ steps.paths.outputs.bridge }}
+      browser: ${{ steps.paths.outputs.browser }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check CI routing and cache security
+        run: |
+          node tools/test-ci-changes.mjs
+          node tools/test-unity-ci-cache.mjs
+          node tools/test-find-unity-player.mjs
+      - name: Detect changed build inputs
+        id: paths
+        run: node tools/ci-changes.mjs
+
   unity-build:
+    needs: changes
     # Maintainer opt-in only. Fork PRs never receive private assets or secrets.
     # Do not use pull_request_target to execute a PR's build scripts.
     if: >-
+      needs.changes.outputs.player == 'true' &&
       github.repository == 'cubitouch/Orcbands' &&
       github.event.pull_request.state == 'open' &&
       github.event.pull_request.base.ref == 'main' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       ((github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
-       github.event.label.name == 'unity-visual-review' || github.event.label.name == 'unity-full-review') &&
+       github.event.label.name == 'unity-visual-review' || github.event.label.name == 'unity-full-review' || github.event.label.name == 'unity-gameplay-review') &&
       (contains(github.event.pull_request.labels.*.name, 'unity-visual-review') ||
-       contains(github.event.pull_request.labels.*.name, 'unity-full-review'))
+       contains(github.event.pull_request.labels.*.name, 'unity-full-review') ||
+       contains(github.event.pull_request.labels.*.name, 'unity-gameplay-review'))
     runs-on: ubuntu-latest
     timeout-minutes: ${{ contains(github.event.pull_request.labels.*.name, 'unity-full-review') && 90 || 30 }}
     steps:
@@ -50,7 +74,15 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
+      - name: Restore Unity Library cache
+        id: library-cache
+        uses: ./.github/actions/unity-cache
+        with:
+          mode: licensed
+          platform: WebGL
+          secret: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
       - name: Build Unity browser player
+        id: player-build
         uses: game-ci/unity-builder@v4
         env:
           ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"
@@ -62,6 +94,16 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
+      - name: Save Unity Library cache
+        if: steps.library-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: ./.github/actions/unity-cache
+        with:
+          operation: save
+          mode: licensed
+          platform: WebGL
+          secret: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
+          key: ${{ steps.library-cache.outputs.key }}
       - name: Store Unity browser build
         uses: actions/upload-artifact@v4
         with:
@@ -88,7 +130,8 @@ jobs:
         env:
           ORCBANDS_SMOKE_QUICK: ${{ contains(github.event.pull_request.labels.*.name, 'unity-full-review') && '0' || '1' }}
         run: node tools/smoke-unity-webgl.mjs
-      - name: Focused band and resource playthrough
+      - name: Focused band and resource playthrough (opt-in)
+        if: contains(github.event.pull_request.labels.*.name, 'unity-gameplay-review') || contains(github.event.pull_request.labels.*.name, 'unity-full-review')
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 --directory build/WebGL/Orcbands &
           SERVER_PID=$!

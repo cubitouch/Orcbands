@@ -1,0 +1,74 @@
+name: Unity Library cache
+description: Cache public imports directly and licensed imports as an authenticated encrypted archive
+inputs:
+  operation:
+    description: restore or save
+    default: restore
+  mode:
+    description: public or licensed (never restore across these scopes)
+    required: true
+  platform:
+    description: Unity target platform
+    default: WebGL
+  secret:
+    description: Private asset token used to derive the licensed encryption key
+    default: ''
+  key:
+    description: Original restore key, required for save
+    default: ''
+outputs:
+  key:
+    description: Exact key to use after a successful build
+    value: ${{ steps.identity.outputs.key }}
+  cache-hit:
+    description: Whether this exact Library was restored
+    value: ${{ steps.restore.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - name: Keep licensed imports out of public caches
+      if: inputs.mode == 'public'
+      shell: bash
+      run: |
+        test ! -d unity/Assets/Synty
+        test ! -d unity/Assets/Mixamo
+    - name: Identify compatible Unity Library
+      if: inputs.operation == 'restore'
+      id: identity
+      shell: bash
+      env:
+        ORCBANDS_CACHE_MODE: ${{ inputs.mode }}
+        ORCBANDS_CACHE_PLATFORM: ${{ inputs.platform }}
+        ORCBANDS_CACHE_SECRET: ${{ inputs.secret }}
+        ORCBANDS_CACHE_COMPATIBILITY: ${{ hashFiles('unity/ProjectSettings/ProjectVersion.txt', 'unity/Packages/**') }}
+        ORCBANDS_CACHE_SOURCE: ${{ hashFiles('unity/Assets/**', 'unity/ProjectSettings/**') }}
+      run: node tools/unity-ci-cache.mjs key
+    - name: Restore compatible cache
+      if: inputs.operation == 'restore'
+      id: restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ steps.identity.outputs.path }}
+        key: ${{ steps.identity.outputs.key }}
+        restore-keys: ${{ steps.identity.outputs.prefix }}
+    - name: Authenticate and unpack licensed Library
+      if: inputs.operation == 'restore' && inputs.mode == 'licensed'
+      # A missing or damaged cache must not prevent a clean build. Authentication
+      # finishes before extraction, so a failed restore cannot install bad files.
+      continue-on-error: true
+      shell: bash
+      env:
+        ORCBANDS_CACHE_SECRET: ${{ inputs.secret }}
+      run: node tools/unity-ci-cache.mjs restore
+    - name: Encrypt licensed Library after successful build
+      if: inputs.operation == 'save' && inputs.mode == 'licensed'
+      shell: bash
+      env:
+        ORCBANDS_CACHE_SECRET: ${{ inputs.secret }}
+      run: node tools/unity-ci-cache.mjs pack
+    - name: Save compatible cache
+      if: inputs.operation == 'save'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ inputs.mode == 'licensed' && '.unity-ci-cache/library.enc' || 'unity/Library' }}
+        key: ${{ inputs.key }}

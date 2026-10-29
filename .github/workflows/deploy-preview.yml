@@ -13,10 +13,14 @@ on:
       - "tools/generate-unity-tree-shadows.mjs"
       - "tools/smoke-unity-webgl.mjs"
       - ".github/workflows/deploy-preview.yml"
+      - ".github/actions/unity-cache/**"
+      - "tools/*ci*.mjs"
+      - "tools/find-unity-player.mjs"
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -25,9 +29,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  unity-build:
-    # Licensed content may only be read on the trusted main branch.
+  changes:
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.decision.outputs.build }}
+      previous_run: ${{ steps.previous.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changed player inputs
+        id: paths
+        run: node tools/ci-changes.mjs
+      - name: Find the last successful deployed Unity player
+        if: github.event_name == 'push' && steps.paths.outputs.unity != 'true'
+        id: previous
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/find-unity-player.mjs
+      - name: Decide whether Unity needs rebuilding
+        id: decision
+        env:
+          REBUILD: ${{ github.event_name == 'workflow_dispatch' || steps.paths.outputs.unity == 'true' || !steps.previous.outputs.run }}
+        run: echo "build=$REBUILD" >> "$GITHUB_OUTPUT"
+
+  unity-build:
+    needs: changes
+    # Licensed content may only be read on the trusted main branch.
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -53,7 +83,15 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts three@0.166.1
           node tools/generate-unity-environment.mjs
+      - name: Restore Unity Library cache
+        id: library-cache
+        uses: ./.github/actions/unity-cache
+        with:
+          mode: licensed
+          platform: WebGL
+          secret: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
       - name: Build Unity browser player
+        id: player-build
         uses: game-ci/unity-builder@v4
         env:
           ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"
@@ -65,6 +103,16 @@ jobs:
           targetPlatform: WebGL
           buildMethod: Orcbands.Editor.OrcbandsSceneSetup.Build
           versioning: None
+      - name: Save Unity Library cache
+        if: steps.library-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: ./.github/actions/unity-cache
+        with:
+          operation: save
+          mode: licensed
+          platform: WebGL
+          secret: ${{ secrets.PRIVATE_ASSETS_TOKEN }}
+          key: ${{ steps.library-cache.outputs.key }}
       - name: Check static hosting asset format
         shell: bash
         run: |
@@ -93,7 +141,10 @@ jobs:
           if-no-files-found: error
 
   deploy:
-    needs: unity-build
+    needs: [changes, unity-build]
+    if: >-
+      !cancelled() && needs.changes.result == 'success' &&
+      (needs.unity-build.result == 'success' || needs.unity-build.result == 'skipped')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -140,6 +191,15 @@ jobs:
         with:
           name: orcbands-unity-published-build
           path: preview/unity
+          run-id: ${{ needs.changes.outputs.previous_run || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Retain reused Unity player for subsequent browser-only deployments
+        if: needs.changes.outputs.previous_run
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcbands-unity-published-build
+          path: preview/unity/
+          if-no-files-found: error
       - name: Verify both previews are present
         run: |
           test -f preview/index.html
@@ -152,3 +212,4 @@ jobs:
       - name: Deploy Asset Lab and Unity player to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+

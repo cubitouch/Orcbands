@@ -144,8 +144,10 @@ assert.match(trustedDeploy, /secrets\.PRIVATE_ASSETS_TOKEN/);
 assert.match(trustedDeploy, /ORCBANDS_REQUIRE_PRIVATE_ASSETS: "1"/);
 assert.match(trustedDeploy, /github\.ref == 'refs\/heads\/main'/);
 assert.match(publicPrCi, /github\.event_name == 'workflow_dispatch' && github\.ref == 'refs\/heads\/main'/);
-assert(!trustedDeploy.includes('actions/cache'), 'Never cache private Unity imports in public CI');
-assert(!publicPrCi.includes('actions/cache'), 'Never cache private Unity imports in public CI');
+// Licensed cache confidentiality and authentication are exercised by
+// test-unity-ci-cache.mjs; workflows use the shared encrypted-cache action.
+assert(trustedDeploy.includes('./.github/actions/unity-cache'));
+assert(publicPrCi.includes('./.github/actions/unity-cache'));
 assert.match(file('unity/Assets/Orcbands/Shaders/CharacterMatte.shader'), /clip\(atlas\.a - \.5\)/);
 
 
