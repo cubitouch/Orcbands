@@ -19,7 +19,7 @@ export function classify(paths) {
   const browser = paths.some(p => p.startsWith('unity/Assets/WebGLTemplates/') ||
     /^tools\/(test-(save-store|menu-host|background-music)|unity-test-session)\.mjs$/.test(p));
   const preview = paths.some(p => p.startsWith('preview/') ||
-    /^tools\/(generate-(tree|hut)|validate-|smoke-(preview|camp-ui))/.test(p) ||
+    /^tools\/(generate-(tree|hut)|validate-(?!unity-)|smoke-(preview|camp-ui))/.test(p) ||
     p === '.github/workflows/validate-preview.yml');
   const bridge = unity || infrastructure || paths.some(p =>
     /^tools\/validate-(unity-|forest-story)/.test(p));

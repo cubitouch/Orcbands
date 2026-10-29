@@ -17,6 +17,7 @@ for (const path of ['unity/Assets/Orcbands/Runtime/WorkerNavigation.cs',
 assert.equal(classify(['tools/test-menu-host.mjs']).browser, true);
 assert.equal(classify(['preview/camp-ui.js']).preview, true);
 assert.equal(classify(['tools/validate-unity-starter.mjs']).bridge, true);
+assert.equal(classify(['tools/validate-unity-starter.mjs']).preview, false);
 assert.equal(changedPaths({}, 'workflow_dispatch'), null);
 const event = (names, action='synchronize') => ({action,pull_request:{labels:names.map(name=>({name}))}});
 assert.equal(route(['docs/ci.md'],event(['unity-visual-review']),'pull_request').player,false);
