@@ -24,6 +24,7 @@ namespace Orcbands
         public float MapHalfExtent = 110f;
         public WoodcuttingTarget.WorkExclusion[] WorkPositionExclusions;
 
+        private bool selectingNearbyResource;
         private bool selected;
         public bool IsWorkerSelected => selected;
         public string LastSelectionHit { get; private set; } = "no click";
@@ -37,6 +38,17 @@ namespace Orcbands
         public string LastCommandResult { get; private set; } = "Ready";
         public int RemainingWaypoints => hasDestination ? route.Count - waypoint : 0;
         public Vector3 Destination => destination;
+        public float PlannedTravelDistance
+        {
+            get {
+                float length = 0f; Vector3 previous = Worker.position;
+                for (int i = waypoint; i < route.Count; i++) {
+                    length += Vector2.Distance(WorkerNavigation.Flat(previous), WorkerNavigation.Flat(route[i]));
+                    previous = route[i];
+                }
+                return length;
+            }
+        }
         public RtsCamera Navigation;
         private bool selectionPressed, boxSelecting;
         private Vector2 selectionStart;
@@ -218,8 +230,16 @@ namespace Orcbands
         }
         public void FinishTree()
         {
+            var tree = chopTarget; var rock = MiningTarget;
             CancelWorkerCommand();
-            Feedback("Resource exhausted · choose another target", 4f);
+            bool continued = false;
+            selectingNearbyResource = true;
+            try {
+                var harvest = GetComponent<WorkerHarvest>();
+                if (harvest != null) continued = harvest.TryContinueNearby(tree, rock);
+            } finally { selectingNearbyResource = false; }
+            Feedback(continued ? "Continuing at nearby " + (rock != null ? "stone outcrop" : "tree")
+                : "Resource exhausted · no nearby reachable work", 4f);
         }
 
         private bool RejectCommand(string message = "No clear route to that destination")
@@ -232,6 +252,7 @@ namespace Orcbands
         private void Feedback(string message, float duration = 3f)
         {
             LastCommandResult = message;
+            if (selectingNearbyResource) return;
             var owner = Band == null ? this : Band[0];
             owner.bandFeedback = (OwnsInput ? "" : Worker.name + ": ") + message;
             owner.feedbackUntil = Time.time + duration;

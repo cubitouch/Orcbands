@@ -16,8 +16,10 @@ namespace Orcbands
         {
             public Vector3 feet, screen, destination;
             public bool selected, moving, miningTool;
-            public string order;
-            public int visibleTools;
+            public string order, model, animation;
+            public int visibleTools, startingRole;
+            public bool animated, gripParentCorrect;
+            public float animationTime;
         }
         [System.Serializable] private class ReportData
         {
@@ -101,7 +103,15 @@ namespace Orcbands
             var bandReport = new BandReport[controller.Band.Length];
             for (int i = 0; i < bandReport.Length; i++) {
                 var member = controller.Band[i]; var tools = member.Worker.GetComponent<WorkerTools>();
+                var presentation = member.Worker.GetComponent<CharacterPresentation>();
+                var memberDriver = member.Worker.GetComponent<WorkerAnimation>();
+                var memberBody = memberDriver == null ? null : memberDriver.Body;
                 bandReport[i] = new BandReport { feet = member.Worker.position, screen = View.WorldToViewportPoint(member.Worker.position + Vector3.up),
+                    startingRole = presentation.StartingRole, model = presentation.ReviewRoles[presentation.StartingRole].name,
+                    animation = memberDriver == null ? "Static" : memberDriver.Current.ToString(),
+                    animationTime = memberBody == null ? 0f : memberBody.GetCurrentAnimatorStateInfo(0).normalizedTime,
+                    animated = memberBody != null && memberBody.isHuman,
+                    gripParentCorrect = tools != null && tools.Axe != null && tools.Axe.transform.parent.parent != null && tools.Axe.transform.parent.parent.name == "hand_r",
                     destination = member.Destination, selected = member.IsWorkerSelected, moving = member.IsMoving,
                     miningTool = tools != null && tools.Mining, visibleTools = tools == null ? 0 : (tools.Axe.activeInHierarchy ? 1 : 0) + (tools.Pickaxe.activeInHierarchy ? 1 : 0),
                     order = member.MiningTarget != null ? "mine" : member.ChoppingTarget != null ? "chop" : member.IsMoving ? "move" : "idle" };
@@ -296,7 +306,7 @@ namespace Orcbands
         }
         public void Capture(string preset)
         {
-            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide" || preset == "tree-feedback" || preset == "harvest-stump";
+            bool preserveFacing = preset == "worker-moved" || preset == "worker-chopping" || preset == "worker-wide" || preset == "tree-feedback" || preset == "harvest-stump" || preset == "band";
             if (!preserveFacing) GetComponent<OrcbandsController>().CancelWorkerCommand();
             Vector3 feet = preserveFacing ? Character.transform.position : originalFeet;
             if (preset == "warm" || preset == "worker-three-quarter") feet = CampfireFeet;
@@ -337,6 +347,13 @@ namespace Orcbands
             {
                 target = stumpTree.transform.position + Vector3.up * .5f;
                 offset = new Vector3(-5f, 6f, 7f);
+            }
+            if (preset == "band") {
+                target = Vector3.zero;
+                var band = GetComponent<OrcbandsController>().Band;
+                foreach (var member in band) target += member.Worker.position;
+                target = target / band.Length + Vector3.up * .8f;
+                offset = new Vector3(-5f, 7f, 10f);
             }
             View.transform.position = target + offset;
             View.transform.LookAt(target);

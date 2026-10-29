@@ -20,8 +20,9 @@ namespace Orcbands.Editor
             "SM_Chr_Dungeon_GoblinShaman_01.prefab"
         };
 
-        public static GameObject TryCreate(Vector3 feet)
+        public static GameObject TryCreate(Vector3 feet, int startingRole = 0)
         {
+            if (startingRole < 0 || startingRole >= Roles.Length) throw new ArgumentOutOfRangeException(nameof(startingRole));
             bool required = Environment.GetEnvironmentVariable("ORCBANDS_REQUIRE_PRIVATE_ASSETS") == "1";
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + Roles[0]);
             if (prefab == null)
@@ -46,6 +47,7 @@ namespace Orcbands.Editor
             mount.SetParent(root.transform, false);
             presentation.ModelMount = mount;
             presentation.TargetHeight = 2.0f;
+            presentation.StartingRole = startingRole;
             presentation.ReviewRoles = new Transform[Roles.Length];
             var sharedMaterials = new Dictionary<Material, Material>();
 
@@ -88,23 +90,23 @@ namespace Orcbands.Editor
                     renderer.receiveShadows = true;
                 }
                 presentation.ReviewRoles[role] = model.transform;
-                model.SetActive(role == 0);
+                model.SetActive(role == startingRole);
             }
             bool animated = WorkerAnimationFactory.HasSources();
             if (!animated && Environment.GetEnvironmentVariable("ORCBANDS_REQUIRE_PRIVATE_ASSETS") == "1")
                 throw new InvalidOperationException("Restore the private Mixamo worker animations before building");
             Avatar bodyAvatar = animated ? WorkerAnimationFactory.CreateAvatar(
-                AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + Roles[0]),
-                presentation.ReviewRoles[0].name) : null;
+                AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + Roles[startingRole]),
+                presentation.ReviewRoles[startingRole].name) : null;
             var rest = AssetDatabase.LoadAssetAtPath<WorkerRestProfile>(
                 "Assets/Editor/WorkerRestProfile.asset");
             if (rest == null) throw new InvalidOperationException("Missing owned worker rest profile");
-            rest.Apply(presentation.ReviewRoles[0]);
+            rest.Apply(presentation.ReviewRoles[startingRole]);
             presentation.Apply();
             presentation.FitRestPose(presentation.TargetHeight);
             // Add the tool after fitting, so the axe cannot distort character height/feet.
-            AttachWorkerAxe(root, presentation.ReviewRoles[0], rest, shader, sharedMaterials);
-            if (animated) WorkerAnimationFactory.Configure(root, presentation.ReviewRoles[0], bodyAvatar);
+            AttachWorkerAxe(root, presentation.ReviewRoles[startingRole], rest, shader, sharedMaterials);
+            if (animated) WorkerAnimationFactory.Configure(root, presentation.ReviewRoles[startingRole], bodyAvatar);
             Debug.Log("Orcbands: using licensed Synty mini-orc with original gameplay root.");
             return root;
         }
@@ -190,15 +192,18 @@ namespace Orcbands.Editor
                 original, out string guid, out long localId))
                 throw new InvalidOperationException("Cannot identify Synty material " + original.name);
             string path = Generated + "Synty-" + guid + "-" + localId + ".mat";
-            if (AssetDatabase.LoadAssetAtPath<Material>(path) != null)
-                AssetDatabase.DeleteAsset(path);
-            var matte = new Material(shader) { name = "Mini-orc matte — " + original.name };
+            var matte = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (matte == null) {
+                matte = new Material(shader) { name = "Mini-orc matte — " + original.name };
+                AssetDatabase.CreateAsset(matte, path);
+            }
+            matte.shader = shader;
             // Synty's color atlas is authored art; don't multiply it by our
             // solid-color proxy palette or discard its UV mapping.
             matte.SetTexture("_MainTex", atlas);
             matte.SetColor("_Color", Color.white);
             matte.SetFloat("_SurfaceContrast", 1f);
-            AssetDatabase.CreateAsset(matte, path);
+            EditorUtility.SetDirty(matte);
             return matte;
         }
 

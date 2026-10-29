@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Orcbands
@@ -106,6 +107,42 @@ namespace Orcbands
             rock.RestoreResource(0);
             foreach (var member in Controller.Band) if (member.MiningTarget == rock) member.FinishTree();
             ResetStrike();
+        }
+
+        // Local continuation follows the depleted node, never a global resource search.
+        public const float NearbyResourceRadius = 6f;
+        public const float NearbyTravelLimit = 12f;
+        public bool TryContinueNearby(WoodcuttingTarget tree, StoneMiningTarget rock)
+        {
+            if (tree != null && tree.IsDepleted && Shadows != null && Shadows.Trees != null)
+                return TryNearby(Shadows.Trees, tree.transform.position,
+                    candidate => !candidate.IsDepleted, candidate => Controller.CommandTree(candidate));
+            if (rock != null && rock.IsDepleted && Mines != null)
+                return TryNearby(Mines, rock.transform.position,
+                    candidate => !candidate.IsDepleted, candidate => Controller.CommandMine(candidate));
+            return false;
+        }
+        private bool TryNearby<T>(T[] resources, Vector3 origin, System.Func<T, bool> available,
+            System.Func<T, bool> command) where T : MonoBehaviour
+        {
+            var nearby = new List<T>();
+            foreach (var candidate in resources) {
+                if (candidate == null || !candidate.isActiveAndEnabled || !available(candidate)) continue;
+                if ((WorkerNavigation.Flat(candidate.transform.position) - WorkerNavigation.Flat(origin)).sqrMagnitude
+                    <= NearbyResourceRadius * NearbyResourceRadius) nearby.Add(candidate);
+            }
+            nearby.Sort((a, b) => {
+                int distance = (WorkerNavigation.Flat(a.transform.position) - WorkerNavigation.Flat(origin)).sqrMagnitude.CompareTo(
+                    (WorkerNavigation.Flat(b.transform.position) - WorkerNavigation.Flat(origin)).sqrMagnitude);
+                return distance != 0 ? distance : string.CompareOrdinal(a.name, b.name);
+            });
+            foreach (var candidate in nearby) {
+                // Use the ordinary path/slot reservation and tool equip commands.
+                // A nearby centre behind a long obstacle detour is not local work.
+                if (command(candidate) && Controller.PlannedTravelDistance <= NearbyTravelLimit) return true;
+                Controller.CancelWorkerCommand();
+            }
+            return false;
         }
 
         private void OnGUI()

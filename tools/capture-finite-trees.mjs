@@ -52,8 +52,12 @@ try {
  const depleted=await until(r=>r.depletedTrees===1,'first tree exhaustion');
  assert.equal(depleted.wood,12,'Tree yield was duplicated or lost across interruption');
  assert.equal(depleted.lastTreeRemaining,0);assert(depleted.stumpVisible);
- assert.equal(depleted.lastDepletedTree,firstTree);assert.equal(depleted.chopTarget,'');
- assert(!depleted.treeMarkerVisible&&!depleted.moving);assert(depleted.navigationClear);
+ assert.equal(depleted.lastDepletedTree,firstTree);
+ assert.notEqual(depleted.chopTarget,firstTree,'Depleted tree retained as work target');
+ // Local continuation is intentional. Interrupt it before checking a single
+ // tree's exact yield and stump clearance in isolation.
+ await page.evaluate(p=>window.orcbandsNavigationCommand(p),depleted.feet);await frames(1);
+ assert.equal((await report()).chopTarget,'');assert(depleted.navigationClear);
  assert(depleted.navigationRevision>initial.navigationRevision);assert.equal(depleted.shadowRepairs,1);
  assert(depleted.shadowChangedPixels>100,'Canopy left a stale ground shadow');
  assert(depleted.lastTreeClearance,'Former crown still blocks the worker');
@@ -77,7 +81,9 @@ try {
  await click(second.chopScreen,'right');
  const finished=await until(r=>r.depletedTrees===2,'second tree exhaustion');
  assert.equal(finished.wood,24);assert.equal(finished.shadowRepairs,2);assert(finished.stumpVisible);
- assert.equal(finished.chopTarget,'');assert(!finished.treeMarkerVisible);
+ assert.notEqual(finished.chopTarget,finished.lastDepletedTree);
+ await page.evaluate(p=>window.orcbandsNavigationCommand(p),finished.feet);await frames(1);
+ assert.equal((await report()).chopTarget,'');
  // Every resource award belongs to one actual accepted swing; idle/travel never produce wood.
  assert.equal(finished.wood,finished.treeStrikes);
  await page.screenshot({path:resolve(output,'wood-twenty-four.png')});
@@ -116,3 +122,4 @@ try {
  await writeFile(resolve(output,'finite-trees-report.json'),JSON.stringify({traces,retinaTrace,retinaStatus,errors},null,2));
  await browser.close();
 }
+

@@ -161,6 +161,7 @@ namespace Orcbands.Editor
                     4.5f, 2.45f, i * 2.3f, new Color(1f, .66f, .36f)));
             }
 
+            WorkerAnimationFactory.ResetController();
             GameObject worker = CharacterSceneFactory.Create(Surface(ground, 1.7f, 2.8f));
             var ringObject = new GameObject("Worker selection ring");
             var ring = ringObject.AddComponent<LineRenderer>();
@@ -308,7 +309,7 @@ namespace Orcbands.Editor
             for (int i = 1; i < band.Length; i++) {
                 var memberObject = new GameObject("Band member " + (i + 1));
                 var member = memberObject.AddComponent<OrcbandsController>(); band[i] = member;
-                var body = UnityEngine.Object.Instantiate(worker);
+                var body = CharacterSceneFactory.Create(worker.transform.position, i);
                 body.name = "Orc " + (i + 1);
                 bool placed = false;
                 for (int attempt = 0; attempt < 72 && !placed; attempt++) {
